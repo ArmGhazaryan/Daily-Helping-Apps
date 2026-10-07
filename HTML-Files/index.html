@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard</title>
+    <link rel="stylesheet" href="../CSS-Files/Main.css">
+</head>
+<body>
+    <div class="background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <header>
+        <h1>My Dashboard</h1>
+        <div class="clock" id="clock">00:00:00</div>
+    </header>
+
+    <main class="grid-container">
+        <!-- Card 1: English Flashcards -->
+        <div class="glass-card">
+            <div class="card-icon">📚</div>
+            <h2>English Flashcards</h2>
+            <p>B2 & C1 vocabulary practice</p>
+            <div class="card-action">Launch App →</div>
+        </div>
+
+        <!-- Card 2: Workout Tracker -->
+    <a href="workout-tracker.html" style="text-decoration: none; color: inherit;">
+        <div class="glass-card">
+            <div class="card-icon">💪</div>
+            <h2>Workout Tracker</h2>
+            <p>Push-ups & nutrition log</p>
+            <div class="card-action">Launch App →</div>
+        </div>
+    </a>
+
+        <!-- Card 3: Rubik's Timer -->
+        <div class="glass-card">
+            <div class="card-icon">🧊</div>
+            <h2>Rubik's Timer</h2>
+            <p>Solve timer & CFOP algorithms</p>
+            <div class="card-action">Launch App →</div>
+        </div>
+
+        <!-- Card 4: Code Snippets -->
+        <div class="glass-card">
+            <div class="card-icon">💻</div>
+            <h2>Code Snippets</h2>
+            <p>C#, Python & Web tools</p>
+            <div class="card-action">Launch App →</div>
+        </div>
+
+        <!-- Card 5: Smart Tasks -->
+        <div class="glass-card">
+            <div class="card-icon">✅</div>
+            <h2>Smart Tasks</h2>
+            <p>Daily to-do list</p>
+            <div class="card-action">Launch App →</div>
+        </div>
+    </main>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('clock').textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>

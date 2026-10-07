@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout & Nutrition Tracker</title>
+    <link rel="stylesheet" href="../CSS-Files/workout-tracker.css">
+</head>
+<body>
+    <div class="background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header with Back Button -->
+        <header class="app-header">
+            <a href="index.html" class="back-btn">← Back to Dashboard</a>
+            <h1>Workout & Nutrition Tracker</h1>
+        </header>
+
+        <!-- Main Tracker Card -->
+        <div class="glass-panel">
+            <div class="input-section">
+                <h2>Add Daily Goal</h2>
+                <div class="input-group">
+                    <input type="date" id="dateInput" class="custom-input" title="Select date">
+                    <input type="time" id="timeInput" class="custom-input" title="Select time">
+                </div>
+                <div class="input-group">
+                    <input type="text" id="taskInput" class="custom-input task-input" placeholder="e.g. 3 eggs with cucumber, Push-ups etc...">
+                    <button id="addBtn" class="add-btn">Add Goal</button>
+                </div>
+                
+                <!-- ADVANCED ROUTINE ACTIONS -->
+                <div class="routine-actions">
+                    <div class="action-row">
+                        <input type="text" id="routineNameInput" class="custom-input flex-grow" placeholder="Create new routine (e.g. Leg Day)">
+                        <button id="saveRoutineBtn" class="routine-btn">⭐ Save New</button>
+                    </div>
+                    <div class="action-row">
+                        <select id="routineSelect" class="custom-input flex-grow">
+                            <option value="" disabled selected>Select a routine...</option>
+                        </select>
+                        <button id="loadRoutineBtn" class="routine-btn" title="Paste to current day">📋 Paste</button>
+                        <button id="updateRoutineBtn" class="routine-btn update-btn" title="Update this routine with current tasks">🔄 Update</button>
+                        <button id="deleteRoutineBtn" class="routine-btn danger-btn" title="Delete selected routine">🗑️</button>
+                    </div>
+                    <div class="action-row">
+                        <button id="clearTasksBtn" class="routine-btn danger-btn flex-grow">⚠️ Clear All Tasks for Selected Date</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <h2>Your Schedule <span id="displayDateLabel" style="font-size: 1rem; color: #38bdf8; font-weight: normal; margin-left: 10px;"></span></h2>
+                <ul id="taskList" class="task-list">
+                    <!-- Tasks will be injected here by JavaScript -->
+                </ul>
+                
+                <!-- NEW: Productivity Stats Section -->
+                <div class="stats-section">
+                    <h3>📊 Productivity Analytics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Daily</div>
+                            <div class="stat-value" id="dailyStat">0%</div>
+                            <div class="stat-subtitle" id="dailyCount">0/0 Tasks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Weekly</div>
+                            <div class="stat-value" id="weeklyStat">0%</div>
+                            <div class="stat-subtitle" id="weeklyCount">0/0 Tasks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Monthly</div>
+                            <div class="stat-value" id="monthlyStat">0%</div>
+                            <div class="stat-subtitle" id="monthlyCount">0/0 Tasks</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Water Tracker Widget -->
+    <div class="water-widget" id="waterWidget">
+        <div class="water-settings" id="waterSettings">
+            <h3>💧 Water Goal Setup</h3>
+            <div class="settings-group">
+                <input type="number" id="weightInput" placeholder="Weight (kg)" class="widget-input">
+                <input type="number" id="heightInput" placeholder="Height (cm)" class="widget-input">
+            </div>
+            <div class="settings-group">
+                <select id="genderInput" class="widget-input">
+                    <option value="" disabled selected>Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+                <select id="activityInput" class="widget-input">
+                    <option value="" disabled selected>Activity Level</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <button id="calcWaterBtn" class="widget-btn primary">Calculate Goal</button>
+        </div>
+
+        <div class="water-main" id="waterMain" style="display: none;">
+            <div class="water-header">
+                <h3>💧 Water Tracker</h3>
+                <button id="editWaterBtn" class="edit-btn" title="Edit Settings">⚙️</button>
+            </div>
+            
+            <div class="water-progress-container">
+                <div class="water-progress-bar" id="waterProgressBar"></div>
+                <div class="water-stats">
+                    <span id="currentWater">0</span>L / <span id="goalWater">0</span>L
+                </div>
+            </div>
+
+            <div class="water-buttons">
+                <button class="add-water-btn" data-amount="0.1">+0.1L</button>
+                <button class="add-water-btn" data-amount="0.25">+0.25L</button>
+                <button class="add-water-btn" data-amount="0.5">+0.5L</button>
+                <button class="add-water-btn" data-amount="1.0">+1L</button>
+            </div>
+            <button id="resetWaterBtn" class="widget-btn secondary reset-btn">Reset Today</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="toast"></div>
+
+    <script src="../Javascript-Files/workout-tracker.js"></script>
+</body>
+</html>

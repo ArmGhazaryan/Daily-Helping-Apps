@@ -6,27 +6,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskList = document.getElementById('taskList');
     const displayDateLabel = document.getElementById('displayDateLabel');
 
+    // Top Progress Bar elements
+    const topProgressPercent = document.getElementById('topProgressPercent');
+    const topProgressBarFill = document.getElementById('topProgressBarFill');
+    const topProgressTitle = document.getElementById('topProgressTitle');
+
     // UI Toast Notification
     const toastElement = document.getElementById('toast');
     let toastTimeout;
     function showNotification(message, isError = false) {
         toastElement.textContent = message;
         toastElement.className = `toast show ${isError ? 'error' : 'success'}`;
-        
         clearTimeout(toastTimeout);
         toastTimeout = setTimeout(() => {
             toastElement.className = 'toast';
         }, 3000);
     }
-    
+
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
     dateInput.value = today;
 
-    // Load tasks from LocalStorage
+    // Load tasks & water history from LocalStorage
     let tasks = JSON.parse(localStorage.getItem('workoutTasks')) || [];
+    let waterHistory = JSON.parse(localStorage.getItem('waterHistory')) || {};
     
-    // Assign IDs to old tasks if they don't have one (for safer deleting/toggling)
+    // Assign IDs to old tasks if missing
     tasks.forEach(t => {
         if (!t.id) t.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
     });
@@ -44,16 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedDate = dateInput.value;
         
         displayDateLabel.textContent = `( ${formatDate(selectedDate)} )`;
-        
-        // Filter tasks for the selected date
         const dailyTasks = tasks.filter(t => t.date === selectedDate);
         
-        // Sort by time
-        dailyTasks.sort((a, b) => {
-            let timeA = a.time || '00:00';
-            let timeB = b.time || '00:00';
-            return timeA.localeCompare(timeB);
-        });
+        dailyTasks.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
 
         if (dailyTasks.length === 0) {
             taskList.innerHTML = '<li style="color: #94a3b8; text-align: center; padding: 20px;">No tasks for this date.</li>';
@@ -61,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dailyTasks.forEach(task => {
                 const li = document.createElement('li');
                 li.className = `task-item ${task.completed ? 'completed' : ''}`;
-                
                 li.innerHTML = `
                     <label class="checkbox-container">
                         <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask('${task.id}')">
@@ -83,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateProductivityStats(selectedDate);
     }
 
-    // Re-render when date changes
     dateInput.addEventListener('change', renderTasks);
 
     // Add new task
@@ -97,20 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const newTask = {
+        tasks.push({
             id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-            text: text,
-            date: date,
-            time: time,
-            completed: false
-        };
-
-        tasks.push(newTask);
+            text: text, date: date, time: time, completed: false
+        });
         saveAndRender();
         taskInput.value = '';
     });
 
-    // Toggle completion status
     window.toggleTask = function(id) {
         const task = tasks.find(t => t.id === id);
         if (task) {
@@ -119,13 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Delete task
     window.deleteTask = function(id) {
         tasks = tasks.filter(t => t.id !== id);
         saveAndRender();
     };
 
-    // Helper to save to storage and re-render
     function saveAndRender() {
         localStorage.setItem('workoutTasks', JSON.stringify(tasks));
         renderTasks();
@@ -133,78 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
-    // --- PRODUCTIVITY STATS LOGIC ---
-    // ==========================================
-    function calculateProductivityStats(selectedDateStr) {
-        const dailyStat = document.getElementById('dailyStat');
-        const dailyCount = document.getElementById('dailyCount');
-        const weeklyStat = document.getElementById('weeklyStat');
-        const weeklyCount = document.getElementById('weeklyCount');
-        const monthlyStat = document.getElementById('monthlyStat');
-        const monthlyCount = document.getElementById('monthlyCount');
-        
-        const selectedDate = new Date(selectedDateStr);
-        const selectedMonthPrefix = selectedDateStr.substring(0, 7); // e.g., "2026-10"
-        
-        let dTotal = 0, dComp = 0;
-        let wTotal = 0, wComp = 0;
-        let mTotal = 0, mComp = 0;
-
-        tasks.forEach(t => {
-            const taskDate = new Date(t.date);
-            const isCompleted = t.completed ? 1 : 0;
-            
-            // Daily
-            if (t.date === selectedDateStr) {
-                dTotal++;
-                dComp += isCompleted;
-            }
-            
-            // Monthly
-            if (t.date.startsWith(selectedMonthPrefix)) {
-                mTotal++;
-                mComp += isCompleted;
-            }
-            
-            // Weekly (last 7 days including selected date)
-            // Diff in days: (taskDate - selectedDate) / ms in a day
-            const diffTime = taskDate - selectedDate;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays <= 0 && diffDays >= -6) {
-                wTotal++;
-                wComp += isCompleted;
-            }
-        });
-
-        // Function to update the DOM elements
-        function updateStatUI(elValue, elCount, comp, total) {
-            if (total === 0) {
-                elValue.textContent = "-";
-                elValue.style.color = "#64748b"; // gray
-                elCount.textContent = "No tasks";
-            } else {
-                const percentage = Math.round((comp / total) * 100);
-                elValue.textContent = `${percentage}%`;
-                elCount.textContent = `${comp}/${total} Tasks`;
-                
-                // Color coding
-                if (percentage >= 80) elValue.style.color = "#10b981"; // green
-                else if (percentage >= 50) elValue.style.color = "#f59e0b"; // yellow
-                else elValue.style.color = "#ef4444"; // red
-            }
-        }
-
-        updateStatUI(dailyStat, dailyCount, dComp, dTotal);
-        updateStatUI(weeklyStat, weeklyCount, wComp, wTotal);
-        updateStatUI(monthlyStat, monthlyCount, mComp, mTotal);
-    }
-
-
-    // ==========================================
     // --- ADVANCED ROUTINE MANAGER LOGIC ---
     // ==========================================
-    
     let savedRoutines = JSON.parse(localStorage.getItem('savedRoutines')) || {};
     const routineSelect = document.getElementById('routineSelect');
     const routineNameInput = document.getElementById('routineNameInput');
@@ -218,118 +136,78 @@ document.addEventListener('DOMContentLoaded', () => {
             routineSelect.appendChild(opt);
         }
     }
-    
-    updateRoutineSelect(); // initialize on load
+    updateRoutineSelect();
 
-    // 1. Save NEW Routine
     document.getElementById('saveRoutineBtn').addEventListener('click', () => {
         const name = routineNameInput.value.trim();
-        if (!name) {
-            showNotification('Please enter a new name for your routine.', true);
-            return;
-        }
+        if (!name) return showNotification('Please enter a new name for your routine.', true);
         
         const selectedDate = dateInput.value;
         const dailyTasks = tasks.filter(t => t.date === selectedDate);
+        if (dailyTasks.length === 0) return showNotification('No tasks found to save!', true);
         
-        if (dailyTasks.length === 0) {
-            showNotification('No tasks found on this date to save!', true);
-            return;
-        }
-        
-        const template = dailyTasks.map(t => ({ text: t.text, time: t.time }));
-        savedRoutines[name] = template;
-        
+        savedRoutines[name] = dailyTasks.map(t => ({ text: t.text, time: t.time }));
         localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
         updateRoutineSelect();
         routineNameInput.value = '';
         showNotification(`Routine "${name}" saved!`);
     });
 
-    // 2. Load Routine (Replace existing day's tasks)
     document.getElementById('loadRoutineBtn').addEventListener('click', () => {
         const name = routineSelect.value;
-        if (!name) {
-            showNotification('Please select a routine to paste.', true);
-            return;
-        }
+        if (!name) return showNotification('Please select a routine to paste.', true);
         
         const template = savedRoutines[name];
         const selectedDate = dateInput.value;
         
-        const existingTasks = tasks.filter(t => t.date === selectedDate);
-        if (existingTasks.length > 0) {
-            const confirmOverwrite = confirm(`Warning: This will clear your current tasks for ${formatDate(selectedDate)} and paste "${name}". Continue?`);
-            if (!confirmOverwrite) return;
+        if (tasks.filter(t => t.date === selectedDate).length > 0) {
+            if (!confirm(`Clear current tasks for ${formatDate(selectedDate)} and paste "${name}"?`)) return;
         }
 
         tasks = tasks.filter(t => t.date !== selectedDate);
-
         template.forEach(item => {
             tasks.push({
                 id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-                text: item.text,
-                date: selectedDate,
-                time: item.time,
-                completed: false
+                text: item.text, date: selectedDate, time: item.time, completed: false
             });
         });
 
         saveAndRender();
-        showNotification(`Pasted "${name}" successfully.`);
+        showNotification(`Pasted "${name}".`);
     });
 
-    // 3. UPDATE Existing Routine
     document.getElementById('updateRoutineBtn').addEventListener('click', () => {
         const name = routineSelect.value;
-        if (!name) {
-            showNotification('Select a routine to update.', true);
-            return;
-        }
+        if (!name) return showNotification('Select a routine to update.', true);
 
-        const selectedDate = dateInput.value;
-        const dailyTasks = tasks.filter(t => t.date === selectedDate);
-        
-        if (dailyTasks.length === 0) {
-            showNotification('No tasks found on this date to update!', true);
-            return;
-        }
+        const dailyTasks = tasks.filter(t => t.date === dateInput.value);
+        if (dailyTasks.length === 0) return showNotification('No tasks to update!', true);
 
-        const template = dailyTasks.map(t => ({ text: t.text, time: t.time }));
-        savedRoutines[name] = template;
+        savedRoutines[name] = dailyTasks.map(t => ({ text: t.text, time: t.time }));
         localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
         showNotification(`Routine "${name}" updated!`);
     });
 
-    // 4. Delete a Routine
     document.getElementById('deleteRoutineBtn').addEventListener('click', () => {
         const name = routineSelect.value;
         if (!name) return;
-        
-        if (confirm(`Are you sure you want to delete the saved routine "${name}" forever?`)) {
+        if (confirm(`Delete routine "${name}" forever?`)) {
             delete savedRoutines[name];
             localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
             updateRoutineSelect();
-            showNotification(`Routine "${name}" deleted.`);
+            showNotification(`Routine deleted.`);
         }
     });
 
-    // 5. Clear Day's Tasks
     document.getElementById('clearTasksBtn').addEventListener('click', () => {
         const selectedDate = dateInput.value;
-        const dailyTasks = tasks.filter(t => t.date === selectedDate);
-        
-        if (dailyTasks.length === 0) return;
-        
-        if (confirm(`Are you sure you want to clear ALL tasks for ${formatDate(selectedDate)}?`)) {
+        if (tasks.filter(t => t.date === selectedDate).length === 0) return;
+        if (confirm(`Clear ALL tasks for ${formatDate(selectedDate)}?`)) {
             tasks = tasks.filter(t => t.date !== selectedDate);
             saveAndRender();
-            showNotification('All tasks cleared.');
+            showNotification('Tasks cleared.');
         }
     });
-
-    // Initial render call
-    renderTasks();
 
 
     // ==========================================
@@ -337,30 +215,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     const waterSettings = document.getElementById('waterSettings');
     const waterMain = document.getElementById('waterMain');
-    
-    const weightInput = document.getElementById('weightInput');
-    const heightInput = document.getElementById('heightInput');
-    const genderInput = document.getElementById('genderInput');
-    const activityInput = document.getElementById('activityInput');
-    
     const calcWaterBtn = document.getElementById('calcWaterBtn');
-    const editWaterBtn = document.getElementById('editWaterBtn');
-    const resetWaterBtn = document.getElementById('resetWaterBtn');
-    const addWaterBtns = document.querySelectorAll('.add-water-btn');
     
-    const currentWaterDisplay = document.getElementById('currentWater');
-    const goalWaterDisplay = document.getElementById('goalWater');
-    const waterProgressBar = document.getElementById('waterProgressBar');
+    // Collapsible elements
+    const waterCollapsed = document.getElementById('waterCollapsed');
+    const waterExpandedContent = document.getElementById('waterExpandedContent');
+    const collapseWaterBtn = document.getElementById('collapseWaterBtn');
+    const expandWaterBtn = document.getElementById('expandWaterBtn');
+    const collapsedWaterText = document.getElementById('collapsedWaterText');
 
     let waterGoal = parseFloat(localStorage.getItem('waterGoal')) || 0;
     let currentWater = parseFloat(localStorage.getItem('currentWater')) || 0;
     let lastWaterDate = localStorage.getItem('lastWaterDate');
+    let isWaterCollapsed = localStorage.getItem('isWaterCollapsed') === 'true';
 
     if (lastWaterDate !== today) {
         currentWater = 0;
         localStorage.setItem('currentWater', currentWater);
         localStorage.setItem('lastWaterDate', today);
     }
+
+    function updateCollapseUI() {
+        if (isWaterCollapsed) {
+            waterCollapsed.style.display = 'block';
+            waterExpandedContent.style.display = 'none';
+        } else {
+            waterCollapsed.style.display = 'none';
+            waterExpandedContent.style.display = 'block';
+        }
+        
+        if (waterGoal > 0) {
+            const percent = Math.min(Math.round((currentWater / waterGoal) * 100), 100);
+            collapsedWaterText.textContent = `Water: ${currentWater.toFixed(1)}L (${percent}%)`;
+        } else {
+            collapsedWaterText.textContent = `Water Tracker`;
+        }
+    }
+
+    collapseWaterBtn.addEventListener('click', () => {
+        isWaterCollapsed = true;
+        localStorage.setItem('isWaterCollapsed', 'true');
+        updateCollapseUI();
+    });
+
+    expandWaterBtn.addEventListener('click', () => {
+        isWaterCollapsed = false;
+        localStorage.setItem('isWaterCollapsed', 'false');
+        updateCollapseUI();
+    });
 
     function initWaterTracker() {
         if (waterGoal > 0) {
@@ -371,75 +273,267 @@ document.addEventListener('DOMContentLoaded', () => {
             waterSettings.style.display = 'block';
             waterMain.style.display = 'none';
         }
+        updateCollapseUI();
     }
 
     function updateWaterDisplay() {
-        currentWaterDisplay.textContent = currentWater.toFixed(2);
-        goalWaterDisplay.textContent = waterGoal.toFixed(1);
+        document.getElementById('currentWater').textContent = currentWater.toFixed(2);
+        document.getElementById('goalWater').textContent = waterGoal.toFixed(1);
         
         let percentage = (currentWater / waterGoal) * 100;
         if (percentage > 100) percentage = 100;
         
-        waterProgressBar.style.width = `${percentage}%`;
+        const bar = document.getElementById('waterProgressBar');
+        bar.style.width = `${percentage}%`;
+        bar.style.background = percentage >= 100 
+            ? 'linear-gradient(90deg, #10b981, #34d399)' 
+            : 'linear-gradient(90deg, #0ea5e9, #38bdf8)';
+
+        waterHistory[today] = { goal: waterGoal, current: currentWater };
+        localStorage.setItem('waterHistory', JSON.stringify(waterHistory));
         
-        if (percentage >= 100) {
-            waterProgressBar.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
-        } else {
-            waterProgressBar.style.background = 'linear-gradient(90deg, #0ea5e9, #38bdf8)';
-        }
+        calculateProductivityStats(dateInput.value);
+        updateCollapseUI();
     }
 
     calcWaterBtn.addEventListener('click', () => {
-        const weight = parseFloat(weightInput.value);
-        const activity = activityInput.value;
-        
-        if (!weight || !activity) {
-            showNotification('Please enter weight and activity level.', true);
-            return;
-        }
+        const weight = parseFloat(document.getElementById('weightInput').value);
+        const activity = document.getElementById('activityInput').value;
+        if (!weight || !activity) return showNotification('Please enter weight and activity.', true);
 
-        let baseAmountMl = weight * 35; 
-        if (activity === 'medium') baseAmountMl += 500;
-        if (activity === 'high') baseAmountMl += 1000;
+        let baseMl = weight * 35; 
+        if (activity === 'medium') baseMl += 500;
+        if (activity === 'high') baseMl += 1000;
 
-        waterGoal = parseFloat((baseAmountMl / 1000).toFixed(1));
+        waterGoal = parseFloat((baseMl / 1000).toFixed(1));
         localStorage.setItem('waterGoal', waterGoal);
         localStorage.setItem('waterSettings', JSON.stringify({
-            weight: weightInput.value,
-            height: heightInput.value,
-            gender: genderInput.value,
-            activity: activityInput.value
+            weight: weight, height: document.getElementById('heightInput').value,
+            gender: document.getElementById('genderInput').value, activity: activity
         }));
 
         initWaterTracker();
     });
 
-    editWaterBtn.addEventListener('click', () => {
-        const savedSettings = JSON.parse(localStorage.getItem('waterSettings'));
-        if (savedSettings) {
-            weightInput.value = savedSettings.weight;
-            heightInput.value = savedSettings.height;
-            genderInput.value = savedSettings.gender;
-            activityInput.value = savedSettings.activity;
+    document.getElementById('editWaterBtn').addEventListener('click', () => {
+        const s = JSON.parse(localStorage.getItem('waterSettings'));
+        if (s) {
+            document.getElementById('weightInput').value = s.weight;
+            document.getElementById('heightInput').value = s.height;
+            document.getElementById('genderInput').value = s.gender;
+            document.getElementById('activityInput').value = s.activity;
         }
         waterSettings.style.display = 'block';
         waterMain.style.display = 'none';
     });
 
-    addWaterBtns.forEach(btn => {
+    document.querySelectorAll('.add-water-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const amount = parseFloat(e.target.getAttribute('data-amount'));
-            currentWater += amount;
+            currentWater += parseFloat(e.target.getAttribute('data-amount'));
             localStorage.setItem('currentWater', currentWater.toFixed(2));
             updateWaterDisplay();
         });
     });
 
-    resetWaterBtn.addEventListener('click', () => {
+    document.getElementById('resetWaterBtn').addEventListener('click', () => {
         currentWater = 0;
         localStorage.setItem('currentWater', 0);
         updateWaterDisplay();
     });
 
     initWaterTracker();
+
+
+    // ==========================================
+    // --- PRODUCTIVITY STATS LOGIC ---
+    // ==========================================
+    function calculateProductivityStats(selectedDateStr) {
+        const selectedDate = new Date(selectedDateStr);
+        const selectedMonthPrefix = selectedDateStr.substring(0, 7); 
+        
+        let dTotal = 0, dComp = 0;
+        let wTotal = 0, wComp = 0;
+        let mTotal = 0, mComp = 0;
+
+        // Process Tasks (Whole numbers: 0 or 1)
+        tasks.forEach(t => {
+            const taskDate = new Date(t.date);
+            const isCompleted = t.completed ? 1 : 0;
+            
+            if (t.date === selectedDateStr) { dTotal++; dComp += isCompleted; }
+            if (t.date.startsWith(selectedMonthPrefix)) { mTotal++; mComp += isCompleted; }
+            
+            const diffDays = Math.ceil((taskDate - selectedDate) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 0 && diffDays >= -6) { wTotal++; wComp += isCompleted; }
+        });
+
+        // Process Water (Proportional tracking, max 1.0)
+        for (const [wDate, wData] of Object.entries(waterHistory)) {
+            if (wData.goal <= 0) continue; 
+            
+            const waterProgress = Math.min(wData.current / wData.goal, 1);
+            const taskDate = new Date(wDate);
+            
+            if (wDate === selectedDateStr) { dTotal++; dComp += waterProgress; }
+            if (wDate.startsWith(selectedMonthPrefix)) { mTotal++; mComp += waterProgress; }
+            
+            const diffDays = Math.ceil((taskDate - selectedDate) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 0 && diffDays >= -6) { wTotal++; wComp += waterProgress; }
+        }
+
+        // --- UPDATE TOP DAILY PROGRESS BAR (Proposal 3) ---
+        if (dTotal === 0) {
+            topProgressPercent.textContent = "0%";
+            topProgressBarFill.style.width = "0%";
+            topProgressTitle.textContent = `${formatDate(selectedDateStr)} Progress (No Goals)`;
+        } else {
+            const dPercentage = Math.round((dComp / dTotal) * 100);
+            topProgressPercent.textContent = `${dPercentage}%`;
+            topProgressBarFill.style.width = `${dPercentage}%`;
+            
+            if (dPercentage >= 80) {
+                topProgressBarFill.style.background = "linear-gradient(90deg, #10b981, #34d399)";
+            } else if (dPercentage >= 50) {
+                topProgressBarFill.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)";
+            } else {
+                topProgressBarFill.style.background = "linear-gradient(90deg, #0ea5e9, #3b82f6)";
+            }
+            topProgressTitle.textContent = `${formatDate(selectedDateStr)} Progress`;
+        }
+
+        function updateStatUI(elValue, elCount, comp, total) {
+            if (total === 0) {
+                elValue.textContent = "-";
+                elValue.style.color = "#64748b"; 
+                elCount.textContent = "No Goals";
+            } else {
+                const percentage = Math.round((comp / total) * 100);
+                elValue.textContent = `${percentage}%`;
+                
+                const compFormatted = Number.isInteger(comp) ? comp : comp.toFixed(1);
+                elCount.textContent = `${compFormatted}/${total} Goals`;
+                
+                if (percentage >= 80) elValue.style.color = "#10b981"; 
+                else if (percentage >= 50) elValue.style.color = "#f59e0b"; 
+                else elValue.style.color = "#ef4444"; 
+            }
+        }
+
+        updateStatUI(document.getElementById('dailyStat'), document.getElementById('dailyCount'), dComp, dTotal);
+        updateStatUI(document.getElementById('weeklyStat'), document.getElementById('weeklyCount'), wComp, wTotal);
+        updateStatUI(document.getElementById('monthlyStat'), document.getElementById('monthlyCount'), mComp, mTotal);
+    }
+
+    // ==========================================
+    // --- HISTORY VIEWER LOGIC ---
+    // ==========================================
+    const historyDateInput = document.getElementById('historyDateInput');
+    const checkHistoryBtn = document.getElementById('checkHistoryBtn');
+    const historyResult = document.getElementById('historyResult');
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    historyDateInput.value = yesterday.toISOString().split('T')[0];
+
+    checkHistoryBtn.addEventListener('click', () => {
+        const dateStr = historyDateInput.value;
+        if (!dateStr) return;
+
+        let total = 0;
+        let comp = 0;
+
+        const dayTasks = tasks.filter(t => t.date === dateStr);
+        total += dayTasks.length;
+        comp += dayTasks.filter(t => t.completed).length;
+
+        if (waterHistory[dateStr] && waterHistory[dateStr].goal > 0) {
+            total += 1;
+            comp += Math.min(waterHistory[dateStr].current / waterHistory[dateStr].goal, 1);
+        }
+
+        if (total === 0) {
+            historyResult.innerHTML = `<span style="color: #94a3b8;">No records found for ${formatDate(dateStr)}.</span>`;
+        } else {
+            const percentage = Math.round((comp / total) * 100);
+            let color = "#ef4444";
+            if (percentage >= 80) color = "#10b981";
+            else if (percentage >= 50) color = "#f59e0b";
+
+            const compFormatted = Number.isInteger(comp) ? comp : comp.toFixed(1);
+
+            historyResult.innerHTML = `
+                <div style="font-size: 2rem; font-weight: bold; color: ${color}; margin-bottom: 5px;">${percentage}%</div>
+                <div style="font-size: 0.95rem; color: #cbd5e1;">${compFormatted} out of ${total} Goals Completed</div>
+            `;
+        }
+    });
+
+    // ==========================================
+    // --- DATA EXPORT / IMPORT (BACKUP) ---
+    // ==========================================
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+
+    exportBtn.addEventListener('click', () => {
+        const backupData = {
+            workoutTasks: localStorage.getItem('workoutTasks'),
+            savedRoutines: localStorage.getItem('savedRoutines'),
+            waterSettings: localStorage.getItem('waterSettings'),
+            waterGoal: localStorage.getItem('waterGoal'),
+            currentWater: localStorage.getItem('currentWater'),
+            lastWaterDate: localStorage.getItem('lastWaterDate'),
+            waterHistory: localStorage.getItem('waterHistory')
+        };
+
+        const dataStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Workout_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showNotification("Data backed up successfully!");
+    });
+
+    importBtn.addEventListener('click', () => {
+        importFile.click();
+    });
+
+    importFile.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                String(e.target.result);
+                const importedData = JSON.parse(e.target.result);
+                if (importedData.workoutTasks !== undefined) {
+                    for (const key in importedData) {
+                        if (importedData[key] !== null && importedData[key] !== undefined) {
+                            localStorage.setItem(key, importedData[key]);
+                        }
+                    }
+                    showNotification("Data restored successfully! Refreshing...");
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showNotification("Error: Invalid backup file format.", true);
+                }
+            } catch (error) {
+                showNotification("Error reading the backup file.", true);
+            }
+        };
+        
+        reader.readAsText(file);
+        importFile.value = '';
+    });
+
+    renderTasks();
 });

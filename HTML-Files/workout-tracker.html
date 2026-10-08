@@ -14,10 +14,17 @@
     </div>
 
     <div class="container">
-        <!-- Header with Back Button -->
+        <!-- Header with Back Button and Backup Controls -->
         <header class="app-header">
-            <a href="../index.html" class="back-btn">← Back to Dashboard</a>
-            <h1>Workout & Nutrition Tracker</h1>
+            <a href="index.html" class="back-btn">← Back to Dashboard</a>
+            <div class="header-title-row">
+                <h1>Workout & Nutrition Tracker</h1>
+                <div class="header-controls">
+                    <button id="exportBtn" class="utility-btn" title="Download your data">💾 Backup</button>
+                    <button id="importBtn" class="utility-btn" title="Load data from file">📁 Restore</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </div>
+            </div>
         </header>
 
         <!-- Main Tracker Card -->
@@ -54,30 +61,53 @@
             </div>
 
             <div class="list-section">
+                <!-- Top Daily Progress Bar Section -->
+                <div class="top-progress-container">
+                    <div class="top-progress-header">
+                        <span id="topProgressTitle">Today's Progress</span>
+                        <span id="topProgressPercent">0%</span>
+                    </div>
+                    <div class="top-progress-bar-bg">
+                        <div class="top-progress-bar-fill" id="topProgressBarFill"></div>
+                    </div>
+                </div>
+
                 <h2>Your Schedule <span id="displayDateLabel" style="font-size: 1rem; color: #38bdf8; font-weight: normal; margin-left: 10px;"></span></h2>
                 <ul id="taskList" class="task-list">
                     <!-- Tasks will be injected here by JavaScript -->
                 </ul>
                 
-                <!-- NEW: Productivity Stats Section -->
+                <!-- Productivity Stats Section -->
                 <div class="stats-section">
                     <h3>📊 Productivity Analytics</h3>
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-title">Daily</div>
                             <div class="stat-value" id="dailyStat">0%</div>
-                            <div class="stat-subtitle" id="dailyCount">0/0 Tasks</div>
+                            <div class="stat-subtitle" id="dailyCount">0/0 Goals</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-title">Weekly</div>
                             <div class="stat-value" id="weeklyStat">0%</div>
-                            <div class="stat-subtitle" id="weeklyCount">0/0 Tasks</div>
+                            <div class="stat-subtitle" id="weeklyCount">0/0 Goals</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-title">Monthly</div>
                             <div class="stat-value" id="monthlyStat">0%</div>
-                            <div class="stat-subtitle" id="monthlyCount">0/0 Tasks</div>
+                            <div class="stat-subtitle" id="monthlyCount">0/0 Goals</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Progress History Section -->
+                <div class="history-section">
+                    <h3>🗓️ Progress History</h3>
+                    <div class="history-controls">
+                        <input type="date" id="historyDateInput" class="custom-input flex-grow">
+                        <button id="checkHistoryBtn" class="routine-btn">Check Progress</button>
+                    </div>
+                    <div id="historyResult" class="history-result">
+                        <span style="color: #64748b;">Select a date to see your past score.</span>
                     </div>
                 </div>
             </div>
@@ -86,48 +116,65 @@
 
     <!-- Water Tracker Widget -->
     <div class="water-widget" id="waterWidget">
-        <div class="water-settings" id="waterSettings">
-            <h3>💧 Water Goal Setup</h3>
-            <div class="settings-group">
-                <input type="number" id="weightInput" placeholder="Weight (kg)" class="widget-input">
-                <input type="number" id="heightInput" placeholder="Height (cm)" class="widget-input">
-            </div>
-            <div class="settings-group">
-                <select id="genderInput" class="widget-input">
-                    <option value="" disabled selected>Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                </select>
-                <select id="activityInput" class="widget-input">
-                    <option value="" disabled selected>Activity Level</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-            <button id="calcWaterBtn" class="widget-btn primary">Calculate Goal</button>
+        <!-- Collapsed Floating Button View -->
+        <div class="water-collapsed" id="waterCollapsed" style="display: none;">
+            <button id="expandWaterBtn" class="water-fab">
+                💧 <span id="collapsedWaterText">Water Tracker</span>
+            </button>
         </div>
 
-        <div class="water-main" id="waterMain" style="display: none;">
-            <div class="water-header">
+        <!-- Expanded Widget Content -->
+        <div class="water-expanded" id="waterExpandedContent">
+            <div class="water-widget-top-bar">
                 <h3>💧 Water Tracker</h3>
-                <button id="editWaterBtn" class="edit-btn" title="Edit Settings">⚙️</button>
-            </div>
-            
-            <div class="water-progress-container">
-                <div class="water-progress-bar" id="waterProgressBar"></div>
-                <div class="water-stats">
-                    <span id="currentWater">0</span>L / <span id="goalWater">0</span>L
+                <div class="water-widget-actions">
+                    <button id="collapseWaterBtn" class="collapse-btn" title="Minimize Widget">−</button>
                 </div>
             </div>
 
-            <div class="water-buttons">
-                <button class="add-water-btn" data-amount="0.1">+0.1L</button>
-                <button class="add-water-btn" data-amount="0.25">+0.25L</button>
-                <button class="add-water-btn" data-amount="0.5">+0.5L</button>
-                <button class="add-water-btn" data-amount="1.0">+1L</button>
+            <div class="water-settings" id="waterSettings">
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">Set up your daily goal:</p>
+                <div class="settings-group">
+                    <input type="number" id="weightInput" placeholder="Weight (kg)" class="widget-input">
+                    <input type="number" id="heightInput" placeholder="Height (cm)" class="widget-input">
+                </div>
+                <div class="settings-group">
+                    <select id="genderInput" class="widget-input">
+                        <option value="" disabled selected>Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                    <select id="activityInput" class="widget-input">
+                        <option value="" disabled selected>Activity Level</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <button id="calcWaterBtn" class="widget-btn primary">Calculate Goal</button>
             </div>
-            <button id="resetWaterBtn" class="widget-btn secondary reset-btn">Reset Today</button>
+
+            <div class="water-main" id="waterMain" style="display: none;">
+                <div class="water-header">
+                    <span style="font-size: 0.9rem; color: #cbd5e1;">Today's Intake</span>
+                    <button id="editWaterBtn" class="edit-btn" title="Edit Settings">⚙️</button>
+                </div>
+                
+                <div class="water-progress-container">
+                    <div class="water-progress-bar" id="waterProgressBar"></div>
+                    <div class="water-stats">
+                        <span id="currentWater">0</span>L / <span id="goalWater">0</span>L
+                    </div>
+                </div>
+
+                <div class="water-buttons">
+                    <button class="add-water-btn" data-amount="0.1">+0.1L</button>
+                    <button class="add-water-btn" data-amount="0.25">+0.25L</button>
+                    <button class="add-water-btn" data-amount="0.5">+0.5L</button>
+                    <button class="add-water-btn" data-amount="1.0">+1L</button>
+                </div>
+                <button id="resetWaterBtn" class="widget-btn secondary reset-btn">Reset Today</button>
+            </div>
         </div>
     </div>
 

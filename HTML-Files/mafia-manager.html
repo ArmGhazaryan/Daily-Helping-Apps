@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Manager - Կարմիր թե Սև</title>
+    <link rel="stylesheet" href="../CSS-Files/mafia-manager.css">
+</head>
+<body>
+    <div class="background">
+        <div class="shape shape-red"></div>
+        <div class="shape shape-dark"></div>
+    </div>
+
+    <div class="container">
+        <!-- Գլխամաս -->
+        <header class="app-header glass-panel">
+            <div class="header-top-actions">
+                <a href="../index.html" class="back-btn">← Վերադառնալ</a>
+                <div class="header-buttons">
+                    <button id="settingsBtn" class="utility-btn">⚙️ Կարգավորումներ</button>
+                    <button id="rulesBtn" class="utility-btn">📜 Կանոններ</button>
+                </div>
+            </div>
+            
+            <div class="title-section">
+                <h1>🎭 ԿԱՐՄԻՐ ԹԵ ՍԵՎ</h1>
+                <p>Խաղավարի Վահանակ</p>
+            </div>
+            
+            <!-- Սա գլխավոր ժամաչափն է, որը դինամիկ կտեղափոխվի խաղացողների քարտերի մեջ -->
+            <div class="timer-widget" id="mainTimerWidget">
+                <span id="timerDisplay">01:00</span>
+                <div class="timer-controls">
+                    <button id="startTimerBtn" class="timer-btn start-btn">▶ Սկսել</button>
+                    <button id="resetTimerBtn" class="timer-btn reset-btn">↺</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ՄԱՖԻԱՅԻ ՊԼԱՆ (3 գիշեր) -->
+        <div id="mafiaPlanSection" class="glass-panel" style="margin-bottom: 25px; border-top: 4px solid #ef4444; padding: 20px;">
+            <h2 style="color: #ef4444; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">🔫 Մաֆիայի Պլանավորում</h2>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">Նշեք սևերի ընտրած զոհերին առաջին երեք գիշերների համար (Խաղը սկսելուց առաջ).</p>
+            <div class="plan-grid" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="plan-item">
+                    <label style="color: #cbd5e1; display: block; margin-bottom: 5px;">Գիշեր 1:</label>
+                    <select id="planN1" class="player-name" style="width: 150px;"><option value="">-- Ընտրել --</option></select>
+                </div>
+                <div class="plan-item">
+                    <label style="color: #cbd5e1; display: block; margin-bottom: 5px;">Գիշեր 2:</label>
+                    <select id="planN2" class="player-name" style="width: 150px;"><option value="">-- Ընտրել --</option></select>
+                </div>
+                <div class="plan-item">
+                    <label style="color: #cbd5e1; display: block; margin-bottom: 5px;">Գիշեր 3:</label>
+                    <select id="planN3" class="player-name" style="width: 150px;"><option value="">-- Ընտրել --</option></select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ԽԱՂԸ ՍԿՍԵԼՈՒ ԿՈՃԱԿ -->
+        <div id="startGameSection" style="text-align: center; margin-bottom: 20px;">
+            <button id="initGameBtn" class="timer-btn start-btn" style="width: 100%; max-width: 600px; font-size: 1.2rem; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                🚀 ՍԿՍԵԼ ԽԱՂԸ (Հաստատել դերերը և պլանը)
+            </button>
+        </div>
+
+        <!-- ԽԱՂԻ ՓՈՒԼԵՐԻ ՈՒՂԵՑՈՒՅՑ (Թաքնված է մինչև խաղի սկիզբը) -->
+        <div id="gamePhaseContainer" class="glass-panel" style="display: none; text-align: center; margin-bottom: 25px; padding: 20px; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <h2 id="phaseTitle" style="color: #f59e0b; font-size: 1.8rem; margin-bottom: 5px;">Օր 1</h2>
+            <h3 id="turnTitle" style="color: #38bdf8; font-size: 1.3rem;">Խոսում է Խաղացող 1</h3>
+            <div class="turn-actions" style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                <button id="prevTurnBtn" class="utility-btn">⏮ Նախորդը</button>
+                <button id="nextTurnBtn" class="timer-btn start-btn" style="padding: 10px 20px; font-size: 1.1rem;">⏭ Պաս / Հաջորդը</button>
+                <button id="startNightBtn" class="timer-btn reset-btn" style="display: none; padding: 10px 20px; font-size: 1.1rem; background-color: #6366f1;">🌙 Անցնել Գիշեր</button>
+            </div>
+            <!-- Timer will be moved here during voting phase -->
+        </div>
+
+        <!-- Խաղացողների Դաշտ -->
+        <div class="players-grid" id="playersGrid">
+            <!-- JavaScript գեներացիա -->
+        </div>
+
+        <!-- Թեկնածություններ (Nominations) -->
+        <div class="nominations-section glass-panel">
+            <h2>🗳️ Թեկնածություններ (Ցերեկային Քվեարկություն)</h2>
+            <div class="nomination-controls">
+                <select id="nominateSelect" class="player-name">
+                    <option value="" disabled selected>Ընտրել խաղացողին...</option>
+                </select>
+                <button id="addNominationBtn" class="timer-btn start-btn">Առաջադրել</button>
+                <button id="clearNominationsBtn" class="timer-btn reset-btn">Մաքրել ցուցակը</button>
+            </div>
+            <ul id="nominationsList" class="nominations-list"></ul>
+        </div>
+    </div>
+
+    <!-- ԳԻՇԵՐԱՅԻՆ ՀՈՒՇՈՒՄՆԵՐԻ ՄՈԴԱԼ (Night Phase) -->
+    <div id="nightModal" class="modal">
+        <div class="modal-content glass-panel" style="text-align: center; max-width: 600px;">
+            <h2 style="color: #818cf8; font-size: 2rem; margin-bottom: 20px;">🌙 Գիշեր <span id="nightNumberDisplay">1</span></h2>
+            
+            <div id="nightStep1" class="night-step">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🔫</div>
+                <h3 style="color: #ef4444; margin-bottom: 15px;">Քայլ 1: Մաֆիան կրակում է</h3>
+                <p style="color: #cbd5e1; margin-bottom: 15px;">Մաֆիան արթնանում է և ընտրում զոհին: (Ստուգեք Ձեր նշած պլանը):</p>
+                <select id="nightVictimSelect" class="player-name" style="margin-bottom: 20px; width: 80%; font-size: 1.1rem; padding: 10px;">
+                    <option value="">-- Վրիպում (Ոչ ոք չի մահանում) --</option>
+                </select>
+                <br>
+                <button class="timer-btn start-btn" onclick="goToNightStep(2)" style="padding: 10px 30px; font-size: 1.1rem;">Հաջորդը ⏭</button>
+            </div>
+
+            <div id="nightStep2" class="night-step" style="display: none;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🕴️</div>
+                <h3 style="color: #dc2626; margin-bottom: 15px;">Քայլ 2: Դոնի Ստուգում</h3>
+                <p style="color: #cbd5e1; margin-bottom: 20px; line-height: 1.5;">Դոնը արթնանում է և մատներով ցույց է տալիս խաղացողի համար: <br>Խաղավարը գլխով կամ մատով <b>հաստատում է (Շերիֆն է)</b> կամ <b>հերքում (Շերիֆը չէ)</b>:</p>
+                <button class="timer-btn start-btn" onclick="goToNightStep(3)" style="padding: 10px 30px; font-size: 1.1rem;">Հաջորդը ⏭</button>
+            </div>
+
+            <div id="nightStep3" class="night-step" style="display: none;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">👮‍♂️</div>
+                <h3 style="color: #3b82f6; margin-bottom: 15px;">Քայլ 3: Շերիֆի Ստուգում</h3>
+                <p style="color: #cbd5e1; margin-bottom: 20px; line-height: 1.5;">Շերիֆը արթնանում է և փնտրում սև խաղացողի (Մաֆիա): <br>Խաղավարը <b>հաստատում է (Սև է)</b> կամ <b>հերքում (Կարմիր է)</b>:</p>
+                <button class="timer-btn start-btn" onclick="endNight()" style="padding: 10px 30px; font-size: 1.1rem; background-color: #f59e0b;">Ավարտել Գիշերը 🌅</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Կարգավորումներ & Կանոններ Մոդալներ -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="closeSettingsBtn">&times;</span>
+            <h2 style="color: #38bdf8; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">⚙️ Խաղի Կարգավորումներ</h2>
+            <div class="settings-form">
+                <div class="input-group">
+                    <label>👥 Խաղացողների ընդհանուր քանակը:</label>
+                    <input type="number" id="totalPlayersInput" value="10" min="4" max="20" class="player-name">
+                </div>
+                <div class="input-group">
+                    <label>⚫ Սևերի քանակը (Մաֆիա + Դոն):</label>
+                    <input type="number" id="blackCountInput" value="3" min="1" max="10" class="player-name">
+                </div>
+                <div class="input-group">
+                    <label>🔴 Կարմիրների քանակը (Քաղաքացի + Շերիֆ):</label>
+                    <input type="number" id="redCountInput" value="7" readonly class="player-name" style="background: rgba(255,255,255,0.1); opacity: 0.7;">
+                </div>
+                <button id="saveSettingsBtn" class="timer-btn start-btn" style="width: 100%; margin-top: 20px; padding: 12px; font-size: 1.1rem;">Պահպանել և Սկսել Նոր Խաղ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rulesModal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="closeRulesBtn">&times;</span>
+            <h2 style="color: #ef4444; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">📜 Կանոններ և Տերմիններ</h2>
+            <div class="rules-text" style="line-height: 1.6; color: #cbd5e1; max-height: 50vh; overflow-y: auto;">
+                <p>Խաղում են 10 հոգի. <b>7 Կարմիր</b> (6 քաղաքացի, 1 Շերիֆ) և <b>3 Սև</b> (2 մաֆիա, 1 Դոն): Յուրաքանչյուրը ունի 60 վրկ:</p>
+                <h3 style="color:#38bdf8; margin-top:10px;">Նկատողություններ:</h3>
+                <p>3-րդ նկատողություն -> զրկվում է հաջորդ խոսքից: 4-րդ նկատողություն -> լքում է խաղը:</p>
+                <h3 style="color:#38bdf8; margin-top:10px;">Տերմիններ:</h3>
+                <ul>
+                    <li><b>Դոնի/Շերիֆի ստուգում:</b> Գիշերը ստուգում են խաղացողների դերերը:</li>
+                    <li><b>Կտակ:</b> Սպանվածի վերջին 60 վրկ:</li>
+                    <li><b>Փոխհրաձգություն:</b> Հավասար ձայներ ունեցողների 30 վրկ արդարացում:</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="../Javascript-Files/mafia-manager.js"></script>
+</body>
+</html>

@@ -568,3 +568,217 @@ select option {
     color: #0f172a;
     padding: 10px;
 }
+
+/* =========================================
+   ԲՋՋԱՅԻՆ ՏԱՐԲԵՐԱԿԻ ԿՈՄՊԱԿՏ ԵՎ 2-ՍՅՈՒՆԱԿ ԴԻԶԱՅՆ (Mobile)
+   Ակտիվանում է միայն 768px և փոքր էկրաններին
+========================================= */
+@media (max-width: 768px) {
+    /* 1. Քարտերը սարքում ենք 2 սյունակով (կողք-կողքի) */
+    #playersGrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 2 հավասար սյունակ */
+        gap: 6px;
+        padding-right: 0 !important;
+    }
+
+    /* 2. Բուն քարտի ավելորդ տարածքների կրճատում */
+    .player-card {
+        padding: 8px;
+        gap: 4px;
+        min-height: auto;
+    }
+
+    /* 3. Խաղացողի գլխամասի և համարի փոքրացում */
+    .player-header {
+        margin-bottom: 2px !important;
+        gap: 6px !important;
+    }
+    .player-number {
+        width: 22px;
+        height: 22px;
+        font-size: 0.8rem;
+    }
+    .player-header span {
+        font-size: 0.9rem !important;
+    }
+
+    /* 4. Դերի ընտրության դաշտի (Select) փոքրացում */
+    .player-role {
+        padding: 2px 4px;
+        font-size: 0.75rem;
+        height: 28px;
+    }
+
+    /* 5. Նկատողությունների բլոկի խտացում */
+    .fouls-section {
+        padding: 2px 4px;
+        margin: 2px 0;
+        display: flex;
+        flex-direction: column; /* Տեքստը և կոճակները իրար տակ, որպեսզի տեղավորվեն նեղ սյունակում */
+        align-items: center;
+        gap: 4px;
+    }
+    .fouls-controls button {
+        width: 24px;
+        height: 24px;
+        font-size: 1rem;
+        line-height: 1;
+    }
+    .foul-count {
+        font-size: 1rem;
+        width: 15px;
+        text-align: center;
+    }
+
+    /* 6. Կարգավիճակի կոճակի բարակեցում */
+    .status-btn {
+        padding: 4px;
+        font-size: 0.7rem;
+    }
+    
+/* 7. Կառավարման ֆիքսված վահանակի կարգավորում բջջայինում */
+    #floatingControlsPanel {
+        transform: scale(0.85) !important;
+        bottom: 10px !important;
+        right: 10px !important;
+        transform-origin: bottom right;
+    }
+}
+
+/* =========================================
+   ՄԻԱՍՆԱԿԱՆ ԿԱՌԱՎԱՐՄԱՆ ՎԱՀԱՆԱԿ ԵՎ ՖԻՔՍՎԱԾ ԷԼԵՄԵՆՏՆԵՐ
+========================================= */
+
+/* Լողացող վահանակ (Floating Control Panel) */
+#floatingControlsPanel {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+    pointer-events: none;
+    max-height: 95vh;
+    transform-origin: bottom right;
+}
+
+/* Վահանակի մեջ գտնվող բլոկների ընդհանուր տեսքը */
+#floatingControlsPanel > * {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    margin: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Մաֆիայի պլանի բլոկը վահանակում */
+#floatingControlsPanel #mafiaPlanSection {
+    border: 2px solid #ef4444;
+    padding: 10px 15px;
+    max-width: 320px;
+}
+
+/* Թեկնածությունների բլոկը վահանակում */
+#floatingControlsPanel .glass-panel:has(#addNominationBtn),
+#floatingControlsPanel div:has(#addNominationBtn) {
+    border: 2px solid #3b82f6;
+    padding: 10px 15px;
+    max-height: 40vh;
+    overflow-y: auto;
+    max-width: 320px;
+}
+
+/* Ժամաչափի բլոկը վահանակում */
+#floatingControlsPanel #mainTimerWidget {
+    border: 2px solid #10b981;
+    padding: 5px 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: 320px;
+}
+
+/* =========================================
+   ԲՋՋԱՅԻՆ ՏԱՐԲԵՐԱԿԻ ԿՈՄՊԱԿՏ ԵՎ 2-ՍՅՈՒՆԱԿ ԴԻԶԱՅՆ (Mobile)
+   Ակտիվանում է միայն 768px և փոքր էկրաններին
+========================================= */
+@media (max-width: 768px) {
+    /* 1. Քարտերը սարքում ենք 2 սյունակով (կողք-կողքի) */
+    #playersGrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        padding-right: 0 !important;
+    }
+
+    /* 2. Բուն քարտի ավելորդ տարածքների կրճատում */
+    .player-card {
+        padding: 8px;
+        gap: 4px;
+        min-height: auto;
+    }
+
+    /* 3. Խաղացողի գլխամասի և համարի փոքրացում */
+    .player-header {
+        margin-bottom: 2px !important;
+        gap: 6px !important;
+        justify-content: flex-start;
+    }
+    .player-number {
+        width: 22px;
+        height: 22px;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+    .player-header span {
+        font-size: 0.9rem !important;
+        color: #f8fafc;
+    }
+
+    /* 4. Դերի ընտրության դաշտի (Select) փոքրացում */
+    .player-role {
+        padding: 2px 4px;
+        font-size: 0.75rem;
+        height: 28px;
+    }
+
+    /* 5. Նկատողությունների բլոկի խտացում */
+    .fouls-section {
+        padding: 2px 4px;
+        margin: 2px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+    .fouls-controls button {
+        width: 24px;
+        height: 24px;
+        font-size: 1rem;
+        line-height: 1;
+    }
+    .foul-count {
+        font-size: 1rem;
+        width: 15px;
+        text-align: center;
+    }
+
+    /* 6. Կարգավիճակի կոճակի բարակեցում */
+    .status-btn {
+        padding: 4px;
+        font-size: 0.7rem;
+    }
+    
+    /* 7. Կառավարման ֆիքսված վահանակի կարգավորում բջջայինում */
+    #floatingControlsPanel {
+        transform: scale(0.85);
+        bottom: 10px;
+        right: 10px;
+    }
+}
+

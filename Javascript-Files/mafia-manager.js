@@ -5,16 +5,46 @@ document.addEventListener('DOMContentLoaded', () => {
     let turnIndex = 0;
     let alivePlayersOrder = [];
     
-    // Ավտովթարի (Tie) փոփոխականներ
     let isTieBreaker = false;
     let tiedPlayersOrder = [];
     let tieTurnIndex = 0;
 
-    // === Ժամաչափի (Timer) Տրամաբանություն ===
+    // === Միասնական Կառավարման Վահանակի Ստեղծում ===
+    const isDesktop = window.innerWidth > 768; 
+    
+    const floatingPanel = document.createElement('div');
+    floatingPanel.id = 'floatingControlsPanel';
+    document.body.appendChild(floatingPanel);
+
+    function dockToSidebar(el) {
+        if (!el) return;
+        floatingPanel.appendChild(el);
+    }
+
+    const mafiaPlanSec = document.getElementById('mafiaPlanSection');
+    const nominateBtn = document.getElementById('addNominationBtn');
+    
+    if (isDesktop) {
+        if (mafiaPlanSec) {
+            dockToSidebar(mafiaPlanSec);
+        }
+        if (nominateBtn) {
+            const nomContainer = nominateBtn.closest('.glass-panel') || nominateBtn.parentElement;
+            if (nomContainer) {
+                dockToSidebar(nomContainer);
+            }
+        }
+    } 
+
+    const mainTimerWidget = document.getElementById('mainTimerWidget');
+    if (mainTimerWidget) {
+        dockToSidebar(mainTimerWidget);
+    }
+
+    // === Ժամաչափի Տրամաբանություն ===
     const timerDisplay = document.getElementById('timerDisplay');
     const startTimerBtn = document.getElementById('startTimerBtn');
     const resetTimerBtn = document.getElementById('resetTimerBtn');
-    const mainTimerWidget = document.getElementById('mainTimerWidget');
     
     let timeLeft = 60;
     let timerInterval = null;
@@ -28,19 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (timeLeft <= 10 && timeLeft > 0) {
             timerDisplay.style.color = '#ef4444';
         } else {
-            if(mainTimerWidget && mainTimerWidget.parentElement && mainTimerWidget.parentElement.classList.contains('player-card')) {
-                // Ավտովթարի ժամանակ timer-ը սարքում ենք կարմրավուն
-                timerDisplay.style.color = isTieBreaker ? '#ef4444' : '#10b981';
-            } else {
-                timerDisplay.style.color = '#f8fafc';
-            }
+            if(timerDisplay) timerDisplay.style.color = isTieBreaker ? '#ef4444' : '#10b981';
+        }
+        
+        if (mainTimerWidget) {
+            mainTimerWidget.style.borderColor = isTieBreaker ? '#ef4444' : '#10b981';
         }
     }
 
     function resetTimerLogic() {
         clearInterval(timerInterval);
         isRunning = false;
-        // Եթե ավտովթարի փուլն է, տրվում է 30 վայրկյան, այլապես՝ 60
         timeLeft = isTieBreaker ? 30 : 60;
         updateTimerDisplay();
         if(startTimerBtn) {
@@ -67,9 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         startTimerBtn.textContent = '▶ Սկսել';
                         startTimerBtn.classList.remove('paused');
                         
-                        if (isGameStarted && mainTimerWidget && mainTimerWidget.parentElement && mainTimerWidget.parentElement.classList.contains('player-card')) {
+                        if (isGameStarted) {
                             const nextBtn = document.getElementById('nextTurnBtn');
-                            if(nextBtn) nextBtn.click();
+                            if(nextBtn && nextBtn.style.display !== 'none') {
+                                nextBtn.click();
+                            }
                         }
                     }
                 }, 1000);
@@ -169,16 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const startGameSec = document.getElementById('startGameSection');
         const gamePhaseCont = document.getElementById('gamePhaseContainer');
-        const mafiaPlanSec = document.getElementById('mafiaPlanSection');
         
         if(startGameSec) startGameSec.style.display = 'block';
         if(gamePhaseCont) gamePhaseCont.style.display = 'none';
-        if(mafiaPlanSec) mafiaPlanSec.style.display = 'block';
         
-        const appHeader = document.querySelector('.app-header');
-        if(appHeader && mainTimerWidget) {
-            appHeader.appendChild(mainTimerWidget);
-        }
         resetTimerLogic();
         
         if(playersGrid) playersGrid.innerHTML = '';
@@ -189,9 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'player-card glass-panel';
             card.id = `card_${i}`;
             card.innerHTML = `
-                <div class="player-header" style="justify-content: flex-start; gap: 12px; margin-bottom: 5px;">
-                    <div class="player-number" style="transition: all 0.3s ease;">${i}</div>
-                    <span style="font-size: 1.1rem; font-weight: bold; color: #f8fafc;">Խաղացող ${i}</span>
+                <div class="player-header">
+                    <div class="player-number">${i}</div>
+                    <span>Խաղացող ${i}</span>
                 </div>
                 <select class="player-role" data-prev-val="">
                     <option value="" disabled selected>-- Ընտրել դերը --</option>
@@ -331,7 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const startNightBtn = document.getElementById('startNightBtn');
     const nextTurnBtn = document.getElementById('nextTurnBtn');
     const prevTurnBtn = document.getElementById('prevTurnBtn');
-    const gamePhaseContainer = document.getElementById('gamePhaseContainer');
 
     function startDayPhase() {
         let tempAlive = [];
@@ -370,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
             num.style.transform = 'scale(1)';
         });
         
-        // Ընտրում ենք ճիշտ ցուցակը կախված նրանից սովորական փուլ է, թե ավտովթարի
         let currentOrder = isTieBreaker ? tiedPlayersOrder : alivePlayersOrder;
         let currentIndex = isTieBreaker ? tieTurnIndex : turnIndex;
         
@@ -388,8 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeCard = document.getElementById(`card_${activePlayer}`);
             if(activeCard) {
                 activeCard.classList.add('active-turn');
-                
-                // Ավտովթարի ժամանակ քարտի highlight-ը սարքում ենք կարմիր
                 activeCard.style.boxShadow = isTieBreaker ? '0 0 25px rgba(239, 68, 68, 0.7)' : '0 0 25px rgba(16, 185, 129, 0.7)';
                 activeCard.style.transform = 'scale(1.03)';
                 activeCard.style.borderColor = isTieBreaker ? '#ef4444' : '#10b981';
@@ -399,33 +419,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     playerNumBadge.style.backgroundColor = isTieBreaker ? '#ef4444' : '#10b981';
                     playerNumBadge.style.transform = 'scale(1.2)';
                 }
-                
-                const foulsSection = activeCard.querySelector('.fouls-section');
-                if(mainTimerWidget && foulsSection) {
-                    activeCard.insertBefore(mainTimerWidget, foulsSection);
-                }
             }
         } else {
-            // Երբ ցուցակն ավարտվեց
             if (isTieBreaker) {
-                // Եթե ավտովթարի խոսքերն ավարտվեցին, կանչում ենք լուծման ֆունկցիան
-                setTimeout(() => {
-                    handleTieBreakerResolution();
-                }, 100);
+                setTimeout(() => { handleTieBreakerResolution(); }, 100);
             } else {
                 if(turnTitle) turnTitle.textContent = `⚖️ Քվեարկության ժամանակն է`;
                 if(startNightBtn) startNightBtn.style.display = 'inline-block';
                 if(nextTurnBtn) nextTurnBtn.style.display = 'none';
-                
-                if(gamePhaseContainer && mainTimerWidget) {
-                    const turnActions = gamePhaseContainer.querySelector('.turn-actions');
-                    if(turnActions) {
-                        gamePhaseContainer.insertBefore(mainTimerWidget, turnActions);
-                    } else {
-                        gamePhaseContainer.appendChild(mainTimerWidget);
-                    }
-                }
-                if(timerDisplay) timerDisplay.style.color = '#f8fafc';
             }
         }
     }
@@ -449,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === ԳԻՇԵՐԱՅԻՆ ՓՈՒԼ ԵՎ ԱՎՏՈՎԹԱՐ (Night Phase & Tie Resolution) ===
+    // === ԳԻՇԵՐԱՅԻՆ ՓՈՒԼ ԵՎ ԱՎՏՈՎԹԱՐ ===
     const nightModal = document.getElementById('nightModal');
     
     window.goToNightStep = function(stepNum) {
@@ -477,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const stillTied = confirm("⚖️ ԿՐԿՆԱԿԻ ՔՎԵԱՐԿՈՒԹՅՈՒՆ:\nԱրդյո՞ք խաղացողները կրկին հավասար ձայներ ստացան վերաքվեարկությունից հետո:\n\n[OK] = Այո, կրկին հավասար են\n[Cancel] = Ոչ, մեկը հաղթեց (ընտրել ձեռքով)");
         
         if (stillTied) {
-            // Հավասարի դեպքում քվեարկում ենք 2-ին (կամ բոլորին) հեռացնելու համար
             const eliminateAll = confirm("⚖️ ՀԱՄԱՏԵՂ ՀԵՌԱՑՈՒՄ:\nՍեղանի մեծամասնությունը (50% կամ ավել) կողմ քվեարկե՞ց, որպեսզի ԲՈԼՈՐԸ միասին հեռանան խաղից:\n\n[OK] = Այո, հեռացնել բոլորին և գնալ գիշեր\n[Cancel] = Ոչ, ոչ ոք չի հեռանում, գնալ գիշեր");
             
             if (eliminateAll) {
@@ -493,23 +493,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("Ոչ ոք չի հեռանում խաղից:");
             }
             
-            // Ավարտել ավտովթարը և գնալ գիշեր
             isTieBreaker = false;
             nominations = [];
             renderNominations();
             triggerNightPhase(); 
         } else {
-            // Մեկը հաղթել է, վերադառնալ և հեռացնել ձեռքով
             alert("Խնդրում ենք մուտքագրել վերաքվեարկության ճիշտ ձայները թեկնածուների ցանկում և նորից սեղմել 'Անցնել Գիշերվա':");
             isTieBreaker = false;
-            turnIndex = alivePlayersOrder.length; // Վերադարձնում ենք քվեարկության էկրանին
+            turnIndex = alivePlayersOrder.length; 
             updateTurnDisplay();
         }
     }
 
     if(startNightBtn) {
         startNightBtn.addEventListener('click', () => {
-            // ՔՎԵԱՐԿՈՒԹՅԱՆ ՍՏՈՒԳՄԱՆ ԼՈԳԻԿԱ
             if (nominations.length === 1) {
                 alert("⚠️ Առաջադրվել է միայն 1 թեկնածու: Ըստ կանոնների՝ մեկ թեկնածու չի քվեարկվում, և նա մնում է խաղում:");
                 nominations = []; 
@@ -553,9 +550,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         isTieBreaker = true;
                         tiedPlayersOrder = candidatesWithMax.map(c => c.playerId);
                         tieTurnIndex = 0;
-                        updateTurnDisplay(); // Սկսում ենք ավտովթարի պտույտը
+                        updateTurnDisplay(); 
                     }
-                    return; // Արգելափակում ենք անցումը գիշեր
+                    return; 
                 }
             }
 
@@ -612,11 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.updateVote = function(index, change) {
         let newVotes = nominations[index].votes + change;
-        
-        // Հաշվում ենք կենդանի խաղացողների ընդհանուր քանակը
         const aliveCount = document.querySelectorAll('.player-card:not(.dead)').length;
         
-        // Ստուգում ենք, որ ձայները չգերազանցեն կենդանի մարդկանց քանակը
         if (newVotes >= 0 && newVotes <= aliveCount) {
             nominations[index].votes = newVotes;
             renderNominations();

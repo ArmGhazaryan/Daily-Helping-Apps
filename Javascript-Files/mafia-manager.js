@@ -244,11 +244,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if(roleSelect) {
                 roleSelect.addEventListener('change', (e) => {
                     let currentBlack = 0, currentRed = 0;
+                    let sheriffCount = 0, donCount = 0; // ՆՈՐ: Հաշվիչներ եզակի դերերի համար
+
                     document.querySelectorAll('.player-role').forEach(sel => {
                         const r = roles.find(rx => rx.value === sel.value);
-                        if (r) { if (r.category === 'black') currentBlack++; else currentRed++; }
+                        if (r) { 
+                            if (r.category === 'black') currentBlack++; else currentRed++; 
+                            
+                            // ՆՈՐ: Ստուգում ենք կոնկրետ դերերը
+                            if (r.value === 'sheriff') sheriffCount++;
+                            if (r.value === 'don') donCount++;
+                        }
                     });
 
+                    // ՆՈՐ: Եզակիության արգելափակում
+                    if (sheriffCount > 1) {
+                        alert(`ԽՍՏԱԳՈՒՅՆ ԱՐԳԵԼՎՈՒՄ Է!\nԽաղում կարող է լինել միայն 1 Շերիֆ:`);
+                        e.target.value = e.target.dataset.prevVal; return;
+                    }
+                    if (donCount > 1) {
+                        alert(`ԽՍՏԱԳՈՒՅՆ ԱՐԳԵԼՎՈՒՄ Է!\nԽաղում կարող է լինել միայն 1 Դոն:`);
+                        e.target.value = e.target.dataset.prevVal; return;
+                    }
+
+                    // Հին ստուգումները՝ ընդհանուր քանակի համար
                     if (currentBlack > config.totalBlack) {
                         alert(`ԽՍՏԱԳՈՒՅՆ ԱՐԳԵԼՎՈՒՄ Է!\nՄաքսիմում ${config.totalBlack} Սև դեր:`);
                         e.target.value = e.target.dataset.prevVal; return;
@@ -257,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         alert(`ԽՍՏԱԳՈՒՅՆ ԱՐԳԵԼՎՈՒՄ Է!\nՄաքսիմում ${config.totalRed} Կարմիր դեր:`);
                         e.target.value = e.target.dataset.prevVal; return;
                     }
+                    
                     e.target.dataset.prevVal = e.target.value;
                     card.style.borderTopColor = roles.find(r => r.value === e.target.value)?.color || '#64748b';
                 });

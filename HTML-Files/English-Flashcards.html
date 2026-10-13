@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Flashcards</title>
+    <link rel="stylesheet" href="../CSS-Files/English-Flashcards.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+
+        <!-- ԳԼԽԱՎՈՐ ԳՈՐԾՈՂՈՒԹՅՈՒՆՆԵՐ -->
+        <div class="top-actions">
+            <button id="openModalBtn" class="add-word-btn">+ Add New Word</button>
+
+            
+        </div>
+
+        <div class="cards-gallery" id="cardsGallery">
+            <!-- Փոքրիկ քարտերը կավելանան ավտոմատ -->
+        </div>
+
+        <div class="flashcard-container">
+            <div class="flashcard" id="myCard">
+                <div class="flashcard-face flashcard-front">
+                    <span class="level-badge" id="frontLevel">B2</span>
+                    <div class="word" id="frontWord">Word</div>
+                    <div class="phonetics" id="frontPhonetics">/phonetics/</div>
+                    <div class="hint">Click to flip ⤵</div>
+                </div>
+
+                <div class="flashcard-face flashcard-back">
+                    <span class="level-badge" id="backLevel">B2</span>
+                    <div class="definition" id="backDefinition">Definition goes here...</div>
+                    <div class="example" id="backExample">"Example sentence"</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Կառավարման կոճակներ -->
+        <div class="controls">
+            <button id="prevBtn">⬅ Prev</button>
+            <span id="counter">1 / 1</span>
+            <button id="nextBtn">Next ➡</button>
+
+            <!-- ՆՈՐ: Ջնջելու կոճակ -->
+            <button id="deleteBtn" class="delete-btn">🗑️ Delete</button>
+        </div>
+
+        <!-- ՆՈՐ: Թաքնված Փոփ-ափ (Modal) պատուհանը նոր բառերի համար -->
+        <div id="addWordModal" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Add New Flashcard</h2>
+                <input type="text" id="newWord" placeholder="Word (e.g., Eloquent)" required>
+                <input type="text" id="newPhonetics" placeholder="Phonetics (e.g., /ˈel.ə.kwənt/)">
+                <select id="newLevel">
+                    <option value="A2">A2 Level</option>
+                    <option value="B1">B1 Level</option>
+                    <option value="B2" selected>B2 Level</option>
+                    <option value="C1">C1 Level</option>
+                    <option value="C2">C2 Level</option>
+                </select>
+                <textarea id="newDefinition" placeholder="Definition (Բացատրություն)..." required></textarea>
+                <textarea id="newExample" placeholder="Example sentence (Օրինակ)..."></textarea>
+
+                <div class="modal-actions">
+                    <button id="cancelBtn" class="cancel-btn">Cancel</button>
+                    <button id="saveWordBtn" class="save-btn">Save Word</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../Javascript-Files/English-Flashcards.js"></script>
+</body>
+
+</html>

@@ -1,12 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout & Nutrition Tracker</title>
+    <link rel="icon" type="image/png" href="../Img/logo.png">
     <link rel="stylesheet" href="../CSS-Files/workout-tracker.css">
 </head>
+
 <body>
+    <header>
+        <!-- 🟢 DHA Brand Logo (Հղումը տանում է դեպի index.html) -->
+        <a href="../index.html" class="dha-brand" title="Daily Helping Apps">
+            <span class="letter">D</span><span class="expand">aily</span>
+            <span class="letter">H</span><span class="expand">elping</span>
+            <span class="letter">A</span><span class="expand">pps</span>
+        </a>
+    </header>
+
+
+
     <div class="background">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
@@ -36,14 +50,16 @@
                     <input type="time" id="timeInput" class="custom-input" title="Select time">
                 </div>
                 <div class="input-group">
-                    <input type="text" id="taskInput" class="custom-input task-input" placeholder="e.g. 3 eggs with cucumber, Push-ups etc...">
+                    <input type="text" id="taskInput" class="custom-input task-input"
+                        placeholder="e.g. 3 eggs with cucumber, Push-ups etc...">
                     <button id="addBtn" class="add-btn">Add Goal</button>
                 </div>
-                
+
                 <!-- ADVANCED ROUTINE ACTIONS -->
                 <div class="routine-actions">
                     <div class="action-row">
-                        <input type="text" id="routineNameInput" class="custom-input flex-grow" placeholder="Create new routine (e.g. Leg Day)">
+                        <input type="text" id="routineNameInput" class="custom-input flex-grow"
+                            placeholder="Create new routine (e.g. Leg Day)">
                         <button id="saveRoutineBtn" class="routine-btn">⭐ Save New</button>
                     </div>
                     <div class="action-row">
@@ -51,11 +67,14 @@
                             <option value="" disabled selected>Select a routine...</option>
                         </select>
                         <button id="loadRoutineBtn" class="routine-btn" title="Paste to current day">📋 Paste</button>
-                        <button id="updateRoutineBtn" class="routine-btn update-btn" title="Update this routine with current tasks">🔄 Update</button>
-                        <button id="deleteRoutineBtn" class="routine-btn danger-btn" title="Delete selected routine">🗑️</button>
+                        <button id="updateRoutineBtn" class="routine-btn update-btn"
+                            title="Update this routine with current tasks">🔄 Update</button>
+                        <button id="deleteRoutineBtn" class="routine-btn danger-btn"
+                            title="Delete selected routine">🗑️</button>
                     </div>
                     <div class="action-row">
-                        <button id="clearTasksBtn" class="routine-btn danger-btn flex-grow">⚠️ Clear All Tasks for Selected Date</button>
+                        <button id="clearTasksBtn" class="routine-btn danger-btn flex-grow">⚠️ Clear All Tasks for
+                            Selected Date</button>
                     </div>
                 </div>
             </div>
@@ -72,11 +91,12 @@
                     </div>
                 </div>
 
-                <h2>Your Schedule <span id="displayDateLabel" style="font-size: 1rem; color: #38bdf8; font-weight: normal; margin-left: 10px;"></span></h2>
+                <h2>Your Schedule <span id="displayDateLabel"
+                        style="font-size: 1rem; color: #38bdf8; font-weight: normal; margin-left: 10px;"></span></h2>
                 <ul id="taskList" class="task-list">
                     <!-- Tasks will be injected here by JavaScript -->
                 </ul>
-                
+
                 <!-- Productivity Stats Section -->
                 <div class="stats-section">
                     <h3>📊 Productivity Analytics</h3>
@@ -159,7 +179,7 @@
                     <span style="font-size: 0.9rem; color: #cbd5e1;">Today's Intake</span>
                     <button id="editWaterBtn" class="edit-btn" title="Edit Settings">⚙️</button>
                 </div>
-                
+
                 <div class="water-progress-container">
                     <div class="water-progress-bar" id="waterProgressBar"></div>
                     <div class="water-stats">
@@ -183,4 +203,5 @@
 
     <script src="../Javascript-Files/workout-tracker.js"></script>
 </body>
+
 </html>

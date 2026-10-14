@@ -5,6 +5,16 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+
+header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 body {
     background-color: #0f172a;
     color: #f8fafc;
@@ -782,3 +792,63 @@ select option {
     }
 }
 
+
+
+/* ==========================================
+   🟢 DHA Brand Logo Styles
+   ========================================== */
+
+.dha-brand {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.dha-brand .letter {
+    color: #3b82f6;
+    font-size: 1.6rem;
+    transition: color 0.4s ease;
+}
+
+.dha-brand .expand {
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #94a3b8;
+    transform: translateX(-8px);
+    transition: max-width 0.8s cubic-bezier(0.25, 1, 0.5, 1), 
+                opacity 0.6s ease-in-out, 
+                transform 0.7s cubic-bezier(0.25, 1, 0.5, 1),
+                margin 0.5s ease;
+}
+
+.dha-brand:hover {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+}
+
+.dha-brand:hover .letter {
+    color: #10b981;
+}
+
+.dha-brand:hover .expand {
+    max-width: 85px;
+    opacity: 1;
+    transform: translateX(0);
+    margin-right: 6px;
+    color: #f8fafc;
+}

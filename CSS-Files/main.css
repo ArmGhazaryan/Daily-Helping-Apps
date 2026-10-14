@@ -166,3 +166,104 @@ header h1 {
     opacity: 0; /* hides text to make room for action button */
     transition: opacity 0.2s ease;
 }
+
+
+/* ==========================================
+   🟢 DHA Brand Logo Styles
+   ========================================== */
+
+.dha-brand {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+/* DHA Բրենդի կոճակը */
+.dha-brand {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    /* 0.6s սահուն անցում կոճակի համար */
+    transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* D, H, A մեծատառերի ոճը */
+.dha-brand .letter {
+    color: #3b82f6;
+    font-size: 1.6rem;
+    transition: color 0.4s ease;
+}
+
+/* Թաքնված տեքստերը (aily, elping, pps) */
+.dha-brand .expand {
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #94a3b8;
+    
+    /* Թեթև սլայդի սկզբնակետը (ձախից) */
+    transform: translateX(-8px);
+    
+    /* 0.8s երկարացված և մեղմ անցում */
+    transition: max-width 0.8s cubic-bezier(0.25, 1, 0.5, 1), 
+                opacity 0.6s ease-in-out, 
+                transform 0.7s cubic-bezier(0.25, 1, 0.5, 1),
+                margin 0.5s ease;
+}
+
+/* Hover-ի ժամանակ (երբ մկնիկը պահում ես վրան) */
+.dha-brand:hover {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+}
+
+.dha-brand:hover .letter {
+    color: #10b981;
+}
+
+/* Տեքստի սահուն բացումն ու սլայդը */
+.dha-brand:hover .expand {
+    max-width: 85px; /* Ճշգրտված չափս, որպեսզի արագ չթռնի */
+    opacity: 1;
+    transform: translateX(0); /* Սահում է դեպի իր ճիշտ տեղը */
+    margin-right: 6px;
+    color: #f8fafc;
+}
+
+
+/* 🟢 Grid-ի ներսի բոլոր <a> տեգերը դարձնում ենք լրիվ չափսի */
+.grid-container > a {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+}
+
+.grid-container > a .glass-card {
+    flex: 1; /* Լրացնում է ամբողջ բարձրությունը */
+}

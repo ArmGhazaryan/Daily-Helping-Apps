@@ -12,12 +12,9 @@
 
     <div class="app-container">
 
-
         <!-- ԳԼԽԱՎՈՐ ԳՈՐԾՈՂՈՒԹՅՈՒՆՆԵՐ -->
         <div class="top-actions">
             <button id="openModalBtn" class="add-word-btn">+ Add New Word</button>
-
-            
         </div>
 
         <div class="cards-gallery" id="cardsGallery">
@@ -28,16 +25,24 @@
             <div class="flashcard" id="myCard">
                 <div class="flashcard-face flashcard-front">
                     <span class="level-badge" id="frontLevel">B2</span>
-                    <div class="word" id="frontWord">Word</div>
+                    
+                    <!-- ԲԱՌԸ ԵՎ ՁԱՅՆԻ ԿՈՃԱԿԸ -->
+                    <div class="word-container">
+                        <div class="word" id="frontWord">Word</div>
+                        <button id="speakBtn" class="speak-btn" title="Listen pronunciation">🔊</button>
+                    </div>
+
                     <div class="phonetics" id="frontPhonetics">/phonetics/</div>
                     <div class="hint">Click to flip ⤵</div>
                 </div>
 
                 <div class="flashcard-face flashcard-back">
                     <span class="level-badge" id="backLevel">B2</span>
+                    <div class="word" id="backWord">Word</div>
+                    <button id="backSpeakBtn" class="speak-btn" title="Listen pronunciation">🔊</button>
                     <div class="definition" id="backDefinition">Definition goes here...</div>
                     <div class="example" id="backExample">"Example sentence"</div>
-                </div>
+                </div>  
             </div>
         </div>
 
@@ -47,11 +52,11 @@
             <span id="counter">1 / 1</span>
             <button id="nextBtn">Next ➡</button>
 
-            <!-- ՆՈՐ: Ջնջելու կոճակ -->
+            <!-- Ջնջելու կոճակ -->
             <button id="deleteBtn" class="delete-btn">🗑️ Delete</button>
         </div>
 
-        <!-- ՆՈՐ: Թաքնված Փոփ-ափ (Modal) պատուհանը նոր բառերի համար -->
+        <!-- Թաքնված Փոփ-ափ (Modal) պատուհանը նոր բառերի համար -->
         <div id="addWordModal" class="modal-overlay">
             <div class="modal-content">
                 <h2>Add New Flashcard</h2>

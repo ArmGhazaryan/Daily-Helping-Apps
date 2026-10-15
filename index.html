@@ -7,6 +7,7 @@
     <title>DHA</title>
     <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="CSS-Files/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -17,13 +18,21 @@
     </div>
 
     <header>
-        <a href="index.html" class="dha-brand" title="Daily Helping Apps">
-            <span class="letter">D</span><span class="expand">aily</span>
-            <span class="letter">H</span><span class="expand">elping</span>
-            <span class="letter">A</span><span class="expand">pps</span>
-        </a>
+    <a href="index.html" class="dha-brand" title="Daily Helping Apps">
+        <span class="letter">D</span><span class="expand">aily</span>
+        <span class="letter">H</span><span class="expand">elping</span>
+        <span class="letter">A</span><span class="expand">pps</span>
+    </a>
+
+    <div class="header-right">
         <div class="clock" id="clock">00:00:00</div>
-    </header>
+        
+        <!-- 🟢 Dynamic Auth Container (JS-ով ավտոմատ կփոխվի) -->
+        <div id="auth-header-container">
+            <a href="HTML-Files/auth.html" class="auth-btn" id="nav-auth-btn">Log In / Sign Up</a>
+        </div>
+    </div>
+</header>
 
     <main class="grid-container">
         <!-- Card 1: English Flashcards -->
@@ -91,6 +100,9 @@
         setInterval(updateClock, 1000);
         updateClock();
     </script>
+
+    <script src="Javascript-Files/supabase.js"></script>
+    <script src="Javascript-Files/header-auth.js"></script>
 </body>
 
 </html>

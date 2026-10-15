@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHA - Account</title>
+    <link rel="icon" type="image/png" href="../Img/logo.png">
+    
+    <!-- CSS Ֆայլեր -->
+    <link rel="stylesheet" href="../CSS-Files/main.css">
+    <link rel="stylesheet" href="../CSS-Files/auth.css">
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="auth-header">
+        <a href="../index.html" class="dha-brand" title="Daily Helping Apps">
+            <span class="letter">D</span><span class="expand">aily</span>
+            <span class="letter">H</span><span class="expand">elping</span>
+            <span class="letter">A</span><span class="expand">pps</span>
+        </a>
+    </header>
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <!-- Tabs Switcher -->
+            <div class="auth-tabs">
+                <button id="tab-login" class="tab-btn active">Login</button>
+                <button id="tab-signup" class="tab-btn">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <div class="input-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="example@mail.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="submit-btn">Sign In</button>
+            </form>
+
+            <!-- Sign Up Form -->
+            <form id="signup-form" class="auth-form hidden">
+                <div class="input-group">
+                    <label for="signup-username">Username</label>
+                    <input type="text" id="signup-username" placeholder="Arman" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="example@mail.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Min. 6 characters" required minlength="6">
+                </div>
+                <button type="submit" class="submit-btn">Create Account</button>
+            </form>
+
+            <!-- Status Message -->
+            <p id="auth-message" class="auth-message"></p>
+        </div>
+    </main>
+
+    <!-- JS Ֆայլեր -->
+    <script src="../Javascript-Files/supabase.js"></script>
+    <script src="../Javascript-Files/auth.js"></script>
+</body>
+</html>

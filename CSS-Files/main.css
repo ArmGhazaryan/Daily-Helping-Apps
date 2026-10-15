@@ -93,6 +93,96 @@ header h1 {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* ==========================================
+   🟢 USER PROFILE BADGE IN HEADER
+   ========================================== */
+.user-profile-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 6px 14px;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.username-text {
+    color: #f8fafc;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.admin-tag {
+    background: rgba(234, 179, 8, 0.2);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+
+.auth-btn {
+    padding: 8px 16px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 10px;
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.auth-btn:hover {
+    background: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
 /* Grid Layout for Cards */
 .grid-container {
     width: 90%;

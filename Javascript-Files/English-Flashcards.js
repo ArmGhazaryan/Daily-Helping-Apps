@@ -1,12 +1,100 @@
+// ==========================================
+// 🟢 1. SUPABASE AUTH & DATABASE HELPER FUNCTIONS
+// ==========================================
+
+async function getCurrentUser() {
+    if (typeof supabaseClient === 'undefined') {
+        console.error("Supabase client is not initialized. Ensure supabase.js is linked in HTML.");
+        return null;
+    }
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+        alert("Բառերը պահպանելու համար խնդրում ենք նախ մուտք գործել համակարգ:");
+        window.location.href = '../HTML-Files/auth.html';
+        return null;
+    }
+    return user;
+}
+
+// Սինխրոնացնում ենք հին տվյալները հեռախոսից դեպի բազա
+async function syncLocalFlashcardsToSupabase() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    let localCards = JSON.parse(localStorage.getItem('flashcards')) || [];
+    if (localCards.length === 0) return;
+
+    console.log("Migrating local flashcards to cloud...");
+    const cardsToInsert = localCards.map(card => ({
+        user_id: user.id,
+        word: card.word,
+        definition: card.definition,
+        example_sentence: card.example || '',
+        level: card.level || 'B2'
+    }));
+
+    const { error } = await supabaseClient.from('flashcards').insert(cardsToInsert);
+    if (!error) {
+        console.log("Migration successful!");
+        localStorage.removeItem('flashcards'); 
+    }
+}
+
+async function loadFlashcardsFromSupabase() {
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    const { data, error } = await supabaseClient
+        .from('flashcards')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error loading flashcards:", error.message);
+        return [];
+    }
+    return data || [];
+}
+
+async function saveFlashcardToSupabase(word, definition, example, level) {
+    const user = await getCurrentUser();
+    if (!user) return false;
+
+    const { error } = await supabaseClient
+        .from('flashcards')
+        .insert([{
+            user_id: user.id,
+            word: word,
+            definition: definition,
+            example_sentence: example,
+            level: level
+        }]);
+
+    if (error) {
+        console.error("Error saving flashcard:", error.message);
+        return false;
+    }
+    return true;
+}
+
+async function deleteFlashcardFromSupabase(wordToDelete) {
+    const user = await getCurrentUser();
+    if (!user) return false;
+
+    const { error } = await supabaseClient
+        .from('flashcards')
+        .delete()
+        .eq('word', wordToDelete)
+        .eq('user_id', user.id);
+
+    return !error;
+}
+
+
+// ==========================================
+// 🟢 2. MAIN APPLICATION LOGIC (DOM & UI)
+// ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-
-    const SUPABASE_URL = 'https://ypdjnzqkvqgjcrgtefsf.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_7_tQfI0y-jCQODj2RGMxyw_MSXMfHlb';
-
-    // Ստեղծում ենք Supabase կապը
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
     let flashcardsData = [];
     let currentIndex = 0;
 
@@ -32,52 +120,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelBtn = document.getElementById('cancelBtn');
     const saveWordBtn = document.getElementById('saveWordBtn');
 
-    // 1. ԲԱԶԱՅԻՑ ԲԱՌԵՐԻ ՍՏԱՑՈՒՄ (FETCH FROM CLOUD)
-    async function fetchFlashcards() {
-        try {
-            const { data, error } = await _supabase.from('flashcards').select('*');
-            if (error) throw error;
+    // 1. ԲԱԶԱՅԻՑ ԲԱՌԵՐԻ ՍՏԱՑՈՒՄ ԵՎ ՆԿԱՐՈՒՄ
+    async function fetchAndRenderCards() {
+        const data = await loadFlashcardsFromSupabase();
+        
+        // Ձևափոխում ենք բազայի 'example_sentence' դաշտը UI-ի 'example' դաշտի
+        flashcardsData = data.map(item => ({
+            word: item.word,
+            level: item.level,
+            definition: item.definition,
+            example: item.example_sentence
+        }));
 
-            flashcardsData = data || [];
-
-            if (flashcardsData.length === 0) {
-                await seedInitialData();
-            } else {
-                loadCard(currentIndex);
-            }
-        } catch (err) {
-            console.error('Error fetching data:', err.message);
-            alert('Չհաջողվեց միանալ ամպային բազային: Ստուգիր կապդ:');
+        if (flashcardsData.length === 0) {
+            await seedInitialData();
+        } else {
+            if (currentIndex >= flashcardsData.length) currentIndex = 0;
+            loadCard(currentIndex);
         }
     }
 
     async function seedInitialData() {
+        const user = await getCurrentUser();
+        if(!user) return;
+
         const initialWords = [
-            {
-                word: "Serendipity", level: "C1",
-                definition: "The occurrence and development of events by chance in a happy or beneficial way.",
-                example: "We found the perfect restaurant by pure serendipity."
-            },
-            {
-                word: "Resilient", level: "B2",
-                definition: "Able to withstand or recover quickly from difficult conditions.",
-                example: "She's a resilient girl - she won't let this failure get her down."
-            },
-            {
-                word: "Adequate", level: "B1",
-                definition: "Satisfactory or acceptable in quality or quantity.",
-                example: "This office is perfectly adequate for my needs."
-            }
+            { user_id: user.id, word: "Serendipity", level: "C1", definition: "The occurrence and development of events by chance in a happy or beneficial way.", example_sentence: "We found the perfect restaurant by pure serendipity." },
+            { user_id: user.id, word: "Resilient", level: "B2", definition: "Able to withstand or recover quickly from difficult conditions.", example_sentence: "She's a resilient girl - she won't let this failure get her down." },
+            { user_id: user.id, word: "Adequate", level: "B1", definition: "Satisfactory or acceptable in quality or quantity.", example_sentence: "This office is perfectly adequate for my needs." }
         ];
 
-        const { error } = await _supabase.from('flashcards').insert(initialWords);
-        if (!error) {
-            fetchFlashcards();
-        }
+        const { error } = await supabaseClient.from('flashcards').insert(initialWords);
+        if (!error) await fetchAndRenderCards();
     }
 
     // 2. ՆԿԱՐԵԼՈՒ ՖՈՒՆԿՑԻԱՆԵՐ
     function renderGallery() {
+        if(!cardsGallery) return;
         cardsGallery.innerHTML = '';
         flashcardsData.forEach((data, index) => {
             const miniCard = document.createElement('div');
@@ -95,48 +174,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function loadCard(index) {
         if (flashcardsData.length === 0) {
-            frontWord.textContent = "Դատարկ է";
-            backWord.textContent = "";
-            backDefinition.textContent = "Խնդրում ենք ավելացնել նոր բառեր:";
-            backExample.textContent = "";
-            frontLevel.textContent = "-";
-            backLevel.textContent = "-";
-            frontLevel.style.backgroundColor = '#475569';
-            backLevel.style.backgroundColor = '#475569';
-            counter.textContent = "0 / 0";
+            if(frontWord) frontWord.textContent = "Դատարկ է";
+            if(backWord) backWord.textContent = "";
+            if(backDefinition) backDefinition.textContent = "Խնդրում ենք ավելացնել նոր բառեր:";
+            if(backExample) backExample.textContent = "";
+            if(frontLevel) { frontLevel.textContent = "-"; frontLevel.style.backgroundColor = '#475569'; }
+            if(backLevel) { backLevel.textContent = "-"; backLevel.style.backgroundColor = '#475569'; }
+            if(counter) counter.textContent = "0 / 0";
 
-            prevBtn.disabled = true;
-            nextBtn.disabled = true;
-            deleteBtn.disabled = true;
-            cardsGallery.innerHTML = '';
-            card.classList.remove('is-flipped');
+            if(prevBtn) prevBtn.disabled = true;
+            if(nextBtn) nextBtn.disabled = true;
+            if(deleteBtn) deleteBtn.disabled = true;
+            if(cardsGallery) cardsGallery.innerHTML = '';
+            if(card) card.classList.remove('is-flipped');
             return;
         }
 
-        deleteBtn.disabled = false;
+        if(deleteBtn) deleteBtn.disabled = false;
         const data = flashcardsData[index];
 
-        frontWord.textContent = data.word;
-        backWord.textContent = data.word;
-        backDefinition.textContent = data.definition;
-        backExample.textContent = data.example ? `"${data.example}"` : '';
+        if(frontWord) frontWord.textContent = data.word;
+        if(backWord) backWord.textContent = data.word;
+        if(backDefinition) backDefinition.textContent = data.definition;
+        if(backExample) backExample.textContent = data.example ? `"${data.example}"` : '';
 
-        frontLevel.textContent = data.level;
-        backLevel.textContent = data.level;
+        if(frontLevel) frontLevel.textContent = data.level;
+        if(backLevel) backLevel.textContent = data.level;
 
         let levelColor = '#10b981';
         if (data.level === 'B2') levelColor = '#3b82f6';
         if (data.level === 'C1') levelColor = '#8b5cf6';
         if (data.level === 'C2') levelColor = '#ef4444';
 
-        frontLevel.style.backgroundColor = levelColor;
-        backLevel.style.backgroundColor = levelColor;
+        if(frontLevel) frontLevel.style.backgroundColor = levelColor;
+        if(backLevel) backLevel.style.backgroundColor = levelColor;
 
-        counter.textContent = `${index + 1} / ${flashcardsData.length}`;
-        prevBtn.disabled = index === 0;
-        nextBtn.disabled = index === flashcardsData.length - 1;
+        if(counter) counter.textContent = `${index + 1} / ${flashcardsData.length}`;
+        if(prevBtn) prevBtn.disabled = index === 0;
+        if(nextBtn) nextBtn.disabled = index === flashcardsData.length - 1;
 
-        card.classList.remove('is-flipped');
+        if(card) card.classList.remove('is-flipped');
         renderGallery();
 
         setTimeout(() => {
@@ -161,27 +238,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 3. ԻՐԱԴԱՐՁՈՒԹՅՈՒՆՆԵՐ (Events)
-    card.addEventListener('click', () => {
-        if (flashcardsData.length > 0) {
-            card.classList.toggle('is-flipped');
-        }
-    });
+    if(card) {
+        card.addEventListener('click', () => {
+            if (flashcardsData.length > 0) card.classList.toggle('is-flipped');
+        });
+    }
 
-    nextBtn.addEventListener('click', () => {
-        if (currentIndex < flashcardsData.length - 1) {
-            currentIndex++;
-            loadCard(currentIndex);
-        }
-    });
+    if(nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < flashcardsData.length - 1) {
+                currentIndex++;
+                loadCard(currentIndex);
+            }
+        });
+    }
 
-    prevBtn.addEventListener('click', () => {
-        if (currentIndex > 0) {
-            currentIndex--;
-            loadCard(currentIndex);
-        }
-    });
+    if(prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadCard(currentIndex);
+            }
+        });
+    }
 
-    // 🔊 Ձայնի կոճակներ (Դիմացի և հետևի)
     if (speakBtn) {
         speakBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -201,68 +281,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 4. ՋՆՋԵԼՈՒ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆ (SUPABASE-ԻՑ)
-    deleteBtn.addEventListener('click', async () => {
-        if (flashcardsData.length === 0) return;
+    if(deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+            if (flashcardsData.length === 0) return;
 
-        const currentCard = flashcardsData[currentIndex];
-        const isConfirmed = confirm(`Վստա՞հ եք, որ ցանկանում եք ջնջել "${currentCard.word}" բառը ամպային բազայից:`);
+            const currentCard = flashcardsData[currentIndex];
+            const isConfirmed = confirm(`Վստա՞հ եք, որ ցանկանում եք ջնջել "${currentCard.word}" բառը ամպային բազայից:`);
 
-        if (isConfirmed) {
-            const { error } = await _supabase.from('flashcards').delete().eq('word', currentCard.word);
-
-            if (error) {
-                alert("Չհաջողվեց ջնջել բառը:");
-                return;
+            if (isConfirmed) {
+                const isDeleted = await deleteFlashcardFromSupabase(currentCard.word);
+                if (!isDeleted) {
+                    alert("Չհաջողվեց ջնջել բառը:");
+                    return;
+                }
+                currentIndex = 0;
+                fetchAndRenderCards();
             }
-
-            currentIndex = 0;
-            fetchFlashcards();
-        }
-    });
+        });
+    }
 
     // 5. ՆՈՐ ԲԱՌ ԱՎԵԼԱՑՆԵԼՈՒ ՏՐԱՄԱԲԱՆՈՒԹՅՈՒՆԸ (SUPABASE)
-    openModalBtn.addEventListener('click', () => {
-        modal.style.display = 'flex';
-    });
+    if(openModalBtn) openModalBtn.addEventListener('click', () => modal.style.display = 'flex');
 
     function closeModal() {
-        modal.style.display = 'none';
+        if(modal) modal.style.display = 'none';
         document.getElementById('newWord').value = '';
         document.getElementById('newDefinition').value = '';
         document.getElementById('newExample').value = '';
         document.getElementById('newLevel').value = 'B2';
     }
 
-    cancelBtn.addEventListener('click', closeModal);
+    if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
-    saveWordBtn.addEventListener('click', async () => {
-        const wordVal = document.getElementById('newWord').value.trim();
-        const defVal = document.getElementById('newDefinition').value.trim();
+    if(saveWordBtn) {
+        saveWordBtn.addEventListener('click', async () => {
+            const wordVal = document.getElementById('newWord').value.trim();
+            const defVal = document.getElementById('newDefinition').value.trim();
+            const exVal = document.getElementById('newExample').value.trim();
+            const levelVal = document.getElementById('newLevel').value;
 
-        if (!wordVal || !defVal) {
-            alert("Խնդրում ենք լրացնել 'Word' և 'Definition' դաշտերը:");
-            return;
-        }
+            if (!wordVal || !defVal) {
+                alert("Խնդրում ենք լրացնել 'Word' և 'Definition' դաշտերը:");
+                return;
+            }
 
-        const newCard = {
-            word: wordVal,
-            level: document.getElementById('newLevel').value,
-            definition: defVal,
-            example: document.getElementById('newExample').value.trim()
-        };
+            const isSaved = await saveFlashcardToSupabase(wordVal, defVal, exVal, levelVal);
+            if (isSaved) {
+                closeModal();
+                fetchAndRenderCards();
+            } else {
+                alert("Սխալ բազայում պահպանելիս: Հնարավոր է այս բառն արդեն գոյություն ունի:");
+            }
+        });
+    }
 
-        const { error } = await _supabase.from('flashcards').insert([newCard]);
-
-        if (error) {
-            alert("Սխալ բազայում պահպանելիս: Հնարավոր է այս բառն արդեն գոյություն ունի:");
-            console.error(error);
-            return;
-        }
-
-        closeModal();
-        fetchFlashcards();
-    });
-
-    // Առաջնային բեռնում բազայից
-    fetchFlashcards();
+    // Առաջնային սինխրոնացում և բեռնում
+    await syncLocalFlashcardsToSupabase();
+    await fetchAndRenderCards();
 });

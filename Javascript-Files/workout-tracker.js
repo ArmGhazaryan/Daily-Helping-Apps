@@ -1,4 +1,115 @@
+// ==========================================
+// 🟢 1. SUPABASE AUTH & DATABASE HELPER FUNCTIONS
+// ==========================================
+
+// 1. Ստուգում ենք ընթացիկ օգտատիրոջը
+async function getCurrentUser() {
+    if (typeof supabaseClient === 'undefined') {
+        console.error("Supabase client is not initialized.");
+        return null;
+    }
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+        alert("Մարզումները պահպանելու համար խնդրում ենք նախ մուտք գործել համակարգ:");
+        window.location.href = '../HTML-Files/auth.html';
+        return null;
+    }
+    return user;
+}
+
+// 2. Մարզումը պահպանում ենք Supabase-ում (INSERT)
+async function saveWorkoutToSupabase(exerciseName, repsCount) {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const { data, error } = await supabaseClient
+        .from('workouts')
+        .insert([
+            {
+                user_id: user.id,
+                exercise_name: exerciseName,
+                reps: parseInt(repsCount)
+            }
+        ]);
+
+    if (error) {
+        console.error("Error saving workout to Supabase:", error.message);
+        if (typeof showNotification === 'function') {
+            showNotification("Error saving workout to database.", true);
+        }
+    } else {
+        console.log("Workout saved successfully to Supabase!");
+        if (typeof showNotification === 'function') {
+            showNotification("Workout saved to cloud!");
+        }
+        loadUserWorkouts(); // Թարմացնում ենք ցուցակը
+    }
+}
+
+// 3. Կարդում ենք օգտատիրոջ մարզումները բազայից (SELECT)
+async function loadUserWorkouts() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const { data: workouts, error } = await supabaseClient
+        .from('workouts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error loading workouts from Supabase:", error.message);
+        return;
+    }
+
+    console.log("User Workouts Loaded from Supabase:", workouts);
+    return workouts;
+}
+
+
+// 🟢 LocalStorage-ի չսինխրոնացված տվյալները ուղարկում ենք Supabase
+async function syncLocalTasksToSupabase() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    // Վերցնում ենք հեռախոսի/բրաուզերի LocalStorage-ի տվյալները
+    const localTasks = JSON.parse(localStorage.getItem('workoutTasks')) || [];
+
+    // Եթե տեղական տվյալ չկա, դուրս ենք գալիս
+    if (localTasks.length === 0) return;
+
+    console.log("Migrating local tasks to Supabase cloud...");
+
+    // Ձևափոխում ենք տվյալները Supabase workouts աղյուսակի ձևաչափի
+    const tasksToInsert = localTasks.map(task => ({
+        user_id: user.id,
+        exercise_name: task.text,
+        reps: 1,
+        created_at: task.date ? new Date(task.date).toISOString() : new Date().toISOString()
+    }));
+
+    // Ուղարկում ենք բոլոր տվյալները միանգամից (Bulk Insert)
+    const { error } = await supabaseClient
+        .from('workouts')
+        .insert(tasksToInsert);
+
+    if (!error) {
+        console.log("Local tasks successfully synced to account!");
+        // Սինխրոնացումից հետո մաքրում ենք LocalStorage-ի հին ցուցակը, որ կրկնություններ չլինեն
+        localStorage.removeItem('workoutTasks');
+        if (typeof showNotification === 'function') {
+            showNotification("Your local progress was synced to your account!");
+        }
+    } else {
+        console.error("Migration error:", error.message);
+    }
+}
+
+
+// ==========================================
+// 🟢 2. MAIN APPLICATION LOGIC (DOM & UI)
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Top Input elements
     const taskInput = document.getElementById('taskInput');
     const dateInput = document.getElementById('dateInput');
     const timeInput = document.getElementById('timeInput');
@@ -14,23 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // UI Toast Notification
     const toastElement = document.getElementById('toast');
     let toastTimeout;
-    function showNotification(message, isError = false) {
+    window.showNotification = function(message, isError = false) {
+        if (!toastElement) return;
         toastElement.textContent = message;
         toastElement.className = `toast show ${isError ? 'error' : 'success'}`;
         clearTimeout(toastTimeout);
         toastTimeout = setTimeout(() => {
             toastElement.className = 'toast';
         }, 3000);
-    }
+    };
 
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
-    dateInput.value = today;
+    if (dateInput) dateInput.value = today;
 
     // Load tasks & water history from LocalStorage
     let tasks = JSON.parse(localStorage.getItem('workoutTasks')) || [];
     let waterHistory = JSON.parse(localStorage.getItem('waterHistory')) || {};
-    
+
     // Assign IDs to old tasks if missing
     tasks.forEach(t => {
         if (!t.id) t.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -45,12 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to render ONLY tasks for the selected date
     function renderTasks() {
+        if (!taskList || !dateInput) return;
         taskList.innerHTML = '';
         const selectedDate = dateInput.value;
-        
-        displayDateLabel.textContent = `( ${formatDate(selectedDate)} )`;
+
+        if (displayDateLabel) displayDateLabel.textContent = `( ${formatDate(selectedDate)} )`;
         const dailyTasks = tasks.filter(t => t.date === selectedDate);
-        
+
         dailyTasks.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
 
         if (dailyTasks.length === 0) {
@@ -75,33 +188,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 taskList.appendChild(li);
             });
         }
-        
+
         // Update Productivity Stats whenever tasks are rendered
         calculateProductivityStats(selectedDate);
     }
 
-    dateInput.addEventListener('change', renderTasks);
+    if (dateInput) dateInput.addEventListener('change', renderTasks);
 
-    // Add new task
-    addBtn.addEventListener('click', () => {
-        const text = taskInput.value.trim();
-        const date = dateInput.value;
-        const time = timeInput.value;
+    // Add new task & sync with Supabase
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            const text = taskInput.value.trim();
+            const date = dateInput.value;
+            const time = timeInput.value;
 
-        if (text === '') {
-            showNotification('Please enter a goal or meal.', true);
-            return;
-        }
+            if (text === '') {
+                showNotification('Please enter a goal or meal.', true);
+                return;
+            }
 
-        tasks.push({
-            id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-            text: text, date: date, time: time, completed: false
+            tasks.push({
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                text: text, date: date, time: time, completed: false
+            });
+            saveAndRender();
+
+            // Save to Supabase Cloud Database as well
+            saveWorkoutToSupabase(text, 1);
+
+            taskInput.value = '';
         });
-        saveAndRender();
-        taskInput.value = '';
-    });
+    }
 
-    window.toggleTask = function(id) {
+    window.toggleTask = function (id) {
         const task = tasks.find(t => t.id === id);
         if (task) {
             task.completed = !task.completed;
@@ -109,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.deleteTask = function(id) {
+    window.deleteTask = function (id) {
         tasks = tasks.filter(t => t.id !== id);
         saveAndRender();
     };
@@ -126,8 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let savedRoutines = JSON.parse(localStorage.getItem('savedRoutines')) || {};
     const routineSelect = document.getElementById('routineSelect');
     const routineNameInput = document.getElementById('routineNameInput');
-    
+
     function updateRoutineSelect() {
+        if (!routineSelect) return;
         routineSelect.innerHTML = '<option value="" disabled selected>Select a routine...</option>';
         for (let name in savedRoutines) {
             const opt = document.createElement('option');
@@ -138,14 +258,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateRoutineSelect();
 
-    document.getElementById('saveRoutineBtn').addEventListener('click', () => {
+    document.getElementById('saveRoutineBtn')?.addEventListener('click', () => {
         const name = routineNameInput.value.trim();
         if (!name) return showNotification('Please enter a new name for your routine.', true);
-        
+
         const selectedDate = dateInput.value;
         const dailyTasks = tasks.filter(t => t.date === selectedDate);
         if (dailyTasks.length === 0) return showNotification('No tasks found to save!', true);
-        
+
         savedRoutines[name] = dailyTasks.map(t => ({ text: t.text, time: t.time }));
         localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
         updateRoutineSelect();
@@ -153,13 +273,13 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification(`Routine "${name}" saved!`);
     });
 
-    document.getElementById('loadRoutineBtn').addEventListener('click', () => {
+    document.getElementById('loadRoutineBtn')?.addEventListener('click', () => {
         const name = routineSelect.value;
         if (!name) return showNotification('Please select a routine to paste.', true);
-        
+
         const template = savedRoutines[name];
         const selectedDate = dateInput.value;
-        
+
         if (tasks.filter(t => t.date === selectedDate).length > 0) {
             if (!confirm(`Clear current tasks for ${formatDate(selectedDate)} and paste "${name}"?`)) return;
         }
@@ -176,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification(`Pasted "${name}".`);
     });
 
-    document.getElementById('updateRoutineBtn').addEventListener('click', () => {
+    document.getElementById('updateRoutineBtn')?.addEventListener('click', () => {
         const name = routineSelect.value;
         if (!name) return showNotification('Select a routine to update.', true);
 
@@ -188,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification(`Routine "${name}" updated!`);
     });
 
-    document.getElementById('deleteRoutineBtn').addEventListener('click', () => {
+    document.getElementById('deleteRoutineBtn')?.addEventListener('click', () => {
         const name = routineSelect.value;
         if (!name) return;
         if (confirm(`Delete routine "${name}" forever?`)) {
@@ -199,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('clearTasksBtn').addEventListener('click', () => {
+    document.getElementById('clearTasksBtn')?.addEventListener('click', () => {
         const selectedDate = dateInput.value;
         if (tasks.filter(t => t.date === selectedDate).length === 0) return;
         if (confirm(`Clear ALL tasks for ${formatDate(selectedDate)}?`)) {
@@ -216,8 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const waterSettings = document.getElementById('waterSettings');
     const waterMain = document.getElementById('waterMain');
     const calcWaterBtn = document.getElementById('calcWaterBtn');
-    
-    // Collapsible elements
+
     const waterCollapsed = document.getElementById('waterCollapsed');
     const waterExpandedContent = document.getElementById('waterExpandedContent');
     const collapseWaterBtn = document.getElementById('collapseWaterBtn');
@@ -236,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCollapseUI() {
+        if (!waterCollapsed || !waterExpandedContent) return;
         if (isWaterCollapsed) {
             waterCollapsed.style.display = 'block';
             waterExpandedContent.style.display = 'none';
@@ -243,28 +363,31 @@ document.addEventListener('DOMContentLoaded', () => {
             waterCollapsed.style.display = 'none';
             waterExpandedContent.style.display = 'block';
         }
-        
-        if (waterGoal > 0) {
-            const percent = Math.min(Math.round((currentWater / waterGoal) * 100), 100);
-            collapsedWaterText.textContent = `Water: ${currentWater.toFixed(1)}L (${percent}%)`;
-        } else {
-            collapsedWaterText.textContent = `Water Tracker`;
+
+        if (collapsedWaterText) {
+            if (waterGoal > 0) {
+                const percent = Math.min(Math.round((currentWater / waterGoal) * 100), 100);
+                collapsedWaterText.textContent = `Water: ${currentWater.toFixed(1)}L (${percent}%)`;
+            } else {
+                collapsedWaterText.textContent = `Water Tracker`;
+            }
         }
     }
 
-    collapseWaterBtn.addEventListener('click', () => {
+    collapseWaterBtn?.addEventListener('click', () => {
         isWaterCollapsed = true;
         localStorage.setItem('isWaterCollapsed', 'true');
         updateCollapseUI();
     });
 
-    expandWaterBtn.addEventListener('click', () => {
+    expandWaterBtn?.addEventListener('click', () => {
         isWaterCollapsed = false;
         localStorage.setItem('isWaterCollapsed', 'false');
         updateCollapseUI();
     });
 
     function initWaterTracker() {
+        if (!waterSettings || !waterMain) return;
         if (waterGoal > 0) {
             waterSettings.style.display = 'none';
             waterMain.style.display = 'block';
@@ -277,54 +400,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateWaterDisplay() {
-        document.getElementById('currentWater').textContent = currentWater.toFixed(2);
-        document.getElementById('goalWater').textContent = waterGoal.toFixed(1);
-        
-        let percentage = (currentWater / waterGoal) * 100;
+        const curEl = document.getElementById('currentWater');
+        const goalEl = document.getElementById('goalWater');
+        if (curEl) curEl.textContent = currentWater.toFixed(2);
+        if (goalEl) goalEl.textContent = waterGoal.toFixed(1);
+
+        let percentage = waterGoal > 0 ? (currentWater / waterGoal) * 100 : 0;
         if (percentage > 100) percentage = 100;
-        
+
         const bar = document.getElementById('waterProgressBar');
-        bar.style.width = `${percentage}%`;
-        bar.style.background = percentage >= 100 
-            ? 'linear-gradient(90deg, #10b981, #34d399)' 
-            : 'linear-gradient(90deg, #0ea5e9, #38bdf8)';
+        if (bar) {
+            bar.style.width = `${percentage}%`;
+            bar.style.background = percentage >= 100
+                ? 'linear-gradient(90deg, #10b981, #34d399)'
+                : 'linear-gradient(90deg, #0ea5e9, #38bdf8)';
+        }
 
         waterHistory[today] = { goal: waterGoal, current: currentWater };
         localStorage.setItem('waterHistory', JSON.stringify(waterHistory));
-        
-        calculateProductivityStats(dateInput.value);
+
+        if (dateInput) calculateProductivityStats(dateInput.value);
         updateCollapseUI();
     }
 
-    calcWaterBtn.addEventListener('click', () => {
-        const weight = parseFloat(document.getElementById('weightInput').value);
-        const activity = document.getElementById('activityInput').value;
+    calcWaterBtn?.addEventListener('click', () => {
+        const weight = parseFloat(document.getElementById('weightInput')?.value);
+        const activity = document.getElementById('activityInput')?.value;
         if (!weight || !activity) return showNotification('Please enter weight and activity.', true);
 
-        let baseMl = weight * 35; 
+        let baseMl = weight * 35;
         if (activity === 'medium') baseMl += 500;
         if (activity === 'high') baseMl += 1000;
 
         waterGoal = parseFloat((baseMl / 1000).toFixed(1));
         localStorage.setItem('waterGoal', waterGoal);
         localStorage.setItem('waterSettings', JSON.stringify({
-            weight: weight, height: document.getElementById('heightInput').value,
-            gender: document.getElementById('genderInput').value, activity: activity
+            weight: weight, height: document.getElementById('heightInput')?.value,
+            gender: document.getElementById('genderInput')?.value, activity: activity
         }));
 
         initWaterTracker();
     });
 
-    document.getElementById('editWaterBtn').addEventListener('click', () => {
+    document.getElementById('editWaterBtn')?.addEventListener('click', () => {
         const s = JSON.parse(localStorage.getItem('waterSettings'));
-        if (s) {
-            document.getElementById('weightInput').value = s.weight;
-            document.getElementById('heightInput').value = s.height;
-            document.getElementById('genderInput').value = s.gender;
-            document.getElementById('activityInput').value = s.activity;
+        if (s && waterSettings && waterMain) {
+            document.getElementById('weightInput').value = s.weight || '';
+            document.getElementById('heightInput').value = s.height || '';
+            document.getElementById('genderInput').value = s.gender || '';
+            document.getElementById('activityInput').value = s.activity || '';
+            waterSettings.style.display = 'block';
+            waterMain.style.display = 'none';
         }
-        waterSettings.style.display = 'block';
-        waterMain.style.display = 'none';
     });
 
     document.querySelectorAll('.add-water-btn').forEach(btn => {
@@ -335,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.getElementById('resetWaterBtn').addEventListener('click', () => {
+    document.getElementById('resetWaterBtn')?.addEventListener('click', () => {
         currentWater = 0;
         localStorage.setItem('currentWater', 0);
         updateWaterDisplay();
@@ -348,74 +475,75 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PRODUCTIVITY STATS LOGIC ---
     // ==========================================
     function calculateProductivityStats(selectedDateStr) {
+        if (!selectedDateStr) return;
         const selectedDate = new Date(selectedDateStr);
-        const selectedMonthPrefix = selectedDateStr.substring(0, 7); 
-        
+        const selectedMonthPrefix = selectedDateStr.substring(0, 7);
+
         let dTotal = 0, dComp = 0;
         let wTotal = 0, wComp = 0;
         let mTotal = 0, mComp = 0;
 
-        // Process Tasks (Whole numbers: 0 or 1)
         tasks.forEach(t => {
             const taskDate = new Date(t.date);
             const isCompleted = t.completed ? 1 : 0;
-            
+
             if (t.date === selectedDateStr) { dTotal++; dComp += isCompleted; }
             if (t.date.startsWith(selectedMonthPrefix)) { mTotal++; mComp += isCompleted; }
-            
+
             const diffDays = Math.ceil((taskDate - selectedDate) / (1000 * 60 * 60 * 24));
             if (diffDays <= 0 && diffDays >= -6) { wTotal++; wComp += isCompleted; }
         });
 
-        // Process Water (Proportional tracking, max 1.0)
         for (const [wDate, wData] of Object.entries(waterHistory)) {
-            if (wData.goal <= 0) continue; 
-            
+            if (wData.goal <= 0) continue;
+
             const waterProgress = Math.min(wData.current / wData.goal, 1);
             const taskDate = new Date(wDate);
-            
+
             if (wDate === selectedDateStr) { dTotal++; dComp += waterProgress; }
             if (wDate.startsWith(selectedMonthPrefix)) { mTotal++; mComp += waterProgress; }
-            
+
             const diffDays = Math.ceil((taskDate - selectedDate) / (1000 * 60 * 60 * 24));
             if (diffDays <= 0 && diffDays >= -6) { wTotal++; wComp += waterProgress; }
         }
 
-        // --- UPDATE TOP DAILY PROGRESS BAR (Proposal 3) ---
-        if (dTotal === 0) {
-            topProgressPercent.textContent = "0%";
-            topProgressBarFill.style.width = "0%";
-            topProgressTitle.textContent = `${formatDate(selectedDateStr)} Progress (No Goals)`;
-        } else {
-            const dPercentage = Math.round((dComp / dTotal) * 100);
-            topProgressPercent.textContent = `${dPercentage}%`;
-            topProgressBarFill.style.width = `${dPercentage}%`;
-            
-            if (dPercentage >= 80) {
-                topProgressBarFill.style.background = "linear-gradient(90deg, #10b981, #34d399)";
-            } else if (dPercentage >= 50) {
-                topProgressBarFill.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)";
+        if (topProgressPercent && topProgressBarFill && topProgressTitle) {
+            if (dTotal === 0) {
+                topProgressPercent.textContent = "0%";
+                topProgressBarFill.style.width = "0%";
+                topProgressTitle.textContent = `${formatDate(selectedDateStr)} Progress (No Goals)`;
             } else {
-                topProgressBarFill.style.background = "linear-gradient(90deg, #0ea5e9, #3b82f6)";
+                const dPercentage = Math.round((dComp / dTotal) * 100);
+                topProgressPercent.textContent = `${dPercentage}%`;
+                topProgressBarFill.style.width = `${dPercentage}%`;
+
+                if (dPercentage >= 80) {
+                    topProgressBarFill.style.background = "linear-gradient(90deg, #10b981, #34d399)";
+                } else if (dPercentage >= 50) {
+                    topProgressBarFill.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)";
+                } else {
+                    topProgressBarFill.style.background = "linear-gradient(90deg, #0ea5e9, #3b82f6)";
+                }
+                topProgressTitle.textContent = `${formatDate(selectedDateStr)} Progress`;
             }
-            topProgressTitle.textContent = `${formatDate(selectedDateStr)} Progress`;
         }
 
         function updateStatUI(elValue, elCount, comp, total) {
+            if (!elValue || !elCount) return;
             if (total === 0) {
                 elValue.textContent = "-";
-                elValue.style.color = "#64748b"; 
+                elValue.style.color = "#64748b";
                 elCount.textContent = "No Goals";
             } else {
                 const percentage = Math.round((comp / total) * 100);
                 elValue.textContent = `${percentage}%`;
-                
+
                 const compFormatted = Number.isInteger(comp) ? comp : comp.toFixed(1);
                 elCount.textContent = `${compFormatted}/${total} Goals`;
-                
-                if (percentage >= 80) elValue.style.color = "#10b981"; 
-                else if (percentage >= 50) elValue.style.color = "#f59e0b"; 
-                else elValue.style.color = "#ef4444"; 
+
+                if (percentage >= 80) elValue.style.color = "#10b981";
+                else if (percentage >= 50) elValue.style.color = "#f59e0b";
+                else elValue.style.color = "#ef4444";
             }
         }
 
@@ -431,13 +559,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkHistoryBtn = document.getElementById('checkHistoryBtn');
     const historyResult = document.getElementById('historyResult');
 
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    historyDateInput.value = yesterday.toISOString().split('T')[0];
+    if (historyDateInput) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        historyDateInput.value = yesterday.toISOString().split('T')[0];
+    }
 
-    checkHistoryBtn.addEventListener('click', () => {
+    checkHistoryBtn?.addEventListener('click', () => {
         const dateStr = historyDateInput.value;
-        if (!dateStr) return;
+        if (!dateStr || !historyResult) return;
 
         let total = 0;
         let comp = 0;
@@ -475,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const importBtn = document.getElementById('importBtn');
     const importFile = document.getElementById('importFile');
 
-    exportBtn.addEventListener('click', () => {
+    exportBtn?.addEventListener('click', () => {
         const backupData = {
             workoutTasks: localStorage.getItem('workoutTasks'),
             savedRoutines: localStorage.getItem('savedRoutines'),
@@ -489,31 +619,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataStr = JSON.stringify(backupData, null, 2);
         const blob = new Blob([dataStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `Workout_Backup_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
-        
+
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         showNotification("Data backed up successfully!");
     });
 
-    importBtn.addEventListener('click', () => {
-        importFile.click();
+    importBtn?.addEventListener('click', () => {
+        if (importFile) importFile.click();
     });
 
-    importFile.addEventListener('change', (event) => {
+    importFile?.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             try {
-                String(e.target.result);
                 const importedData = JSON.parse(e.target.result);
                 if (importedData.workoutTasks !== undefined) {
                     for (const key in importedData) {
@@ -530,10 +659,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 showNotification("Error reading the backup file.", true);
             }
         };
-        
+
         reader.readAsText(file);
         importFile.value = '';
     });
 
-    renderTasks();
+// Initial renders & automatic sync
+    async function initApp() {
+        renderTasks();
+        await syncLocalTasksToSupabase(); // 1. Նախ տեղափոխում ենք տեղական տվյալները բազա
+        await loadUserWorkouts();         // 2. Հետո բեռնում ենք ամպային բազայի ամբողջական պատկերը
+    }
+
+    initApp();
 });

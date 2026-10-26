@@ -22,6 +22,7 @@
     width: 100%;
     max-width: 420px;
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
 }
@@ -101,6 +102,49 @@
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
+
+/* ==========================================
+   🟢 RESPONSIVE / DEVICE OPTIMIZATION
+   ========================================== */
+@media (max-width: 480px) {
+    .auth-header {
+        padding: 16px 20px;
+    }
+
+    .auth-container {
+        padding: 12px;
+        min-height: 100dvh;
+    }
+
+    .auth-card {
+        padding: 24px 20px;
+        border-radius: 16px;
+    }
+
+    .tab-btn {
+        padding: 10px;
+        font-size: 1rem;
+    }
+
+    .auth-form input {
+        padding: 12px 14px;
+        font-size: 16px; /* prevents iOS zoom */
+    }
+
+    .submit-btn {
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-card,
+    .tab-btn,
+    .auth-form input,
+    .submit-btn {
+        transition: none;
+    }
+}
+
     transition: background 0.3s ease, transform 0.1s ease;
 }
 

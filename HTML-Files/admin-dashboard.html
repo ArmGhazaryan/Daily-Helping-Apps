@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | DHA</title>
+    <link rel="icon" type="image/png" href="../Img/logo.png">
+    <link rel="stylesheet" href="../CSS-Files/main.css">
+    <link rel="stylesheet" href="../CSS-Files/admin-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <header>
+        <a href="../index.html" class="dha-brand" title="Daily Helping Apps">
+            <span class="letter">D</span><span class="expand">aily</span>
+            <span class="letter">H</span><span class="expand">elping</span>
+            <span class="letter">A</span><span class="expand">pps</span>
+        </a>
+        <div class="header-right">
+            <a href="../index.html" class="back-btn">← Back to Dashboard</a>
+            <div id="auth-header-container"></div>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <h1 class="admin-title">Admin Dashboard</h1>
+        <p class="admin-subtitle">Overall user analytics &amp; categorized user list</p>
+
+        <section class="metrics-grid" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-label">Total Registered Users</div>
+                <div class="metric-value" id="metricTotal">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Admins</div>
+                <div class="metric-value" id="metricAdmins">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Regular Users</div>
+                <div class="metric-value" id="metricRegular">—</div>
+            </div>
+        </section>
+
+        <section class="admin-section">
+            <h2>Admin Users</h2>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User ID / Email</th>
+                            <th>Username</th>
+                            <th>Account Created</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-section">
+            <h2>Regular Users</h2>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User ID / Email</th>
+                            <th>Username</th>
+                            <th>Account Created</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div id="adminStatus" class="admin-status"></div>
+    </main>
+
+    <script src="../Javascript-Files/supabase.js"></script>
+    <script src="../Javascript-Files/header-auth.js"></script>
+    <script src="../Javascript-Files/admin-dashboard.js"></script>
+</body>
+</html>

@@ -17,7 +17,7 @@ async function updateHeaderAuth() {
             .single();
 
         const username = profile?.username || session.user.email.split('@')[0];
-        const isAdmin = profile?.is_admin || false;
+        const isAdmin = profile?.is_admin === true;
         const initial = username.charAt(0).toUpperCase();
 
         // Տեղադրում ենք Profile Badge-ը Header-ում
@@ -30,6 +30,9 @@ async function updateHeaderAuth() {
             </div>
         `;
 
+        // 🟢 Admin Panel քարտի դինամիկ ներդրում (միայն admin-ների համար)
+        toggleAdminCard(isAdmin);
+
         // 🟢 Logout Կոճակի տրամաբանությունը
         document.getElementById('logout-btn')?.addEventListener('click', async () => {
             await supabaseClient.auth.signOut();
@@ -38,10 +41,41 @@ async function updateHeaderAuth() {
 
     } else {
         // Եթե մուտք չի գործել (Guest), ցույց ենք տալիս Log In / Sign Up կոճակը
+        const inHtmlFiles = window.location.pathname.includes('/HTML-Files/');
+        const authHref = inHtmlFiles ? 'auth.html' : 'HTML-Files/auth.html';
         authContainer.innerHTML = `
-            <a href="HTML-Files/auth.html" class="auth-btn" id="nav-auth-btn">Log In / Sign Up</a>
+            <a href="${authHref}" class="auth-btn" id="nav-auth-btn">Log In / Sign Up</a>
         `;
+        toggleAdminCard(false);
     }
+}
+
+// 🟢 Admin Panel քարտի ավելացում/հեռացում գլխավոր էջի grid-ում
+function toggleAdminCard(isAdmin) {
+    const grid = document.querySelector('.grid-container');
+    if (!grid) return;
+
+    const existing = document.getElementById('admin-panel-card');
+    if (!isAdmin) {
+        if (existing) existing.remove();
+        return;
+    }
+    if (existing) return;
+
+    const link = document.createElement('a');
+    link.id = 'admin-panel-card';
+    link.href = 'HTML-Files/admin-dashboard.html';
+    link.style.textDecoration = 'none';
+    link.style.color = 'inherit';
+    link.innerHTML = `
+        <div class="glass-card admin-card">
+            <div class="card-icon">🛡️</div>
+            <h2>Admin Panel</h2>
+            <p>Manage users & view analytics</p>
+            <div class="card-action">Open Dashboard →</div>
+        </div>
+    `;
+    grid.appendChild(link);
 }
 
 // 🟢 Լսում ենք Auth վիճակի փոփոխությունները (Login/Logout)

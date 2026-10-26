@@ -1,0 +1,21 @@
+Task Goal:
+Enhance `admin-dashboard.html` and `admin-dashboard.js` to enable Admin Edit Actions (updating user roles and deleting users).
+
+Requirements:
+1. UI Actions Column:
+   - Add an "Actions" column to the user management table in `admin-dashboard.html`.
+   - For each user row, render dynamic control buttons:
+     - "Toggle Admin Role" (e.g. "Promote to Admin" or "Demote to User").
+     - "Delete User" (with confirmation dialog).
+
+2. Role Toggle Handler (`admin-dashboard.js`):
+   - When clicking "Toggle Admin Role", update the user's `is_admin` boolean status in Supabase `profiles` table.
+   - Show a success notification and refresh the table UI dynamically.
+
+3. User Deletion Handler (`admin-dashboard.js`):
+   - When clicking "Delete User", show a confirmation prompt (`confirm(...)`).
+   - If confirmed, delete the record from Supabase `profiles` table.
+   - Update UI metrics (total count, admins count) automatically.
+
+4. Safeguards:
+   - Prevent admins from accidentally demoting or deleting their OWN active account in the UI.

@@ -399,4 +399,7 @@ header h1 {
         animation: none;
         transition: none;
     }
+.glass-card.admin-card {
+    border: 1px solid rgba(234, 179, 8, 0.4);
+}
 }

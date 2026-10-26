@@ -1,0 +1,3 @@
+- Do not execute long or complex terminal commands.
+- Focus strictly on reading and editing JS/CSS/HTML files directly.
+- Always ask for user confirmation in Plan mode before making structural code changes.

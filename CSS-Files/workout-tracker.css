@@ -19,6 +19,7 @@ body {
     background-color: #0f172a;
     color: #ffffff;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow-x: hidden;
     position: relative;
 }
@@ -740,6 +741,7 @@ select.custom-input option {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    min-height: 44px;
 }
 
 .add-water-btn:hover {
@@ -763,6 +765,32 @@ select.custom-input option {
         right: 15px;
         left: 15px;
         width: auto;
+    }
+}
+
+
+/* ==========================================
+   🟢 RESPONSIVE / DEVICE OPTIMIZATION
+   ========================================== */
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .water-widget {
+        bottom: 15px;
+        right: 15px;
+        left: 15px;
+        width: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .water-widget,
+    .water-progress-bar,
+    .water-fab,
+    .top-progress-bar-fill {
+        transition: none;
     }
 }
 

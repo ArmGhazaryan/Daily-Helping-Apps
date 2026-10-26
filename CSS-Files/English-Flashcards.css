@@ -4,7 +4,8 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #0f172a;
     color: #f8fafc;
-    height: 100vh;
+    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 
@@ -94,8 +95,8 @@ header {
 
 /* 3D Քարտի Կառուցվածք */
 .flashcard-container {
-    width: 320px;
-    height: 420px;
+    width: min(320px, 90vw);
+    height: min(420px, 70vh);
     perspective: 1000px;
 }
 
@@ -284,6 +285,7 @@ header {
     justify-content: center;
     align-items: center;
     backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 /* Modal-ի բուն պատուհանը */
@@ -523,4 +525,59 @@ header {
     transform: translateX(0);
     margin-right: 6px;
     color: #f8fafc;
+}
+
+/* ==========================================
+   🟢 RESPONSIVE / DEVICE OPTIMIZATION
+   ========================================== */
+@media (max-width: 480px) {
+    header {
+        padding: 16px 20px;
+    }
+
+    .app-container {
+        padding-top: 20px;
+    }
+
+    .cards-gallery {
+        width: 95%;
+    }
+
+    .mini-card {
+        padding: 12px 18px;
+        font-size: 1rem;
+        min-width: 100px;
+    }
+
+    .controls {
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+    }
+
+    .controls button {
+        padding: 10px 16px;
+        min-height: 44px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 24px 20px;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        font-size: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flashcard,
+    .mini-card,
+    .hint,
+    .modal-content {
+        transition: none;
+        animation: none;
+    }
 }

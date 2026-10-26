@@ -78,7 +78,7 @@ header {
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
     font-weight: 700;
     letter-spacing: 1px;
 }
@@ -189,7 +189,7 @@ header h1 {
     max-width: 1200px;
     margin-top: 50px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
     gap: 30px;
     padding-bottom: 50px;
 }
@@ -356,4 +356,47 @@ header h1 {
 
 .grid-container > a .glass-card {
     flex: 1; /* Լրացնում է ամբողջ բարձրությունը */
+}
+
+/* ==========================================
+   🟢 RESPONSIVE / DEVICE OPTIMIZATION
+   ========================================== */
+@media (max-width: 600px) {
+    header {
+        width: 95%;
+        margin-top: 24px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .clock {
+        font-size: 1.2rem;
+        padding: 8px 14px;
+    }
+
+    .grid-container {
+        width: 95%;
+        margin-top: 30px;
+        gap: 20px;
+    }
+
+    .glass-card {
+        padding: 24px 20px;
+    }
+
+    .card-icon {
+        font-size: 2.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shape,
+    .glass-card,
+    .card-action,
+    .dha-brand,
+    .dha-brand .expand {
+        animation: none;
+        transition: none;
+    }
 }

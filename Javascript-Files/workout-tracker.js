@@ -2,27 +2,23 @@
 // 🟢 1. SUPABASE AUTH & DATABASE HELPER FUNCTIONS
 // ==========================================
 
-// 1. Ստուգում ենք ընթացիկ օգտատիրոջը
+// 1. Ստուգում ենք ընթացիկ օգտատիրոջը (առանց forced alert/redirect-ի)
 async function getCurrentUser() {
-    if (typeof supabaseClient === 'undefined') {
-        console.error("Supabase client is not initialized.");
+    if (typeof supabaseClient === 'undefined') return null;
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        return user || null;
+    } catch (e) {
         return null;
     }
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-        alert("Մարզումները պահպանելու համար խնդրում ենք նախ մուտք գործել համակարգ:");
-        window.location.href = '../HTML-Files/auth.html';
-        return null;
-    }
-    return user;
 }
 
-// 2. Մարզումը պահպանում ենք Supabase-ում (INSERT)
+// 2. Մարզումը պահպանում ենք Supabase-ում (INSERT) - միայն եթե log in է եղած
 async function saveWorkoutToSupabase(exerciseName, repsCount) {
     const user = await getCurrentUser();
-    if (!user) return;
+    if (!user) return; // Guest-ի դեպքում լուռ վերադառնում ենք (տվյալը պահվում է LocalStorage-ում)
 
-    const { data, error } = await supabaseClient
+    const { error } = await supabaseClient
         .from('workouts')
         .insert([
             {
@@ -34,22 +30,15 @@ async function saveWorkoutToSupabase(exerciseName, repsCount) {
 
     if (error) {
         console.error("Error saving workout to Supabase:", error.message);
-        if (typeof showNotification === 'function') {
-            showNotification("Error saving workout to database.", true);
-        }
     } else {
-        console.log("Workout saved successfully to Supabase!");
-        if (typeof showNotification === 'function') {
-            showNotification("Workout saved to cloud!");
-        }
-        loadUserWorkouts(); // Թարմացնում ենք ցուցակը
+        console.log("Workout saved successfully to Supabase cloud!");
     }
 }
 
 // 3. Կարդում ենք օգտատիրոջ մարզումները բազայից (SELECT)
 async function loadUserWorkouts() {
     const user = await getCurrentUser();
-    if (!user) return;
+    if (!user) return null;
 
     const { data: workouts, error } = await supabaseClient
         .from('workouts')
@@ -58,28 +47,23 @@ async function loadUserWorkouts() {
 
     if (error) {
         console.error("Error loading workouts from Supabase:", error.message);
-        return;
+        return null;
     }
 
     console.log("User Workouts Loaded from Supabase:", workouts);
     return workouts;
 }
 
-
-// 🟢 LocalStorage-ի չսինխրոնացված տվյալները ուղարկում ենք Supabase
+// 🟢 LocalStorage-ի չսինխրոնացված տվյալները ուղարկում ենք Supabase (միայն Logged-in-ի համար)
 async function syncLocalTasksToSupabase() {
     const user = await getCurrentUser();
     if (!user) return;
 
-    // Վերցնում ենք հեռախոսի/բրաուզերի LocalStorage-ի տվյալները
     const localTasks = JSON.parse(localStorage.getItem('workoutTasks')) || [];
-
-    // Եթե տեղական տվյալ չկա, դուրս ենք գալիս
     if (localTasks.length === 0) return;
 
     console.log("Migrating local tasks to Supabase cloud...");
 
-    // Ձևափոխում ենք տվյալները Supabase workouts աղյուսակի ձևաչափի
     const tasksToInsert = localTasks.map(task => ({
         user_id: user.id,
         exercise_name: task.text,
@@ -87,15 +71,12 @@ async function syncLocalTasksToSupabase() {
         created_at: task.date ? new Date(task.date).toISOString() : new Date().toISOString()
     }));
 
-    // Ուղարկում ենք բոլոր տվյալները միանգամից (Bulk Insert)
     const { error } = await supabaseClient
         .from('workouts')
         .insert(tasksToInsert);
 
     if (!error) {
         console.log("Local tasks successfully synced to account!");
-        // Սինխրոնացումից հետո մաքրում ենք LocalStorage-ի հին ցուցակը, որ կրկնություններ չլինեն
-        localStorage.removeItem('workoutTasks');
         if (typeof showNotification === 'function') {
             showNotification("Your local progress was synced to your account!");
         }
@@ -189,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Update Productivity Stats whenever tasks are rendered
         calculateProductivityStats(selectedDate);
     }
 
@@ -213,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             saveAndRender();
 
-            // Save to Supabase Cloud Database as well
+            // Save to Supabase Cloud Database if user is logged in
             saveWorkoutToSupabase(text, 1);
 
             taskInput.value = '';
@@ -664,11 +644,14 @@ document.addEventListener('DOMContentLoaded', () => {
         importFile.value = '';
     });
 
-// Initial renders & automatic sync
+    // Initial renders & automatic sync
     async function initApp() {
-        renderTasks();
-        await syncLocalTasksToSupabase(); // 1. Նախ տեղափոխում ենք տեղական տվյալները բազա
-        await loadUserWorkouts();         // 2. Հետո բեռնում ենք ամպային բազայի ամբողջական պատկերը
+        renderTasks(); // Նախ նկարում ենք LocalStorage-ի տվյալները (Guest-ի համար)
+        const user = await getCurrentUser();
+        if (user) {
+            await syncLocalTasksToSupabase(); // Սինխրոնացնում ենք Local-ը Cloud-ի հետ
+            await loadUserWorkouts();        // Բեռնում ենք Cloud տվյալները
+        }
     }
 
     initApp();

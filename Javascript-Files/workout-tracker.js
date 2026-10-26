@@ -13,48 +13,7 @@ async function getCurrentUser() {
     }
 }
 
-// 2. Մարզումը պահպանում ենք Supabase-ում (INSERT) - միայն եթե log in է եղած
-async function saveWorkoutToSupabase(exerciseName, repsCount) {
-    const user = await getCurrentUser();
-    if (!user) return; // Guest-ի դեպքում լուռ վերադառնում ենք (տվյալը պահվում է LocalStorage-ում)
-
-    const { error } = await supabaseClient
-        .from('workouts')
-        .insert([
-            {
-                user_id: user.id,
-                exercise_name: exerciseName,
-                reps: parseInt(repsCount)
-            }
-        ]);
-
-    if (error) {
-        console.error("Error saving workout to Supabase:", error.message);
-    } else {
-        console.log("Workout saved successfully to Supabase cloud!");
-    }
-}
-
-// 3. Կարդում ենք օգտատիրոջ մարզումները բազայից (SELECT)
-async function loadUserWorkouts() {
-    const user = await getCurrentUser();
-    if (!user) return null;
-
-    const { data: workouts, error } = await supabaseClient
-        .from('workouts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error("Error loading workouts from Supabase:", error.message);
-        return null;
-    }
-
-    console.log("User Workouts Loaded from Supabase:", workouts);
-    return workouts;
-}
-
-// 🟢 LocalStorage-ի չսինխրոնացված տվյալները ուղարկում ենք Supabase (միայն Logged-in-ի համար)
+// 2. 🟢 LocalStorage-ի չսինխրոնացված տվյալները ուղարկում ենք Supabase daily_tasks (միայն Logged-in-ի համար)
 async function syncLocalTasksToSupabase() {
     const user = await getCurrentUser();
     if (!user) return;
@@ -66,23 +25,117 @@ async function syncLocalTasksToSupabase() {
 
     const tasksToInsert = localTasks.map(task => ({
         user_id: user.id,
-        exercise_name: task.text,
-        reps: 1,
-        created_at: task.date ? new Date(task.date).toISOString() : new Date().toISOString()
+        date: task.date,
+        task_text: task.text,
+        time_text: task.time || '',
+        is_completed: !!task.completed
     }));
 
     const { error } = await supabaseClient
-        .from('workouts')
+        .from('daily_tasks')
         .insert(tasksToInsert);
 
     if (!error) {
         console.log("Local tasks successfully synced to account!");
+        localStorage.removeItem('workoutTasks');
         if (typeof showNotification === 'function') {
             showNotification("Your local progress was synced to your account!");
         }
     } else {
         console.error("Migration error:", error.message);
     }
+}
+
+// 2b. 🟢 LocalStorage-ի չսինխրոնացված routines-ը ուղարկում ենք Supabase routines (միայն Logged-in-ի համար)
+async function syncLocalRoutinesToSupabase() {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    const localRoutines = JSON.parse(localStorage.getItem('savedRoutines')) || {};
+    const names = Object.keys(localRoutines);
+    if (names.length === 0) return;
+
+    console.log("Migrating local routines to Supabase cloud...");
+
+    const { data: existing, error: fetchError } = await supabaseClient
+        .from('routines')
+        .select('id, routine_name')
+        .eq('user_id', user.id);
+
+    if (fetchError) {
+        console.error("Migration error (fetch routines):", fetchError.message);
+        return;
+    }
+
+    const existingMap = {};
+    (existing || []).forEach(row => {
+        existingMap[row.routine_name] = row.id;
+    });
+
+    let hasError = false;
+    for (const name of names) {
+        const tasks = Array.isArray(localRoutines[name]) ? localRoutines[name] : [];
+        if (existingMap[name]) {
+            const { error } = await supabaseClient
+                .from('routines')
+                .update({ tasks: tasks })
+                .eq('id', existingMap[name])
+                .eq('user_id', user.id);
+            if (error) {
+                console.error("Migration error (update routine):", error.message);
+                hasError = true;
+            }
+        } else {
+            const { error } = await supabaseClient
+                .from('routines')
+                .insert({ user_id: user.id, routine_name: name, tasks: tasks });
+            if (error) {
+                console.error("Migration error (insert routine):", error.message);
+                hasError = true;
+            }
+        }
+    }
+
+    if (!hasError) {
+        console.log("Local routines successfully synced to account!");
+        localStorage.removeItem('savedRoutines');
+        if (typeof showNotification === 'function') {
+            showNotification("Your local routines were synced to your account!");
+        }
+    }
+}
+
+// 3. Կարդում ենք օգտատիրոջ daily tasks-ը բազայից (SELECT)
+async function loadAllTasks() {
+    const user = await getCurrentUser();
+
+    if (user) {
+        const { data, error } = await supabaseClient
+            .from('daily_tasks')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error("Error loading tasks from Supabase:", error.message);
+            return [];
+        }
+
+        return (data || []).map(row => ({
+            id: row.id,
+            text: row.task_text,
+            date: row.date,
+            time: row.time_text || '',
+            completed: !!row.is_completed
+        }));
+    }
+
+    // Guest mode: LocalStorage
+    const localTasks = JSON.parse(localStorage.getItem('workoutTasks')) || [];
+    localTasks.forEach(t => {
+        if (!t.id) t.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    });
+    return localTasks;
 }
 
 
@@ -106,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // UI Toast Notification
     const toastElement = document.getElementById('toast');
     let toastTimeout;
-    window.showNotification = function(message, isError = false) {
+    window.showNotification = function (message, isError = false) {
         if (!toastElement) return;
         toastElement.textContent = message;
         toastElement.className = `toast show ${isError ? 'error' : 'success'}`;
@@ -120,14 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     if (dateInput) dateInput.value = today;
 
-    // Load tasks & water history from LocalStorage
-    let tasks = JSON.parse(localStorage.getItem('workoutTasks')) || [];
+    // Tasks are loaded dynamically (Supabase for logged-in users, LocalStorage for guests)
+    let tasks = [];
     let waterHistory = JSON.parse(localStorage.getItem('waterHistory')) || {};
-
-    // Assign IDs to old tasks if missing
-    tasks.forEach(t => {
-        if (!t.id) t.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    });
 
     // Helper: format date for display
     function formatDate(dateString) {
@@ -175,9 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (dateInput) dateInput.addEventListener('change', renderTasks);
 
-    // Add new task & sync with Supabase
+    // Add new task & sync with Supabase daily_tasks (or LocalStorage for guests)
     if (addBtn) {
-        addBtn.addEventListener('click', () => {
+        addBtn.addEventListener('click', async () => {
             const text = taskInput.value.trim();
             const date = dateInput.value;
             const time = timeInput.value;
@@ -187,34 +235,95 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            tasks.push({
-                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-                text: text, date: date, time: time, completed: false
-            });
-            saveAndRender();
+            const user = await getCurrentUser();
 
-            // Save to Supabase Cloud Database if user is logged in
-            saveWorkoutToSupabase(text, 1);
+            if (user) {
+                const { data, error } = await supabaseClient
+                    .from('daily_tasks')
+                    .insert([{
+                        user_id: user.id,
+                        date: date,
+                        task_text: text,
+                        time_text: time || '',
+                        is_completed: false
+                    }])
+                    .select();
 
+                if (error) {
+                    console.error("Error adding task to Supabase:", error.message);
+                    showNotification('Failed to add goal.', true);
+                    return;
+                }
+
+                const row = (data && data[0]) ? data[0] : null;
+                tasks.push({
+                    id: row ? row.id : (Date.now().toString(36) + Math.random().toString(36).substr(2)),
+                    text: text, date: date, time: time, completed: false
+                });
+            } else {
+                tasks.push({
+                    id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                    text: text, date: date, time: time, completed: false
+                });
+                localStorage.setItem('workoutTasks', JSON.stringify(tasks));
+            }
+
+            renderTasks();
             taskInput.value = '';
         });
     }
 
-    window.toggleTask = function (id) {
-        const task = tasks.find(t => t.id === id);
-        if (task) {
-            task.completed = !task.completed;
-            saveAndRender();
+    window.toggleTask = async function (id) {
+        const task = tasks.find(t => String(t.id) === String(id));
+        if (!task) return;
+
+        const newCompleted = !task.completed;
+        const user = await getCurrentUser();
+
+        if (user) {
+            const { error } = await supabaseClient
+                .from('daily_tasks')
+                .update({ is_completed: newCompleted })
+                .eq('id', task.id)
+                .eq('user_id', user.id);
+
+            if (error) {
+                console.error("Error updating task in Supabase:", error.message);
+                showNotification('Failed to update task.', true);
+                return;
+            }
         }
+
+        task.completed = newCompleted;
+        if (!user) localStorage.setItem('workoutTasks', JSON.stringify(tasks));
+        renderTasks();
     };
 
-    window.deleteTask = function (id) {
-        tasks = tasks.filter(t => t.id !== id);
-        saveAndRender();
+    window.deleteTask = async function (id) {
+        const user = await getCurrentUser();
+
+        if (user) {
+            const { error } = await supabaseClient
+                .from('daily_tasks')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', user.id);
+
+            if (error) {
+                console.error("Error deleting task from Supabase:", error.message);
+                showNotification('Failed to delete task.', true);
+                return;
+            }
+        }
+
+        tasks = tasks.filter(t => String(t.id) !== String(id));
+        if (!user) localStorage.setItem('workoutTasks', JSON.stringify(tasks));
+        renderTasks();
     };
 
-    function saveAndRender() {
-        localStorage.setItem('workoutTasks', JSON.stringify(tasks));
+    async function saveAndRender() {
+        const user = await getCurrentUser();
+        if (!user) localStorage.setItem('workoutTasks', JSON.stringify(tasks));
         renderTasks();
     }
 
@@ -222,12 +331,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // --- ADVANCED ROUTINE MANAGER LOGIC ---
     // ==========================================
-    let savedRoutines = JSON.parse(localStorage.getItem('savedRoutines')) || {};
+    let savedRoutines = {};
+    let routineIds = {};
     const routineSelect = document.getElementById('routineSelect');
     const routineNameInput = document.getElementById('routineNameInput');
 
-    function updateRoutineSelect() {
+    async function updateRoutineSelect() {
         if (!routineSelect) return;
+        const user = await getCurrentUser();
+        if (user) {
+            const { data, error } = await supabaseClient
+                .from('routines')
+                .select('*')
+                .eq('user_id', user.id);
+            if (error) {
+                console.error("Error loading routines from Supabase:", error.message);
+                savedRoutines = {};
+                routineIds = {};
+            } else {
+                savedRoutines = {};
+                routineIds = {};
+                (data || []).forEach(row => {
+                    savedRoutines[row.routine_name] = Array.isArray(row.tasks) ? row.tasks : [];
+                    routineIds[row.routine_name] = row.id;
+                });
+            }
+        } else {
+            savedRoutines = JSON.parse(localStorage.getItem('savedRoutines')) || {};
+            routineIds = {};
+        }
         routineSelect.innerHTML = '<option value="" disabled selected>Select a routine...</option>';
         for (let name in savedRoutines) {
             const opt = document.createElement('option');
@@ -236,9 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
             routineSelect.appendChild(opt);
         }
     }
-    updateRoutineSelect();
 
-    document.getElementById('saveRoutineBtn')?.addEventListener('click', () => {
+    // Backwards-compatible alias
+    const loadRoutines = () => updateRoutineSelect();
+
+    document.getElementById('saveRoutineBtn')?.addEventListener('click', async () => {
         const name = routineNameInput.value.trim();
         if (!name) return showNotification('Please enter a new name for your routine.', true);
 
@@ -246,65 +380,216 @@ document.addEventListener('DOMContentLoaded', () => {
         const dailyTasks = tasks.filter(t => t.date === selectedDate);
         if (dailyTasks.length === 0) return showNotification('No tasks found to save!', true);
 
-        savedRoutines[name] = dailyTasks.map(t => ({ text: t.text, time: t.time }));
-        localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
-        updateRoutineSelect();
+        const taskList = dailyTasks.map(t => ({ text: t.text, time: t.time }));
+
+        const user = await getCurrentUser();
+        if (user) {
+            const existingId = routineIds[name];
+            if (existingId) {
+                const { error } = await supabaseClient
+                    .from('routines')
+                    .update({ tasks: taskList })
+                    .eq('id', existingId)
+                    .eq('user_id', user.id);
+                if (error) {
+                    console.error("Error updating routine in Supabase:", error.message);
+                    showNotification('Failed to save routine.', true);
+                    return;
+                }
+            } else {
+                const { data, error } = await supabaseClient
+                    .from('routines')
+                    .insert({ user_id: user.id, routine_name: name, tasks: taskList })
+                    .select();
+                if (error) {
+                    console.error("Error saving routine to Supabase:", error.message);
+                    showNotification('Failed to save routine.', true);
+                    return;
+                }
+                if (data && data[0]) routineIds[name] = data[0].id;
+            }
+        } else {
+            savedRoutines[name] = taskList;
+            localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
+        }
+
+        await updateRoutineSelect();
         routineNameInput.value = '';
         showNotification(`Routine "${name}" saved!`);
     });
 
-    document.getElementById('loadRoutineBtn')?.addEventListener('click', () => {
+    document.getElementById('loadRoutineBtn')?.addEventListener('click', async () => {
         const name = routineSelect.value;
         if (!name) return showNotification('Please select a routine to paste.', true);
 
-        const template = savedRoutines[name];
+        if (!savedRoutines[name] || !Array.isArray(savedRoutines[name])) {
+            await updateRoutineSelect();
+        }
+        const routineTasks = savedRoutines[name];
+        if (!routineTasks || !Array.isArray(routineTasks)) {
+            return showNotification('Routine not found.', true);
+        }
         const selectedDate = dateInput.value;
 
         if (tasks.filter(t => t.date === selectedDate).length > 0) {
             if (!confirm(`Clear current tasks for ${formatDate(selectedDate)} and paste "${name}"?`)) return;
         }
 
-        tasks = tasks.filter(t => t.date !== selectedDate);
-        template.forEach(item => {
-            tasks.push({
-                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
-                text: item.text, date: selectedDate, time: item.time, completed: false
-            });
-        });
+        const user = await getCurrentUser();
 
-        saveAndRender();
+        if (user) {
+            const { error: delError } = await supabaseClient
+                .from('daily_tasks')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('date', selectedDate);
+            if (delError) {
+                console.error("Error clearing tasks in Supabase:", delError.message);
+                showNotification('Failed to paste routine.', true);
+                return;
+            }
+        }
+
+        tasks = tasks.filter(t => t.date !== selectedDate);
+
+        const newTasks = routineTasks.map(item => ({
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+            text: item.text, date: selectedDate, time: item.time, completed: false
+        }));
+
+        if (user) {
+            const rows = newTasks.map(t => ({
+                user_id: user.id,
+                date: selectedDate,
+                task_text: t.text,
+                time_text: t.time || '',
+                is_completed: false
+            }));
+            const { data, error } = await supabaseClient
+                .from('daily_tasks')
+                .insert(rows)
+                .select();
+            if (error) {
+                console.error("Error pasting routine to Supabase:", error.message);
+                showNotification('Failed to paste routine.', true);
+                return;
+            }
+            (data || []).forEach((row, idx) => {
+                if (newTasks[idx]) newTasks[idx].id = row.id;
+            });
+        }
+
+        tasks.push(...newTasks);
+        if (!user) localStorage.setItem('workoutTasks', JSON.stringify(tasks));
+        renderTasks();
         showNotification(`Pasted "${name}".`);
     });
 
-    document.getElementById('updateRoutineBtn')?.addEventListener('click', () => {
+    document.getElementById('updateRoutineBtn')?.addEventListener('click', async () => {
         const name = routineSelect.value;
         if (!name) return showNotification('Select a routine to update.', true);
 
         const dailyTasks = tasks.filter(t => t.date === dateInput.value);
         if (dailyTasks.length === 0) return showNotification('No tasks to update!', true);
 
-        savedRoutines[name] = dailyTasks.map(t => ({ text: t.text, time: t.time }));
-        localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
+        const taskList = dailyTasks.map(t => ({ text: t.text, time: t.time }));
+
+        const user = await getCurrentUser();
+        if (user) {
+            const existingId = routineIds[name];
+            if (existingId) {
+                const { error } = await supabaseClient
+                    .from('routines')
+                    .update({ tasks: taskList })
+                    .eq('id', existingId)
+                    .eq('user_id', user.id);
+                if (error) {
+                    console.error("Error updating routine in Supabase:", error.message);
+                    showNotification('Failed to update routine.', true);
+                    return;
+                }
+            } else {
+                const { data, error } = await supabaseClient
+                    .from('routines')
+                    .insert({ user_id: user.id, routine_name: name, tasks: taskList })
+                    .select();
+                if (error) {
+                    console.error("Error updating routine in Supabase:", error.message);
+                    showNotification('Failed to update routine.', true);
+                    return;
+                }
+                if (data && data[0]) routineIds[name] = data[0].id;
+            }
+        } else {
+            savedRoutines[name] = taskList;
+            localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
+        }
+
+        await updateRoutineSelect();
         showNotification(`Routine "${name}" updated!`);
     });
 
-    document.getElementById('deleteRoutineBtn')?.addEventListener('click', () => {
+    document.getElementById('deleteRoutineBtn')?.addEventListener('click', async () => {
         const name = routineSelect.value;
         if (!name) return;
-        if (confirm(`Delete routine "${name}" forever?`)) {
+        if (!confirm(`Delete routine "${name}" forever?`)) return;
+
+        const user = await getCurrentUser();
+        if (user) {
+            const existingId = routineIds[name];
+            if (existingId) {
+                const { error } = await supabaseClient
+                    .from('routines')
+                    .delete()
+                    .eq('id', existingId)
+                    .eq('user_id', user.id);
+                if (error) {
+                    console.error("Error deleting routine from Supabase:", error.message);
+                    showNotification('Failed to delete routine.', true);
+                    return;
+                }
+            } else {
+                const { error } = await supabaseClient
+                    .from('routines')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('routine_name', name);
+                if (error) {
+                    console.error("Error deleting routine from Supabase:", error.message);
+                    showNotification('Failed to delete routine.', true);
+                    return;
+                }
+            }
+            delete routineIds[name];
+        } else {
             delete savedRoutines[name];
             localStorage.setItem('savedRoutines', JSON.stringify(savedRoutines));
-            updateRoutineSelect();
-            showNotification(`Routine deleted.`);
         }
+
+        await updateRoutineSelect();
+        showNotification(`Routine deleted.`);
     });
 
-    document.getElementById('clearTasksBtn')?.addEventListener('click', () => {
+    document.getElementById('clearTasksBtn')?.addEventListener('click', async () => {
         const selectedDate = dateInput.value;
         if (tasks.filter(t => t.date === selectedDate).length === 0) return;
         if (confirm(`Clear ALL tasks for ${formatDate(selectedDate)}?`)) {
+            const user = await getCurrentUser();
+            if (user) {
+                const { error } = await supabaseClient
+                    .from('daily_tasks')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('date', selectedDate);
+                if (error) {
+                    console.error("Error clearing tasks in Supabase:", error.message);
+                    showNotification('Failed to clear tasks.', true);
+                    return;
+                }
+            }
             tasks = tasks.filter(t => t.date !== selectedDate);
-            saveAndRender();
+            if (!user) localStorage.setItem('workoutTasks', JSON.stringify(tasks));
+            renderTasks();
             showNotification('Tasks cleared.');
         }
     });
@@ -448,11 +733,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWaterDisplay();
     });
 
-    initWaterTracker();
-
-
-    // ==========================================
-    // --- PRODUCTIVITY STATS LOGIC ---
     // ==========================================
     function calculateProductivityStats(selectedDateStr) {
         if (!selectedDateStr) return;
@@ -646,12 +926,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial renders & automatic sync
     async function initApp() {
-        renderTasks(); // Նախ նկարում ենք LocalStorage-ի տվյալները (Guest-ի համար)
         const user = await getCurrentUser();
         if (user) {
-            await syncLocalTasksToSupabase(); // Սինխրոնացնում ենք Local-ը Cloud-ի հետ
-            await loadUserWorkouts();        // Բեռնում ենք Cloud տվյալները
+            await syncLocalTasksToSupabase();
+            await syncLocalRoutinesToSupabase();
         }
+        tasks = await loadAllTasks();
+        renderTasks();
+        initWaterTracker();
+        await updateRoutineSelect();
     }
 
     initApp();

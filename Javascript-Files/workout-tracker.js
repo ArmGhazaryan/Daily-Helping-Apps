@@ -6,8 +6,33 @@
 async function getCurrentUser() {
     if (typeof supabaseClient === 'undefined') return null;
     try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        return user || null;
+        // Առաջին հերթին ստուգում ենք persisted session-ը (mobile persistence)
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) {
+            console.warn('Session resolution pending:', sessionError.message);
+        }
+        const session = sessionData?.session;
+        if (session && session.user) {
+            // Ստուգում ենք token-ի ժամկետը; եթե լրացել է, autoRefreshToken-ը թարմացնում է ֆոնում
+            const expiresAt = session.expires_at;
+            const now = Math.floor(Date.now() / 1000);
+            if (expiresAt && now >= expiresAt) {
+                try {
+                    const { data: refreshData, error: refreshError } = await supabaseClient.auth.refreshSession();
+                    if (refreshError) {
+                        console.warn('Token refresh pending:', refreshError.message);
+                    }
+                    if (refreshData?.session?.user) {
+                        return refreshData.session.user;
+                    }
+                } catch (refreshErr) {
+                    // Ֆոնային թարմացումը չհաջողվեց; guest ռեժիմ
+                }
+                return null;
+            }
+            return session.user;
+        }
+        return null;
     } catch (e) {
         return null;
     }

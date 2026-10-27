@@ -1,21 +1,40 @@
 Task Goal:
-Enhance `admin-dashboard.html` and `admin-dashboard.js` to enable Admin Edit Actions (updating user roles and deleting users).
+Convert the web application into a fully functional Progressive Web App (PWA) with offline caching capability, app installation manifest, and service worker registration.
 
-Requirements:
-1. UI Actions Column:
-   - Add an "Actions" column to the user management table in `admin-dashboard.html`.
-   - For each user row, render dynamic control buttons:
-     - "Toggle Admin Role" (e.g. "Promote to Admin" or "Demote to User").
-     - "Delete User" (with confirmation dialog).
+Target Files to Create/Modify:
+- Create `manifest.json` in the root directory.
+- Create `sw.js` (Service Worker) in the root directory.
+- Update `index.html`, `HTML-Files/workout-tracker.html`, and `HTML-Files/English-Flashcards.html` to register the service worker and link the manifest.
 
-2. Role Toggle Handler (`admin-dashboard.js`):
-   - When clicking "Toggle Admin Role", update the user's `is_admin` boolean status in Supabase `profiles` table.
-   - Show a success notification and refresh the table UI dynamically.
+Detailed Requirements:
 
-3. User Deletion Handler (`admin-dashboard.js`):
-   - When clicking "Delete User", show a confirmation prompt (`confirm(...)`).
-   - If confirmed, delete the record from Supabase `profiles` table.
-   - Update UI metrics (total count, admins count) automatically.
+1. Web App Manifest (`manifest.json`):
+   - Set `name`: "Daily Productivity & Fitness", `short_name`: "DailyApp".
+   - Set `start_url`: "/index.html" (or relative `./index.html`).
+   - Set `display`: "standalone", `background_color`: "#0f172a", `theme_color`: "#0f172a".
+   - Define standard icon entries (192x192 and 512x512 formats).
 
-4. Safeguards:
-   - Prevent admins from accidentally demoting or deleting their OWN active account in the UI.
+2. Service Worker (`sw.js`):
+   - Implement a "Stale-While-Revalidate" or "Cache First" network strategy.
+   - Cache essential static assets: HTML files, CSS files, JavaScript files, and core icons.
+   - Handle the `install` event to pre-cache critical app shell files.
+   - Handle the `fetch` event to serve cached resources when offline, while updating cache in the background when online.
+   - Handle the `activate` event to clean up outdated cache storage versions.
+
+3. HTML Integration & Service Worker Registration:
+   - Add `<link rel="manifest" href="../manifest.json">` to all HTML file headers.
+   - Add meta tag `<meta name="theme-color" content="#0f172a">`.
+   - Add inline/external script to register `sw.js` safely:
+     ```javascript
+     if ('serviceWorker' in navigator) {
+       window.addEventListener('load', () => {
+         navigator.serviceWorker.register('/sw.js')
+           .then(reg => console.log('PWA Service Worker Registered!'))
+           .catch(err => console.error('SW Registration Failed:', err));
+       });
+     }
+     ```
+
+Verification Steps:
+- Check DevTools -> Application tab -> Manifest & Service Workers to confirm successful PWA installation status.
+- Test offline functionality in DevTools (Network -> Offline mode) to verify the app shell loads without network connectivity.

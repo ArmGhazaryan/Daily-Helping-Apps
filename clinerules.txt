@@ -1,3 +1,20 @@
 - Do not execute long or complex terminal commands.
 - Focus strictly on reading and editing JS/CSS/HTML files directly.
 - Always ask for user confirmation in Plan mode before making structural code changes.
+
+
+# PWA Selective Cache Versioning Rule
+
+- **Conditional Service Worker Cache Bumping:**
+  Inspect `sw.js` and bump the `CACHE_NAME` version ONLY when making **Major or Significant Changes**:
+  
+  ✅ **BUMP Version When:**
+  - Adding new pages, modules, or features (e.g., new tools, UI components, HTML structure).
+  - Modifying core JavaScript logic, API calls, or database schema integration.
+  - Adding or replacing static assets (icons, images, stylesheets).
+  - Refactoring existing functional components.
+
+  ❌ **DO NOT Bump Version When:**
+  - Fixing minor typos, wording, or text content.
+  - Making tiny CSS adjustments (e.g., padding, color tweaks, font size).
+  - Adding code comments or formatting whitespace.

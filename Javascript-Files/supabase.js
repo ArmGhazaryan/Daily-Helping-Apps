@@ -14,6 +14,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 // 🟢 Google OAuth trigger
 async function signInWithGoogle() {
+  console.log("signInWithGoogle triggered");
   const currentOrigin = window.location.origin + window.location.pathname;
   const { data, error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
@@ -61,26 +62,18 @@ async function handleAuthRedirect() {
   }
 }
 
-// 🟢 Bind click listeners on Google Sign-In button(s)
-function bindGoogleButtons() {
-  document.querySelectorAll('.google-btn, .google-signin-btn').forEach((btn) => {
-    if (btn.dataset.googleBound === 'true') return;
-    btn.dataset.googleBound = 'true';
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      signInWithGoogle();
-    });
-  });
-}
+// 🟢 Event delegation for Google Sign-In buttons (robust DOM binding)
+document.addEventListener('click', function (e) {
+  if (e.target.closest('#google-login-btn') || e.target.closest('.google-auth-btn')) {
+    console.log('Google Auth button clicked dynamically!');
+    signInWithGoogle();
+  }
+});
 
-// Auto-run on load
+// Auto-run session resolution on load
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    bindGoogleButtons();
-    handleAuthRedirect();
-  });
+  document.addEventListener('DOMContentLoaded', handleAuthRedirect);
 } else {
-  bindGoogleButtons();
   handleAuthRedirect();
 }
 

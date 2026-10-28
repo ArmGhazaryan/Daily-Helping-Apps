@@ -71,8 +71,15 @@ loginForm?.addEventListener('submit', async (e) => {
         authMessage.style.color = '#10b981';
         authMessage.textContent = 'Welcome back! Redirecting...';
         
+        const authModal = document.getElementById('auth-modal');
+        if (authModal) authModal.style.display = 'none';
+        
         setTimeout(() => {
-            window.location.href = '../index.html';
+            const inHtmlFiles = window.location.pathname.includes('/HTML-Files/');
+            window.location.href = inHtmlFiles ? '../index.html' : 'index.html';
         }, 1000);
     }
 });
+
+// (Google button binding is handled centrally by supabase.js)
+

@@ -1,5 +1,5 @@
 // Service Worker for Daily Productivity & Fitness PWA
-const CACHE_NAME = 'daily-app-v2';
+const CACHE_NAME = 'daily-app-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -23,7 +23,8 @@ const APP_SHELL = [
   '/Javascript-Files/English-Flashcards.js',
   '/Javascript-Files/mafia-manager.js',
   '/Javascript-Files/workout-tracker.js',
-  '/JS-Files/admin-dashboard.js'
+  '/JS-Files/admin-dashboard.js',
+  '/JS-Files/supabase.js'
 ];
 
 // Install: pre-cache app shell

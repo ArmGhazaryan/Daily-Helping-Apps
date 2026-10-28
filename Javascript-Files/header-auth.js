@@ -44,8 +44,17 @@ async function updateHeaderAuth() {
         const inHtmlFiles = window.location.pathname.includes('/HTML-Files/');
         const authHref = inHtmlFiles ? 'auth.html' : 'HTML-Files/auth.html';
         authContainer.innerHTML = `
-            <a href="${authHref}" class="auth-btn" id="nav-auth-btn">Log In / Sign Up</a>
+            <button type="button" class="auth-btn" id="nav-auth-btn">Log In / Sign Up</button>
         `;
+        const navAuthBtn = document.getElementById('nav-auth-btn');
+        navAuthBtn?.addEventListener('click', () => {
+            const modal = document.getElementById('auth-modal');
+            if (modal) {
+                modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+            } else {
+                window.location.href = authHref;
+            }
+        });
         toggleAdminCard(false);
     }
 }

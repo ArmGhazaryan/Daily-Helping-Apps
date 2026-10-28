@@ -1,40 +1,30 @@
 Task Goal:
-Convert the web application into a fully functional Progressive Web App (PWA) with offline caching capability, app installation manifest, and service worker registration.
+Perform a full project codebase audit, fix all UI/UX regressions (including restoring the full Auth Modal), optimize JavaScript/CSS performance, and ensure clean cross-platform execution before deployment.
 
-Target Files to Create/Modify:
-- Create `manifest.json` in the root directory.
-- Create `sw.js` (Service Worker) in the root directory.
-- Update `index.html`, `HTML-Files/workout-tracker.html`, and `HTML-Files/English-Flashcards.html` to register the service worker and link the manifest.
+Requirements:
 
-Detailed Requirements:
+1. Auth Modal & UI Regression Fix (`index.html` & CSS):
+   - Restore the complete Hybrid Authentication Modal structure:
+     * Auth Tabs: "Log In" and "Sign Up".
+     * Input fields: Email (`type="email"`) and Password (`type="password"`).
+     * Action button: Submit "Sign In" / "Sign Up".
+     * Visual Separator: Horizontal divider line with "-- OR --" text.
+     * Google OAuth Button: Styled "Continue with Google" button with SVG logo, positioned beneath the "OR" divider.
+   - Clean up the Header Navbar: Ensure it contains ONLY the DHA logo, real-time clock, and a single "Log In / Sign Up" button aligned with Flexbox. Remove any floating Google buttons from the header.
 
-1. Web App Manifest (`manifest.json`):
-   - Set `name`: "Daily Productivity & Fitness", `short_name`: "DailyApp".
-   - Set `start_url`: "/index.html" (or relative `./index.html`).
-   - Set `display`: "standalone", `background_color`: "#0f172a", `theme_color`: "#0f172a".
-   - Define standard icon entries (192x192 and 512x512 formats).
+2. Codebase Audit & Bug Hunting:
+   - JavaScript Scan (`JS-Files/supabase.js`, `js/main.js`, or related scripts):
+     * Check for unhandled async/await promise rejections or console errors.
+     * Verify event listeners are attached correctly without duplicate bindings.
+     * Ensure `supabaseClient.auth.getSession()` and `onAuthStateChange()` correctly resolve session state and automatically update the UI (close modal, show user profile/logout button).
+   - HTML/CSS Validation:
+     * Check for unclosed tags, broken CSS selectors, or conflicting inline styles.
+     * Verify relative file paths (`./` or relative directory paths) for scripts, stylesheets, and images to prevent 404 errors on Linux/GitHub Pages servers.
+     * Ensure lowercase naming consistency for all file references.
 
-2. Service Worker (`sw.js`):
-   - Implement a "Stale-While-Revalidate" or "Cache First" network strategy.
-   - Cache essential static assets: HTML files, CSS files, JavaScript files, and core icons.
-   - Handle the `install` event to pre-cache critical app shell files.
-   - Handle the `fetch` event to serve cached resources when offline, while updating cache in the background when online.
-   - Handle the `activate` event to clean up outdated cache storage versions.
+3. Code Optimization & Cleanup:
+   - Remove unused variables, dead code, and temporary console logs used during testing.
+   - Ensure full CSS responsiveness across desktop and mobile screens without horizontal scrollbars or modal overflow.
 
-3. HTML Integration & Service Worker Registration:
-   - Add `<link rel="manifest" href="../manifest.json">` to all HTML file headers.
-   - Add meta tag `<meta name="theme-color" content="#0f172a">`.
-   - Add inline/external script to register `sw.js` safely:
-     ```javascript
-     if ('serviceWorker' in navigator) {
-       window.addEventListener('load', () => {
-         navigator.serviceWorker.register('/sw.js')
-           .then(reg => console.log('PWA Service Worker Registered!'))
-           .catch(err => console.error('SW Registration Failed:', err));
-       });
-     }
-     ```
-
-Verification Steps:
-- Check DevTools -> Application tab -> Manifest & Service Workers to confirm successful PWA installation status.
-- Test offline functionality in DevTools (Network -> Offline mode) to verify the app shell loads without network connectivity.
+4. Final Audit Summary Report:
+   - Provide a concise summary list of all bugs identified and fixed, files modified, and confirm readiness for `git push`.

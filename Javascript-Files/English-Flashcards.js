@@ -55,7 +55,6 @@ async function syncGuestFlashcardsToSupabase() {
     const guestCards = getLocalFlashcards();
     if (guestCards.length === 0) return;
 
-    console.log("Migrating guest flashcards to cloud account...");
     const cardsToInsert = guestCards.map(card => ({
         user_id: user.id,
         word: card.word,

@@ -106,26 +106,22 @@ header h1 {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(30, 41, 59, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #1e293b;
+    border: 1px solid #334155;
     padding: 6px 14px;
     border-radius: 12px;
-    backdrop-filter: blur(8px);
-    transition: all 0.3s ease;
 }
 
 .user-avatar {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: #ffffff;
+    background: #2563eb;
+    color: #fff;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 0.95rem;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    font-weight: bold;
 }
 
 .username-text {
@@ -135,21 +131,18 @@ header h1 {
 }
 
 .admin-tag {
-    background: rgba(234, 179, 8, 0.2);
-    color: #eab308;
-    border: 1px solid rgba(234, 179, 8, 0.4);
-    font-size: 0.7rem;
+    background: #059669;
+    color: #fff;
+    font-size: 11px;
     padding: 2px 6px;
-    border-radius: 6px;
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    border-radius: 4px;
+    font-weight: 600;
 }
 
 .logout-btn {
     background: none;
     border: none;
-    color: #ef4444;
+    color: #f8fafc;
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 600;
@@ -160,8 +153,8 @@ header h1 {
 }
 
 .logout-btn:hover {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
+    background: #ef4444;
+    color: #fff;
 }
 
 

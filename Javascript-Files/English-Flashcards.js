@@ -38,6 +38,22 @@ async function getCurrentUser() {
     }
 }
 
+
+async function isAdminUser(user) {
+    if (!user) return false;
+    if (user.user_metadata?.role === 'admin') return true;
+    try {
+        const { data, error } = await supabaseClient
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .maybeSingle();
+        if (!error && data?.is_admin === true) return true;
+    } catch (e) {
+        // ignore
+    }
+    return false;
+}
 // LocalStorage Helper-ներ Guest ռեժիմի համար
 function getLocalFlashcards() {
     return JSON.parse(localStorage.getItem('guest_flashcards')) || [];
@@ -58,9 +74,11 @@ async function syncGuestFlashcardsToSupabase() {
     const cardsToInsert = guestCards.map(card => ({
         user_id: user.id,
         word: card.word,
+        level: card.level || 'B2',
         definition: card.definition,
-        example_sentence: card.example_sentence || card.example || '',
-        level: card.level || 'B2'
+        translation: card.translation || '',
+        example: card.example_sentence || card.example || '',
+        is_global: false
     }));
 
     const { error } = await supabaseClient.from('flashcards').insert(cardsToInsert);
@@ -75,26 +93,81 @@ async function loadFlashcards() {
     const user = await getCurrentUser();
 
     if (user) {
-        // Logged-in mode: Supabase
-        const { data, error } = await supabaseClient
+        // Logged-in mode: load global system cards + user's custom cards
+        let globalResult = await supabaseClient
             .from('flashcards')
             .select('*')
+            .eq('is_global', true)
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error("Error loading flashcards from Supabase:", error.message);
-            return getLocalFlashcards();
+        if (globalResult.error) {
+            console.warn('Global fetch with created_at failed, retrying without order:', globalResult.error.message);
+            globalResult = await supabaseClient
+                .from('flashcards')
+                .select('*')
+                .eq('is_global', true);
         }
-        return data || [];
+
+        let customResult = await supabaseClient
+            .from('flashcards')
+            .select('*')
+            .eq('is_global', false)
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (customResult.error) {
+            console.warn('Custom fetch with created_at failed, retrying without order:', customResult.error.message);
+            customResult = await supabaseClient
+                .from('flashcards')
+                .select('*')
+                .eq('is_global', false)
+                .eq('user_id', user.id);
+        }
+
+        const globalCards = globalResult.data;
+        const customCards = customResult.data;
+        const globalError = globalResult.error;
+        const customError = customResult.error;
+
+        if (globalError) console.error("Error loading global flashcards:", globalError.message);
+        if (customError) console.error("Error loading custom flashcards:", customError.message);
+
+        const combined = [...(globalCards || []), ...(customCards || [])];
+        // de-duplicate by id just in case
+        const seen = new Set();
+        const unique = combined.filter(card => {
+            if (!card.id || seen.has(card.id)) return !card.id ? true : false;
+            seen.add(card.id);
+            return true;
+        });
+        return unique;
     } else {
-        // Guest mode: LocalStorage
+        // Guest mode: fetch official global cards (no auth required)
+        let guestResult = await supabaseClient
+            .from('flashcards')
+            .select('*')
+            .eq('is_global', true)
+            .order('created_at', { ascending: false });
+
+        if (guestResult.error) {
+            console.warn('Guest global fetch with created_at failed, retrying without order:', guestResult.error.message);
+            guestResult = await supabaseClient
+                .from('flashcards')
+                .select('*')
+                .eq('is_global', true);
+        }
+
+        if (!guestResult.error && Array.isArray(guestResult.data) && guestResult.data.length > 0) {
+            return guestResult.data;
+        }
+
+        // Fallback to local demo cards if global fetch fails/empty
         let localCards = getLocalFlashcards();
         if (localCards.length === 0) {
-            // Սկզբնական ցուցադրական բառեր Guest-ի համար
             localCards = [
-                { word: "Serendipity", level: "C1", definition: "The occurrence and development of events by chance in a happy or beneficial way.", example_sentence: "We found the perfect restaurant by pure serendipity." },
-                { word: "Resilient", level: "B2", definition: "Able to withstand or recover quickly from difficult conditions.", example_sentence: "She's a resilient girl - she won't let this failure get her down." },
-                { word: "Adequate", level: "B1", definition: "Satisfactory or acceptable in quality or quantity.", example_sentence: "This office is perfectly adequate for my needs." }
+                { word: "Serendipity", level: "C1", definition: "The occurrence and development of events by chance in a happy or beneficial way.", example_sentence: "We found the perfect restaurant by pure serendipity.", is_global: false },
+                { word: "Resilient", level: "B2", definition: "Able to withstand or recover quickly from difficult conditions.", example_sentence: "She's a resilient girl - she won't let this failure get her down.", is_global: false },
+                { word: "Adequate", level: "B1", definition: "Satisfactory or acceptable in quality or quantity.", example_sentence: "This office is perfectly adequate for my needs.", is_global: false }
             ];
             saveLocalFlashcards(localCards);
         }
@@ -103,7 +176,7 @@ async function loadFlashcards() {
 }
 
 // Պահպանում (Cloud կամ Local)
-async function saveFlashcard(word, definition, example, level) {
+async function saveFlashcard(word, definition, example, level, isGlobal) {
     const user = await getCurrentUser();
 
     if (user) {
@@ -112,18 +185,26 @@ async function saveFlashcard(word, definition, example, level) {
             .insert([{
                 user_id: user.id,
                 word: word,
+                level: level,
                 definition: definition,
-                example_sentence: example,
-                level: level
+                translation: '',
+                example: example,
+                is_global: isGlobal === true
             }]);
-        return !error;
+        if (error) {
+            console.error('Supabase insert error:', error.message);
+            return false;
+        }
+        return true;
     } else {
         const localCards = getLocalFlashcards();
         localCards.unshift({
             word: word,
+            level: level,
             definition: definition,
-            example_sentence: example,
-            level: level
+            translation: '',
+            example: example,
+            is_global: false
         });
         saveLocalFlashcards(localCards);
         return true;
@@ -139,7 +220,8 @@ async function deleteFlashcard(wordToDelete) {
             .from('flashcards')
             .delete()
             .eq('word', wordToDelete)
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .eq('is_global', false);
         return !error;
     } else {
         let localCards = getLocalFlashcards();
@@ -156,6 +238,10 @@ async function deleteFlashcard(wordToDelete) {
 document.addEventListener('DOMContentLoaded', async () => {
     let flashcardsData = [];
     let currentIndex = 0;
+    let allFlashcardsData = [];
+    let favoriteIds = new Set();
+    let currentFilter = 'all';
+    let currentUserId = null;
 
     // DOM Էլեմենտներ
     const card = document.getElementById('myCard');
@@ -173,25 +259,191 @@ document.addEventListener('DOMContentLoaded', async () => {
     const backSpeakBtn = document.getElementById('backSpeakBtn');
     const counter = document.getElementById('counter');
     const cardsGallery = document.getElementById('cardsGallery');
+    const favoriteBtn = document.getElementById('favoriteBtn');
+    const ownershipBadge = document.getElementById('frontOwnership');
+    const favoritesCount = document.getElementById('favoritesCount');
+
+    const filterAllWords = document.getElementById('filterAllWords');
+    const filterOfficial = document.getElementById('filterOfficial');
+    const filterMyWords = document.getElementById('filterMyWords');
+    const filterFavorites = document.getElementById('filterFavorites');
+    const filterAllLevels = document.getElementById('filterAllLevels');
+    const filterA1 = document.getElementById('filterA1');
+    const filterA2 = document.getElementById('filterA2');
+    const filterB1 = document.getElementById('filterB1');
+    const filterB2 = document.getElementById('filterB2');
+    const filterC1 = document.getElementById('filterC1');
+    const filterC2 = document.getElementById('filterC2');
+
+    const levelAccordion = document.getElementById('levelAccordion');
+    const levelAccordionHeader = document.getElementById('levelAccordionHeader');
 
     const modal = document.getElementById('addWordModal');
     const openModalBtn = document.getElementById('openModalBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     const saveWordBtn = document.getElementById('saveWordBtn');
+    const adminGlobalToggle = document.getElementById('adminGlobalToggle');
+    const newIsGlobal = document.getElementById('newIsGlobal');
 
     // 1. ԲԱՌԵՐԻ ՍՏԱՑՈՒՄ ԵՎ ՆԿԱՐՈՒՄ
     async function fetchAndRenderCards() {
+        const user = await getCurrentUser();
+        currentUserId = user?.id || null;
         const data = await loadFlashcards();
-        
-        flashcardsData = data.map(item => ({
+
+        allFlashcardsData = data.map(item => ({
+            id: item.id,
+            user_id: item.user_id,
+            is_global: item.is_global === true,
             word: item.word,
             level: item.level,
             definition: item.definition,
-            example: item.example_sentence || item.example || ''
+            example: item.example || item.example_sentence || ''
         }));
 
+        await loadFavorites();
+        applyFilter(false);
+    }
+
+    async function loadFavorites() {
+        favoriteIds = new Set();
+        const user = await getCurrentUser();
+        if (!user) {
+            updateFavoritesCounter();
+            updateHeartUI();
+            return;
+        }
+        try {
+            const { data, error } = await supabaseClient
+                .from('user_favorites')
+                .select('word_id')
+                .eq('user_id', user.id);
+            if (error) {
+                console.error('Error loading favorites:', error.message);
+                return;
+            }
+            (data || []).forEach(row => {
+                if (row.word_id !== null && row.word_id !== undefined) {
+                    favoriteIds.add(String(row.word_id));
+                }
+            });
+        } catch (e) {
+            console.error('loadFavorites error:', e);
+        }
+        updateFavoritesCounter();
+        updateHeartUI();
+    }
+
+    function applyFilter(resetIndex) {
+        if (resetIndex) currentIndex = 0;
+        let filtered = allFlashcardsData.slice();
+        if (currentFilter === 'favorites') {
+            filtered = filtered.filter(card => favoriteIds.has(String(card.id)));
+        } else if (currentFilter === 'official') {
+            filtered = filtered.filter(card => card.is_global === true);
+        } else if (currentFilter === 'myWords') {
+            filtered = filtered.filter(card => card.is_global === false && String(card.user_id) === String(currentUserId));
+        } else if (['A1','A2','B1','B2','C1','C2'].includes(currentFilter)) {
+            filtered = filtered.filter(card => card.level === currentFilter);
+        }
+        flashcardsData = filtered;
         if (currentIndex >= flashcardsData.length) currentIndex = 0;
         loadCard(currentIndex);
+        updateFavoritesCounter();
+        updateSidebarActive();
+    }
+
+    function updateFavoritesCounter() {
+        const matchedCount = allFlashcardsData.filter(card => favoriteIds.has(String(card.id))).length;
+        if (favoritesCount) {
+            favoritesCount.textContent = `(${matchedCount})`;
+        }
+        // update button text to "Favorites (n)"? already
+    }
+
+    function updateSidebarActive() {
+        const links = [filterAllWords, filterOfficial, filterMyWords, filterFavorites, filterAllLevels, filterA1, filterA2, filterB1, filterB2, filterC1, filterC2];
+        const filterMap = {
+            all: filterAllWords,
+            official: filterOfficial,
+            myWords: filterMyWords,
+            favorites: filterFavorites,
+            allLevels: filterAllLevels,
+            A1: filterA1,
+            A2: filterA2,
+            B1: filterB1,
+            B2: filterB2,
+            C1: filterC1,
+            C2: filterC2
+        };
+        links.forEach(link => {
+            if (!link) return;
+            link.classList.remove('active');
+        });
+        const activeLink = filterMap[currentFilter];
+        if (activeLink) activeLink.classList.add('active');
+    }
+
+    function updateHeartUI() {
+        if (!favoriteBtn) return;
+        const card = flashcardsData[currentIndex];
+        const isFav = !!(card && favoriteIds.has(String(card.id)));
+        favoriteBtn.textContent = isFav ? '❤️' : '🤍';
+        favoriteBtn.classList.toggle('favorited', isFav);
+    }
+
+    function showAuthModal() {
+        const modal = document.getElementById('auth-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    async function toggleFavorite() {
+        if (!flashcardsData.length) return;
+        const card = flashcardsData[currentIndex];
+        if (!card || !card.id) {
+            // guest cards have no id; require login anyway handled below
+        }
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session || !session.user) {
+            alert('Please sign in to save favorites or add custom words.');
+            showAuthModal();
+            return;
+        }
+
+        const user = session.user;
+        const wasFav = favoriteIds.has(String(card.id));
+
+        if (wasFav) {
+            favoriteIds.delete(String(card.id));
+            try {
+                await supabaseClient
+                    .from('user_favorites')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('word_id', card.id);
+            } catch (e) {
+                console.error('Unfavorite error:', e);
+            }
+        } else {
+            favoriteIds.add(String(card.id));
+            try {
+                await supabaseClient
+                    .from('user_favorites')
+                    .insert({ user_id: user.id, word_id: card.id });
+            } catch (e) {
+                console.error('Favorite error:', e);
+                favoriteIds.delete(card.id);
+            }
+        }
+
+        updateHeartUI();
+        updateFavoritesCounter();
+
+        // If currently viewing favorites, refresh list
+        if (currentFilter === 'favorites') {
+            applyFilter(false);
+        }
     }
 
     // 2. UI rendering
@@ -230,8 +482,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        if(deleteBtn) deleteBtn.disabled = false;
         const data = flashcardsData[index];
+
+        if (deleteBtn) {
+            const isGlobal = data && data.is_global === true;
+            deleteBtn.style.display = isGlobal ? 'none' : '';
+            deleteBtn.disabled = isGlobal;
+        }
 
         if(frontWord) frontWord.textContent = data.word;
         if(backWord) backWord.textContent = data.word;
@@ -247,6 +504,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.level === 'C2') levelColor = '#ef4444';
 
         if(frontLevel) frontLevel.style.backgroundColor = levelColor;
+        if (ownershipBadge) {
+            if (data.is_global === true) {
+                ownershipBadge.textContent = '🌐 DHA Official';
+                ownershipBadge.className = 'ownership-badge global';
+            } else {
+                ownershipBadge.textContent = '👤 My Word';
+                ownershipBadge.className = 'ownership-badge custom';
+            }
+        }
+
         if(backLevel) backLevel.style.backgroundColor = levelColor;
 
         if(counter) counter.textContent = `${index + 1} / ${flashcardsData.length}`;
@@ -255,6 +522,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if(card) card.classList.remove('is-flipped');
         renderGallery();
+        updateHeartUI();
 
         setTimeout(() => {
             const activeMiniCard = document.querySelector('.mini-card.active');
@@ -317,6 +585,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    if (favoriteBtn) {
+        favoriteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite();
+        });
+    }
+
+    // Sidebar filters
+    function setFilter(filter) {
+        currentFilter = filter;
+        applyFilter(true);
+    }
+
+    filterAllWords?.addEventListener('click', () => setFilter('all'));
+    filterOfficial?.addEventListener('click', () => setFilter('official'));
+    filterMyWords?.addEventListener('click', () => setFilter('myWords'));
+    filterFavorites?.addEventListener('click', () => setFilter('favorites'));
+    filterAllLevels?.addEventListener('click', () => setFilter('allLevels'));
+    filterA1?.addEventListener('click', () => setFilter('A1'));
+    filterA2?.addEventListener('click', () => setFilter('A2'));
+    filterB1?.addEventListener('click', () => setFilter('B1'));
+    filterB2?.addEventListener('click', () => setFilter('B2'));
+    filterC1?.addEventListener('click', () => setFilter('C1'));
+    filterC2?.addEventListener('click', () => setFilter('C2'));
+
+    // Accordion toggle
+    levelAccordionHeader?.addEventListener('click', () => {
+        levelAccordion?.classList.toggle('open');
+    });
+
     // 4. DELETE
     if(deleteBtn) {
         deleteBtn.addEventListener('click', async () => {
@@ -338,7 +636,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 5. ADD WORD
-    if(openModalBtn) openModalBtn.addEventListener('click', () => modal.style.display = 'flex');
+    if(openModalBtn) openModalBtn.addEventListener('click', async () => {
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('Please sign in to save favorites or add custom words.');
+            showAuthModal();
+            return;
+        }
+        if (modal) modal.style.display = 'flex';
+        const admin = await isAdminUser(user);
+        if (adminGlobalToggle) {
+            adminGlobalToggle.classList.toggle('hidden', !admin);
+        }
+        if (!admin && newIsGlobal) newIsGlobal.checked = false;
+    });
 
     function closeModal() {
         if(modal) modal.style.display = 'none';
@@ -346,6 +657,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('newDefinition').value = '';
         document.getElementById('newExample').value = '';
         document.getElementById('newLevel').value = 'B2';
+        if (newIsGlobal) newIsGlobal.checked = false;
     }
 
     if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
@@ -362,12 +674,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            const isSaved = await saveFlashcard(wordVal, defVal, exVal, levelVal);
+            const user = await getCurrentUser();
+            const admin = await isAdminUser(user);
+            const isGlobal = admin && !!newIsGlobal?.checked;
+            const isSaved = await saveFlashcard(wordVal, defVal, exVal, levelVal, isGlobal);
             if (isSaved) {
                 closeModal();
                 fetchAndRenderCards();
             } else {
-                alert("Սխալ պահպանման ընթացքում:");
+                console.error('Failed to save flashcard.');
             }
         });
     }
@@ -375,4 +690,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Եթե user-ը log in է եղած, սինխրոնացնում ենք Guest բառերը դեպի Cloud
     await syncGuestFlashcardsToSupabase();
     await fetchAndRenderCards();
+
+    // Refresh favorites when auth state changes
+    supabaseClient.auth.onAuthStateChange(async () => {
+        await loadFavorites();
+        applyFilter(false);
+    });
 });

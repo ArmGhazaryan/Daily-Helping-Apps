@@ -163,11 +163,6 @@ header {
     margin-bottom: 10px;
 }
 
-.phonetics {
-    font-size: 1.1rem;
-    color: #94a3b8;
-}
-
 .hint {
     position: absolute;
     bottom: 20px;
@@ -579,5 +574,199 @@ header {
     .modal-content {
         transition: none;
         animation: none;
+    }
+}
+
+/* Accordion for Level Filters */
+.accordion {
+    display: flex;
+    flex-direction: column;
+
+.admin-toggle {
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+}
+.admin-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #93c5fd;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.admin-toggle.hidden { display: none; }
+
+.ownership-badge {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 4;
+    white-space: nowrap;
+}
+.ownership-badge.global {
+    background: rgba(20, 184, 166, 0.2);
+    color: #5eead4;
+    border: 1px solid rgba(20, 184, 166, 0.4);
+}
+.ownership-badge.custom {
+    background: rgba(168, 85, 247, 0.2);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+}
+.accordion-header {
+    width: 100%;
+    justify-content: space-between;
+}
+.accordion-arrow {
+    transition: transform 0.25s ease;
+    display: inline-block;
+}
+.accordion.open .accordion-arrow {
+    transform: rotate(180deg);
+}
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 4px;
+}
+.accordion.open .accordion-content {
+    max-height: 400px;
+    padding: 8px 4px 4px;
+}
+.level-link {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+/* ==========================================
+   Flashcards Sidebar & Layout
+   ========================================== */
+.app-layout {
+    display: flex;
+    gap: 24px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+    align-items: flex-start;
+}
+.sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    top: 20px;
+}
+.sidebar-title {
+    margin: 0 0 8px;
+    font-size: 1.1rem;
+    color: #f8fafc;
+}
+.sidebar-section {
+    margin: 12px 0 4px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.sidebar-link {
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    color: #cbd5e1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.sidebar-link:hover {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #f8fafc;
+}
+.sidebar-link.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+    color: #38bdf8;
+    font-weight: 600;
+}
+.fav-count {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+.app-main .app-container {
+    width: 100%;
+    padding-top: 0;
+}
+.favorite-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.2s ease;
+    line-height: 1;
+}
+.favorite-btn:hover {
+    transform: scale(1.2);
+}
+@media (max-width: 768px) {
+    .app-layout {
+        flex-direction: column;
+        padding: 16px;
+    }
+    .sidebar {
+        width: 100%;
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 12px;
+    }
+    .sidebar-title, .sidebar-section {
+        width: 100%;
+    }
+    .sidebar-link {
+        flex: 1 1 auto;
+        justify-content: center;
+        font-size: 0.85rem;
+        padding: 8px 10px;
     }
 }

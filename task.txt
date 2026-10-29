@@ -1,23 +1,16 @@
 Task Goal:
-Fix silent click failure on the "Continue with Google" button by implementing robust DOM event binding and event delegation.
+Enable unauthenticated (guest) users to view and interact with DHA Official Global flashcards without being logged in.
 
 Requirements:
-1. Event Listener Re-binding (`JS-Files/supabase.js` / `js/main.js`):
-   - Wrap all event listener bindings inside `document.addEventListener('DOMContentLoaded', ...)` or use Event Delegation.
-   - Alternatively, use Event Delegation on the document/modal container:
-     ```javascript
-     document.addEventListener('click', function (e) {
-       if (e.target.closest('#google-login-btn') || e.target.closest('.google-auth-btn')) {
-         console.log('Google Auth button clicked dynamically!');
-         signInWithGoogle();
-       }
-     });
-     ```
-   - Ensure the Google button in `index.html` has explicit matching attributes: `id="google-login-btn"` and class `google-auth-btn`.
 
-2. Explicit Debugging Logs:
-   - Add `console.log("signInWithGoogle triggered")` inside the `signInWithGoogle()` function so we can confirm execution in F12 Console.
+1. Unauthenticated Fetch Logic (`js/flashcards.js`):
+   - Execute `fetchFlashcards()` on initial page load regardless of active session state.
+   - IF user is LOGGED OUT (`session === null`): Query Supabase for flashcards where `is_global === true`.
+   - IF user is LOGGED IN: Query Supabase for flashcards where `is_global === true` OR `user_id === session.user.id`.
 
-3. Verify Script Tag in `index.html`:
-   - Ensure the auth script tag is included at the end of `<body>` or has the `defer` attribute set:
-     `<script src="JS-Files/supabase.js" defer></script>`.
+2. Guest Experience & Auth Guarding:
+   - Guest users can freely flip cards, listen to audio pronunciation, and filter by levels (A1 to C2).
+   - If a guest user clicks the Heart (Favorite) button OR the "+ Add New Word" button:
+     * Prevent the action.
+     * Show a toast message: "Please sign in to save favorites or add custom words."
+     * Open the Auth Modal (`#auth-modal`).

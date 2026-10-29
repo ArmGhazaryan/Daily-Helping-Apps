@@ -82,3 +82,30 @@ if (document.readyState === 'loading') {
 supabaseClient.auth.onAuthStateChange(async (_event, session) => {
   if (session?.user) await ensureProfile(session.user);
 });
+
+// 🟢 Favorites helpers for user_favorites table
+async function fetchUserFavoriteIds(userId) {
+    if (!userId) return [];
+    try {
+        const { data, error } = await supabaseClient
+            .from('user_favorites')
+            .select('word_id')
+            .eq('user_id', userId);
+        if (error) {
+            console.error('fetchUserFavoriteIds error:', error.message);
+            return [];
+        }
+        return (data || []).map(row => row.word_id);
+    } catch (e) {
+        console.error('fetchUserFavoriteIds error:', e);
+        return [];
+    }
+}
+
+async function insertUserFavorite(userId, wordId) {
+    return supabaseClient.from('user_favorites').insert({ user_id: userId, word_id: wordId });
+}
+
+async function deleteUserFavorite(userId, wordId) {
+    return supabaseClient.from('user_favorites').delete().eq('user_id', userId).eq('word_id', wordId);
+}

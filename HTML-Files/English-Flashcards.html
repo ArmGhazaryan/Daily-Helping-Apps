@@ -9,6 +9,8 @@
     <title>English Flashcards</title>
     <link rel="icon" type="image/png" href="../Img/logo.png">
     <link rel="stylesheet" href="../CSS-Files/English-Flashcards.css">
+    <link rel="stylesheet" href="../CSS-Files/auth.css">
+    <link rel="stylesheet" href="../CSS-Files/main.css">
 </head>
 
 <body>
@@ -19,10 +21,35 @@
             <span class="letter">H</span><span class="expand">elping</span>
             <span class="letter">A</span><span class="expand">pps</span>
         </a>
+        <div class="header-right">
+            <div id="auth-header-container"></div>
+        </div>
     </header>
 
 
-    <div class="app-container">
+    <div class="app-layout">
+        <aside class="sidebar" id="flashcardSidebar">
+            <div class="sidebar-title">Filters</div>
+            <button class="sidebar-link active" data-filter="all" id="filterAllWords">📚 All Words</button>
+            <button class="sidebar-link" data-filter="official" id="filterOfficial">🌐 Official Library</button>
+            <button class="sidebar-link" data-filter="myWords" id="filterMyWords">✏️ My Words</button>
+            <button class="sidebar-link" data-filter="favorites" id="filterFavorites">❤️ Favorites <span class="fav-count" id="favoritesCount">(0)</span></button>
+            <div class="accordion open" id="levelAccordion">
+                <button class="sidebar-link accordion-header" id="levelAccordionHeader" type="button">🎯 Level Filters <span class="accordion-arrow">▾</span></button>
+                <div class="accordion-content" id="levelAccordionContent">
+                    <button class="sidebar-link level-link" data-filter="allLevels" id="filterAllLevels">All Levels</button>
+                    <button class="sidebar-link level-link" data-filter="A1" id="filterA1">A1</button>
+                    <button class="sidebar-link level-link" data-filter="A2" id="filterA2">A2</button>
+                    <button class="sidebar-link level-link" data-filter="B1" id="filterB1">B1</button>
+                    <button class="sidebar-link level-link" data-filter="B2" id="filterB2">B2</button>
+                    <button class="sidebar-link level-link" data-filter="C1" id="filterC1">C1</button>
+                    <button class="sidebar-link level-link" data-filter="C2" id="filterC2">C2</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="app-main">
+            <div class="app-container">
 
         <!-- ԳԼԽԱՎՈՐ ԳՈՐԾՈՂՈՒԹՅՈՒՆՆԵՐ -->
         <div class="top-actions">
@@ -37,6 +64,8 @@
             <div class="flashcard" id="myCard">
                 <div class="flashcard-face flashcard-front">
                     <span class="level-badge" id="frontLevel">B2</span>
+                    <button id="favoriteBtn" class="favorite-btn" type="button" aria-label="Favorite word">🤍</button>
+                    <span class="ownership-badge" id="frontOwnership">🌐 DHA Official</span>
 
                     <!-- ԲԱՌԸ ԵՎ ՁԱՅՆԻ ԿՈՃԱԿԸ -->
                     <div class="word-container">
@@ -44,7 +73,6 @@
                         <button id="speakBtn" class="speak-btn" title="Listen pronunciation">🔊</button>
                     </div>
 
-                    <div class="phonetics" id="frontPhonetics">/phonetics/</div>
                     <div class="hint">Click to flip ⤵</div>
                 </div>
 
@@ -73,7 +101,6 @@
             <div class="modal-content">
                 <h2>Add New Flashcard</h2>
                 <input type="text" id="newWord" placeholder="Word (e.g., Eloquent)" required>
-                <input type="text" id="newPhonetics" placeholder="Phonetics (e.g., /ˈel.ə.kwənt/)">
                 <select id="newLevel">
                     <option value="A2">A2 Level</option>
                     <option value="B1">B1 Level</option>
@@ -83,6 +110,11 @@
                 </select>
                 <textarea id="newDefinition" placeholder="Definition (Բացատրություն)..." required></textarea>
                 <textarea id="newExample" placeholder="Example sentence (Օրինակ)..."></textarea>
+                <div id="adminGlobalToggle" class="admin-toggle hidden">
+                    <label><input type="checkbox" id="newIsGlobal"> Add to Official DHA Library (Global Word)</label>
+                </div>
+
+
 
                 <div class="modal-actions">
                     <button id="cancelBtn" class="cancel-btn">Cancel</button>
@@ -92,11 +124,63 @@
         </div>
 
     </div>
+    </main>
+</div>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="auth-modal" style="display: none;">
+        <div class="auth-card">
+            <div class="auth-tabs">
+                <button id="tab-login" class="tab-btn active" type="button">Log In</button>
+                <button id="tab-signup" class="tab-btn" type="button">Sign Up</button>
+            </div>
+            <form id="login-form" class="auth-form">
+                <div class="input-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="example@mail.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="submit-btn">Sign In</button>
+            </form>
+            <form id="signup-form" class="auth-form hidden">
+                <div class="input-group">
+                    <label for="signup-username">Username</label>
+                    <input type="text" id="signup-username" placeholder="Arman" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="example@mail.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Min. 6 characters" required minlength="6">
+                </div>
+                <button type="submit" class="submit-btn">Create Account</button>
+            </form>
+            <div class="auth-divider"><span>OR</span></div>
+            <button type="button" id="google-login-btn" class="google-btn google-signin-btn google-auth-btn">
+                <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <span>Continue with Google</span>
+            </button>
+            <p id="auth-message" class="auth-message"></p>
+        </div>
+    </div>
+
     <!-- 🟢 1. Supabase CDN SDK Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- 🟢 2. Supabase Configuration ֆայլը -->
 <script src="../Javascript-Files/supabase.js"></script>
+<script src="../Javascript-Files/auth.js"></script>
+<script src="../Javascript-Files/header-auth.js"></script>
 
 <!-- 🟢 3. Flashcards-ի JS ֆայլը -->
 <script src="../Javascript-Files/English-Flashcards.js"></script>

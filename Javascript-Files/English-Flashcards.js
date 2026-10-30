@@ -1,3 +1,13 @@
+// 🧹 Purge legacy flashcard caching / mock data on load
+(function purgeLegacyFlashcardCache() {
+    try {
+        ['dha_flashcards', 'flashcards', 'guest_flashcards'].forEach((key) => {
+            try { localStorage.removeItem(key); } catch (e) {}
+            try { sessionStorage.removeItem(key); } catch (e) {}
+        });
+    } catch (e) {}
+})();
+
 // ==========================================
 // 🟢 1. AUTH & HYBRID DATA HELPERS (Guest + Cloud)
 // ==========================================
@@ -56,7 +66,14 @@ async function isAdminUser(user) {
 }
 // LocalStorage Helper-ներ Guest ռեժիմի համար
 function getLocalFlashcards() {
-    return JSON.parse(localStorage.getItem('guest_flashcards')) || [];
+    const raw = localStorage.getItem('guest_flashcards');
+    if (!raw) return [];
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        return [];
+    }
 }
 
 function saveLocalFlashcards(cards) {
@@ -124,15 +141,19 @@ async function loadFlashcards() {
                 .eq('user_id', user.id);
         }
 
-        const globalCards = globalResult.data;
-        const customCards = customResult.data;
+        const globalCards = globalResult.data || [];
+        const customCards = customResult.data || [];
         const globalError = globalResult.error;
         const customError = customResult.error;
 
         if (globalError) console.error("Error loading global flashcards:", globalError.message);
         if (customError) console.error("Error loading custom flashcards:", customError.message);
 
-        const combined = [...(globalCards || []), ...(customCards || [])];
+        // When querying Supabase for user custom words (is_global === false), if the
+        // returned array is empty (data.length === 0), do NOT inject any default cards.
+        // (No fallback injection; leave as-is from Supabase.)
+
+        const combined = [...globalCards, ...customCards];
         // de-duplicate by id just in case
         const seen = new Set();
         const unique = combined.filter(card => {
@@ -157,21 +178,27 @@ async function loadFlashcards() {
                 .eq('is_global', true);
         }
 
-        if (!guestResult.error && Array.isArray(guestResult.data) && guestResult.data.length > 0) {
+        if (!guestResult.error && Array.isArray(guestResult.data)) {
             return guestResult.data;
         }
 
-        // Fallback to local demo cards if global fetch fails/empty
-        let localCards = getLocalFlashcards();
-        if (localCards.length === 0) {
-            localCards = [
-                { word: "Serendipity", level: "C1", definition: "The occurrence and development of events by chance in a happy or beneficial way.", example_sentence: "We found the perfect restaurant by pure serendipity.", is_global: false },
-                { word: "Resilient", level: "B2", definition: "Able to withstand or recover quickly from difficult conditions.", example_sentence: "She's a resilient girl - she won't let this failure get her down.", is_global: false },
-                { word: "Adequate", level: "B1", definition: "Satisfactory or acceptable in quality or quantity.", example_sentence: "This office is perfectly adequate for my needs.", is_global: false }
-            ];
-            saveLocalFlashcards(localCards);
-        }
-        return localCards;
+        // Global library is loaded ONLY from Supabase; never merge/fall back to
+        // local hardcoded mock cards.
+        return [];
+    }
+}
+
+// Մաքուր Supabase fetch (առանց local fallback)
+async function fetchFlashcards() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('flashcards')
+            .select('*');
+        if (error) throw error;
+        return Array.isArray(data) ? data : [];
+    } catch (err) {
+        console.error('Error fetching flashcards:', err?.message || err);
+        return [];
     }
 }
 
@@ -212,20 +239,27 @@ async function saveFlashcard(word, definition, example, level, isGlobal) {
 }
 
 // Ջնջում (Cloud կամ Local)
-async function deleteFlashcard(wordToDelete) {
+async function deleteFlashcard(card) {
     const user = await getCurrentUser();
 
     if (user) {
+        if (!card || card.is_global === true || String(card.user_id) !== String(user.id)) {
+            return false;
+        }
         const { error } = await supabaseClient
             .from('flashcards')
             .delete()
-            .eq('word', wordToDelete)
-            .eq('user_id', user.id)
-            .eq('is_global', false);
-        return !error;
+            .eq('id', card.id)
+            .eq('user_id', user.id);
+        if (error) {
+            console.error('Error deleting flashcard:', error.message);
+            return false;
+        }
+        return true;
     } else {
         let localCards = getLocalFlashcards();
-        localCards = localCards.filter(card => card.word !== wordToDelete);
+        const wordToDelete = typeof card === 'string' ? card : card?.word;
+        localCards = localCards.filter(c => c.word !== wordToDelete);
         saveLocalFlashcards(localCards);
         return true;
     }
@@ -259,6 +293,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const backSpeakBtn = document.getElementById('backSpeakBtn');
     const counter = document.getElementById('counter');
     const cardsGallery = document.getElementById('cardsGallery');
+    const emptyState = document.getElementById('emptyState');
     const favoriteBtn = document.getElementById('favoriteBtn');
     const ownershipBadge = document.getElementById('frontOwnership');
     const favoritesCount = document.getElementById('favoritesCount');
@@ -350,6 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (currentIndex >= flashcardsData.length) currentIndex = 0;
         loadCard(currentIndex);
         updateFavoritesCounter();
+        updateSidebarCounts();
         updateSidebarActive();
     }
 
@@ -359,6 +395,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             favoritesCount.textContent = `(${matchedCount})`;
         }
         // update button text to "Favorites (n)"? already
+    }
+    function updateSidebarCounts() {
+        const allCount = allFlashcardsData.length;
+        const myCount = allFlashcardsData.filter(card => card.is_global === false && String(card.user_id) === String(currentUserId)).length;
+        const allEl = document.getElementById('allWordsCount');
+        const myEl = document.getElementById('myWordsCount');
+        if (allEl) allEl.textContent = `(${allCount})`;
+        if (myEl) myEl.textContent = `(${myCount})`;
     }
 
     function updateSidebarActive() {
@@ -465,8 +509,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function loadCard(index) {
+        if (emptyState) {
+            const showEmpty = (flashcardsData.length === 0);
+            emptyState.style.display = showEmpty ? 'block' : 'none';
+        }
+
         if (flashcardsData.length === 0) {
-            if(frontWord) frontWord.textContent = "Դատարկ է";
+            if(frontWord) frontWord.textContent = (currentFilter === 'myWords') ? "No custom words added yet. Click '+ Add New Word' to create one!" : "Դատարկ է";
             if(backWord) backWord.textContent = "";
             if(backDefinition) backDefinition.textContent = "Խնդրում ենք ավելացնել նոր բառեր:";
             if(backExample) backExample.textContent = "";
@@ -611,8 +660,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterC2?.addEventListener('click', () => setFilter('C2'));
 
     // Accordion toggle
+    const levelAccordionArrow = levelAccordionHeader?.querySelector('.accordion-arrow');
     levelAccordionHeader?.addEventListener('click', () => {
-        levelAccordion?.classList.toggle('open');
+        const isOpen = levelAccordion?.classList.toggle('open');
+        if (levelAccordionArrow) {
+            levelAccordionArrow.textContent = isOpen ? '▴' : '▾';
+        }
     });
 
     // 4. DELETE
@@ -620,18 +673,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         deleteBtn.addEventListener('click', async () => {
             if (flashcardsData.length === 0) return;
 
-            const currentCard = flashcardsData[currentIndex];
-            const isConfirmed = confirm(`Վստա՞հ եք, որ ցանկանում եք ջնջել "${currentCard.word}" բառը:`);
+            const card = flashcardsData[currentIndex];
+            if (!card) return;
 
-            if (isConfirmed) {
-                const isDeleted = await deleteFlashcard(currentCard.word);
-                if (!isDeleted) {
-                    alert("Չհաջողվեց ջնջել բառը:");
-                    return;
-                }
-                currentIndex = 0;
-                fetchAndRenderCards();
+            const { data: sessionData } = await supabaseClient.auth.getSession();
+            const session = sessionData?.session;
+            if (!(card.is_global === false && session?.user?.id && session.user.id === card.user_id)) {
+                return;
             }
+
+            if (!confirm("Are you sure you want to delete this word?")) return;
+
+            const { error } = await supabaseClient
+                .from('flashcards')
+                .delete()
+                .eq('id', card.id)
+                .eq('user_id', session.user.id);
+
+            if (error) {
+                console.error('Error deleting flashcard:', error.message);
+                alert("Չհաջողվեց ջնջել բառը:");
+                return;
+            }
+
+            const allCards = allFlashcardsData;
+            const activeCards = flashcardsData;
+
+            const allIndex = allCards.findIndex(c => c.id === card.id);
+            if (allIndex !== -1) allCards.splice(allIndex, 1);
+
+            const activeIndex = activeCards.findIndex(c => c.id === card.id);
+            if (activeIndex !== -1) activeCards.splice(activeIndex, 1);
+
+            if (activeCards.length === 0) {
+                currentIndex = 0;
+            } else if (currentIndex >= activeCards.length) {
+                currentIndex = activeCards.length - 1;
+            } else if (activeIndex !== -1 && activeIndex < currentIndex) {
+                currentIndex -= 1;
+            }
+
+            applyFilter(false);
+            updateSidebarCounts();
         });
     }
 
@@ -676,7 +759,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const user = await getCurrentUser();
             const admin = await isAdminUser(user);
-            const isGlobal = admin && !!newIsGlobal?.checked;
+            const isGlobal = false; // default all user-submitted flashcards to non-global
             const isSaved = await saveFlashcard(wordVal, defVal, exVal, levelVal, isGlobal);
             if (isSaved) {
                 closeModal();

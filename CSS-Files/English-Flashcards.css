@@ -630,9 +630,6 @@ header {
     transition: transform 0.25s ease;
     display: inline-block;
 }
-.accordion.open .accordion-arrow {
-    transform: rotate(180deg);
-}
 .accordion-content {
     max-height: 0;
     overflow: hidden;
@@ -769,4 +766,14 @@ header {
         font-size: 0.85rem;
         padding: 8px 10px;
     }
+}
+.empty-state {
+    text-align: center;
+    color: #cbd5e1;
+    font-size: 1.05rem;
+    padding: 2rem 1rem;
+    border: 1px dashed #475569;
+    border-radius: 12px;
+    margin: 1rem 0;
+    background: rgba(15, 23, 42, 0.35);
 }

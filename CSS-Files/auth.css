@@ -17,11 +17,29 @@
     width: 100%;
     max-width: 420px;
 }
+.modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.modal-close-btn:hover {
+    color: #ffffff;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
 .auth-modal .google-btn {
     margin-top: 12px;
     min-height: 46px;
     text-align: center;
 }
+
 
 
 /* ==========================================

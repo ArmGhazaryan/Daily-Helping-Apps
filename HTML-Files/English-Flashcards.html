@@ -30,11 +30,11 @@
     <div class="app-layout">
         <aside class="sidebar" id="flashcardSidebar">
             <div class="sidebar-title">Filters</div>
-            <button class="sidebar-link active" data-filter="all" id="filterAllWords">📚 All Words</button>
+            <button class="sidebar-link active" data-filter="all" id="filterAllWords">📚 All Words <span class="count-badge" id="allWordsCount">(0)</span></button>
             <button class="sidebar-link" data-filter="official" id="filterOfficial">🌐 Official Library</button>
-            <button class="sidebar-link" data-filter="myWords" id="filterMyWords">✏️ My Words</button>
+            <button class="sidebar-link" data-filter="myWords" id="filterMyWords">✏️ My Words <span class="count-badge" id="myWordsCount">(0)</span></button>
             <button class="sidebar-link" data-filter="favorites" id="filterFavorites">❤️ Favorites <span class="fav-count" id="favoritesCount">(0)</span></button>
-            <div class="accordion open" id="levelAccordion">
+            <div class="accordion" id="levelAccordion">
                 <button class="sidebar-link accordion-header" id="levelAccordionHeader" type="button">🎯 Level Filters <span class="accordion-arrow">▾</span></button>
                 <div class="accordion-content" id="levelAccordionContent">
                     <button class="sidebar-link level-link" data-filter="allLevels" id="filterAllLevels">All Levels</button>
@@ -59,6 +59,8 @@
         <div class="cards-gallery" id="cardsGallery">
             <!-- Փոքրիկ քարտերը կավելանան ավտոմատ -->
         </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">No custom words added yet. Click '+ Add New Word' to create one!</div>
 
         <div class="flashcard-container">
             <div class="flashcard" id="myCard">
@@ -110,9 +112,6 @@
                 </select>
                 <textarea id="newDefinition" placeholder="Definition (Բացատրություն)..." required></textarea>
                 <textarea id="newExample" placeholder="Example sentence (Օրինակ)..."></textarea>
-                <div id="adminGlobalToggle" class="admin-toggle hidden">
-                    <label><input type="checkbox" id="newIsGlobal"> Add to Official DHA Library (Global Word)</label>
-                </div>
 
 
 
@@ -129,6 +128,7 @@
 
     <!-- Authentication Modal -->
     <div id="auth-modal" class="auth-modal" style="display: none;">
+        <button id="auth-modal-close" class="modal-close-btn" aria-label="Close">&times;</button>
         <div class="auth-card">
             <div class="auth-tabs">
                 <button id="tab-login" class="tab-btn active" type="button">Log In</button>

@@ -1,5 +1,5 @@
 // Service Worker for Daily Productivity & Fitness PWA
-const CACHE_NAME = 'daily-app-v11';
+const CACHE_NAME = 'daily-app-v14';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -21,6 +21,7 @@ const APP_SHELL = [
   '/Javascript-Files/auth.js',
   '/Javascript-Files/admin-dashboard.js',
   '/Javascript-Files/English-Flashcards.js',
+  '/js/flashcards.js',
   '/Javascript-Files/mafia-manager.js',
   '/Javascript-Files/workout-tracker.js',
   '/JS-Files/admin-dashboard.js',

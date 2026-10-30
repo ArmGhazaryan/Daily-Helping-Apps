@@ -81,5 +81,28 @@ loginForm?.addEventListener('submit', async (e) => {
     }
 });
 
+// 🟢 Auth Modal Dismissal
+const authModal = document.getElementById('auth-modal');
+const authModalCloseBtn = document.getElementById('auth-modal-close');
+
+function closeAuthModal() {
+    if (authModal) authModal.style.display = 'none';
+}
+
+authModalCloseBtn?.addEventListener('click', closeAuthModal);
+
+// Clicking the backdrop (outside the modal card) closes the modal
+authModal?.addEventListener('click', (e) => {
+    if (e.target === authModal) closeAuthModal();
+});
+
+// Pressing Escape closes the modal if open
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && authModal && authModal.style.display !== 'none') {
+        closeAuthModal();
+    }
+});
+
 // (Google button binding is handled centrally by supabase.js)
+
 

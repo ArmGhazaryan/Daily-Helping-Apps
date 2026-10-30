@@ -1,16 +1,12 @@
 Task Goal:
-Enable unauthenticated (guest) users to view and interact with DHA Official Global flashcards without being logged in.
+Set the "Level Filters" accordion in the left sidebar to be collapsed/hidden by default on page load.
 
 Requirements:
 
-1. Unauthenticated Fetch Logic (`js/flashcards.js`):
-   - Execute `fetchFlashcards()` on initial page load regardless of active session state.
-   - IF user is LOGGED OUT (`session === null`): Query Supabase for flashcards where `is_global === true`.
-   - IF user is LOGGED IN: Query Supabase for flashcards where `is_global === true` OR `user_id === session.user.id`.
+1. Default Collapsed State (`index.html`, CSS, `js/flashcards.js`):
+   - Ensure the Level Filters menu options (All Levels, A1, A2, B1, B2, C1, C2) are hidden by default when the page loads (`display: none` or removing the `.active`/`.open` CSS class).
+   - Set the default indicator arrow on the Level Filters button to point downwards (`▾`).
 
-2. Guest Experience & Auth Guarding:
-   - Guest users can freely flip cards, listen to audio pronunciation, and filter by levels (A1 to C2).
-   - If a guest user clicks the Heart (Favorite) button OR the "+ Add New Word" button:
-     * Prevent the action.
-     * Show a toast message: "Please sign in to save favorites or add custom words."
-     * Open the Auth Modal (`#auth-modal`).
+2. Interactive Toggle Logic:
+   - When the user clicks "🎯 Level Filters", toggle the sub-menu visibility (`display: block` or toggle `.open` class).
+   - Dynamically switch the indicator arrow between `▾` (when collapsed) and `▴` (when expanded).

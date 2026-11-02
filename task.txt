@@ -1,12 +1,31 @@
 Task Goal:
-Set the "Level Filters" accordion in the left sidebar to be collapsed/hidden by default on page load.
+Build a fully mobile-responsive, WCA-standard 3x3 Speedcubing Timer module with touch/gesture support, desktop spacebar controls, 15s inspection countdown, scramble generator, dynamic Ao5/Ao12 stats, and Supabase/LocalStorage persistence.
 
 Requirements:
 
-1. Default Collapsed State (`index.html`, CSS, `js/flashcards.js`):
-   - Ensure the Level Filters menu options (All Levels, A1, A2, B1, B2, C1, C2) are hidden by default when the page loads (`display: none` or removing the `.active`/`.open` CSS class).
-   - Set the default indicator arrow on the Level Filters button to point downwards (`▾`).
+1. Mobile-First Responsiveness & Touch UI Design (`index.html`, CSS, `js/rubiks-timer.js`):
+   - Layout Adaptation:
+     * Flexbox/Grid layout that stacks vertically on mobile viewports (< 768px).
+     * Large, readable timer digits scaled dynamically using viewport units (`vw`/`vh`) or CSS `clamp()`.
+     * Clean, touch-friendly UI buttons with minimum 44x44px touch targets.
+   - Touch Control Mechanics:
+     * Support touch screen interactions for smartphones/tablets (`touchstart`, `touchend`).
+     * Tap & Hold on screen: Timer turns orange, turns GREEN after holding for 300ms ("Ready" state).
+     * Release touch: Timer starts immediately.
+     * Tap anywhere during timing: Stops timer instantly.
+   - Prevent Mobile UX Glitches:
+     * Apply CSS `user-select: none;` and `touch-action: manipulation;` on the timer touch area to prevent accidental text selection, page scrolling, or double-tap zoom while timing.
 
-2. Interactive Toggle Logic:
-   - When the user clicks "🎯 Level Filters", toggle the sub-menu visibility (`display: block` or toggle `.open` class).
-   - Dynamically switch the indicator arrow between `▾` (when collapsed) and `▴` (when expanded).
+2. WCA 3x3 Scramble Generator:
+   - Generate standard 20-move 3x3 scramble string (`R`, `L`, `U`, `D`, `F`, `B` with `'` or `2`).
+   - Prevent consecutive duplicate faces or redundant move combinations.
+
+3. Inspection & On-the-Fly Statistics Engine:
+   - 15-second WCA inspection countdown toggle.
+   - Dynamic JavaScript calculation of Personal Best (PB), Average of 5 (Ao5), and Average of 12 (Ao12) using WCA trimming rules (exclude best/worst times).
+   - Direct `+2` and `DNF` penalty toggle controls on each solve record.
+
+4. Data Persistence (Supabase & Guest LocalStorage):
+   - Save solves to Supabase `solves` table (`user_id`, `time_ms`, `scramble`, `penalty`) if authenticated.
+   - Store in `localStorage` key `dha_rubiks_solves` if logged out.
+   - Mobile-optimized collapsible or scrollable Solve History sheet/list with individual delete actions.

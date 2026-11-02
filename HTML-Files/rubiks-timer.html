@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <title>Rubik's Timer</title>
+    <link rel="icon" type="image/png" href="../Img/logo.png">
+    <link rel="stylesheet" href="../CSS-Files/rubiks-timer.css">
+    <link rel="stylesheet" href="../CSS-Files/auth.css">
+    <link rel="stylesheet" href="../CSS-Files/main.css">
+</head>
+<body>
+    <header>
+        <a href="../index.html" class="dha-brand" title="Daily Helping Apps">
+            <span class="letter">D</span><span class="expand">aily</span>
+            <span class="letter">H</span><span class="expand">elping</span>
+            <span class="letter">A</span><span class="expand">pps</span>
+        </a>
+        <div class="header-right">
+            <div id="auth-header-container"></div>
+        </div>
+    </header>
+
+    <main class="rubiks-container">
+        <section class="scramble-section">
+            <div id="scramble" class="scramble">R U R' U' ...</div>
+            <div class="scramble-actions">
+                <button id="newScrambleBtn" class="btn">New Scramble</button>
+                <label class="inspection-toggle">
+                    <input type="checkbox" id="inspectionToggle"> 15s Inspection
+                </label>
+            </div>
+            <div id="inspectionDisplay" class="inspection-display"></div>
+        </section>
+
+        <section id="timerArea" class="timer-area" tabindex="0" aria-label="Timer">
+            <div id="timerDisplay" class="timer-display">0.000</div>
+            <div class="timer-hint">Hold (touch/spacebar) to ready, release to start. Tap/space to stop.</div>
+        </section>
+
+        <section class="stats-section">
+            <div class="stat"><span class="stat-label">PB</span><span id="pb" class="stat-value">-</span></div>
+            <div class="stat"><span class="stat-label">Ao5</span><span id="ao5" class="stat-value">-</span></div>
+            <div class="stat"><span class="stat-label">Ao12</span><span id="ao12" class="stat-value">-</span></div>
+        </section>
+
+        <section class="history-section">
+            <div class="history-header">
+                <h2>Solve History</h2>
+                <button id="toggleHistory" class="btn">Toggle</button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS-Files/supabase.js"></script>
+    <script src="../JS-Files/auth.js"></script>
+    <script src="../JS-Files/header-auth.js"></script>
+    <script src="../js/rubiks-timer.js"></script>
+</body>
+</html>

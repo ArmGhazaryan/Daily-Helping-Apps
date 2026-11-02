@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentIndex = 0;
     let allFlashcardsData = [];
     let favoriteIds = new Set();
-    let currentFilter = 'all';
+    let currentFilter = 'official';
     let currentUserId = null;
 
     // DOM Էլեմենտներ
@@ -289,6 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const deleteBtn = document.getElementById('deleteBtn');
+    const addToMyWordsBtn = document.getElementById('addToMyWordsBtn');
     const speakBtn = document.getElementById('speakBtn');
     const backSpeakBtn = document.getElementById('backSpeakBtn');
     const counter = document.getElementById('counter');
@@ -298,7 +299,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ownershipBadge = document.getElementById('frontOwnership');
     const favoritesCount = document.getElementById('favoritesCount');
 
-    const filterAllWords = document.getElementById('filterAllWords');
     const filterOfficial = document.getElementById('filterOfficial');
     const filterMyWords = document.getElementById('filterMyWords');
     const filterFavorites = document.getElementById('filterFavorites');
@@ -333,7 +333,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             word: item.word,
             level: item.level,
             definition: item.definition,
-            example: item.example || item.example_sentence || ''
+            example: item.example || item.example_sentence || '',
+            translation: item.translation || ''
         }));
 
         await loadFavorites();
@@ -397,18 +398,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // update button text to "Favorites (n)"? already
     }
     function updateSidebarCounts() {
-        const allCount = allFlashcardsData.length;
         const myCount = allFlashcardsData.filter(card => card.is_global === false && String(card.user_id) === String(currentUserId)).length;
-        const allEl = document.getElementById('allWordsCount');
         const myEl = document.getElementById('myWordsCount');
-        if (allEl) allEl.textContent = `(${allCount})`;
         if (myEl) myEl.textContent = `(${myCount})`;
     }
 
     function updateSidebarActive() {
-        const links = [filterAllWords, filterOfficial, filterMyWords, filterFavorites, filterAllLevels, filterA1, filterA2, filterB1, filterB2, filterC1, filterC2];
+        const links = [filterOfficial, filterMyWords, filterFavorites, filterAllLevels, filterA1, filterA2, filterB1, filterB2, filterC1, filterC2];
         const filterMap = {
-            all: filterAllWords,
             official: filterOfficial,
             myWords: filterMyWords,
             favorites: filterFavorites,
@@ -526,6 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(prevBtn) prevBtn.disabled = true;
             if(nextBtn) nextBtn.disabled = true;
             if(deleteBtn) deleteBtn.disabled = true;
+            if(addToMyWordsBtn) addToMyWordsBtn.style.display = 'none';
             if(cardsGallery) cardsGallery.innerHTML = '';
             if(card) card.classList.remove('is-flipped');
             return;
@@ -535,8 +533,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (deleteBtn) {
             const isGlobal = data && data.is_global === true;
-            deleteBtn.style.display = isGlobal ? 'none' : '';
-            deleteBtn.disabled = isGlobal;
+            const isOwnedCustom = !isGlobal && String(data.user_id) === String(currentUserId);
+            deleteBtn.style.display = isOwnedCustom ? '' : 'none';
+            deleteBtn.disabled = !isOwnedCustom;
+        }
+
+        if (addToMyWordsBtn) {
+            const isGlobal = data && data.is_global === true;
+            if (isGlobal) {
+                addToMyWordsBtn.style.display = '';
+                const already = allFlashcardsData.some(c => c.is_global === false && String(c.user_id) === String(currentUserId) && c.word === data.word);
+                if (already) {
+                    addToMyWordsBtn.disabled = true;
+                    addToMyWordsBtn.textContent = '✓ In My Words';
+                } else {
+                    addToMyWordsBtn.disabled = false;
+                    addToMyWordsBtn.textContent = '➕ Add to My Words';
+                }
+            } else {
+                addToMyWordsBtn.style.display = 'none';
+            }
         }
 
         if(frontWord) frontWord.textContent = data.word;
@@ -647,7 +663,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         applyFilter(true);
     }
 
-    filterAllWords?.addEventListener('click', () => setFilter('all'));
     filterOfficial?.addEventListener('click', () => setFilter('official'));
     filterMyWords?.addEventListener('click', () => setFilter('myWords'));
     filterFavorites?.addEventListener('click', () => setFilter('favorites'));
@@ -715,6 +730,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             applyFilter(false);
             updateSidebarCounts();
+        });
+    }
+
+    // 4b. ADD TO MY WORDS (official cards)
+    if (addToMyWordsBtn) {
+        addToMyWordsBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (flashcardsData.length === 0) return;
+            const cardData = flashcardsData[currentIndex];
+            if (!cardData || cardData.is_global !== true) return;
+
+            const user = await getCurrentUser();
+            if (!user) {
+                alert('Please sign in to add words to your library');
+                showAuthModal();
+                return;
+            }
+
+            const already = allFlashcardsData.some(c => c.is_global === false && String(c.user_id) === String(user.id) && c.word === cardData.word);
+            if (already) {
+                addToMyWordsBtn.disabled = true;
+                addToMyWordsBtn.textContent = '✓ In My Words';
+                return;
+            }
+
+            try {
+                const { data: inserted, error } = await supabaseClient
+                    .from('flashcards')
+                    .insert([{
+                        word: cardData.word,
+                        level: cardData.level,
+                        definition: cardData.definition,
+                        translation: cardData.translation || '',
+                        example: cardData.example || '',
+                        is_global: false,
+                        user_id: user.id
+                    }])
+                    .select();
+
+                if (error) throw error;
+
+                const row = Array.isArray(inserted) ? inserted[0] : inserted;
+                const newCard = {
+                    id: row?.id,
+                    user_id: row?.user_id || user.id,
+                    is_global: false,
+                    word: row?.word || cardData.word,
+                    level: row?.level || cardData.level,
+                    definition: row?.definition || cardData.definition,
+                    example: row?.example || cardData.example || '',
+                    translation: row?.translation || cardData.translation || ''
+                };
+                allFlashcardsData.push(newCard);
+
+                addToMyWordsBtn.disabled = true;
+                addToMyWordsBtn.textContent = '✓ In My Words';
+                updateSidebarCounts();
+                applyFilter(false);
+            } catch (err) {
+                console.error('Add to My Words failed:', err?.message || err);
+                alert('Failed to add word.');
+            }
         });
     }
 

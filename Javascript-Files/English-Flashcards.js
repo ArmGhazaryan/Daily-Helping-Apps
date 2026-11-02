@@ -822,6 +822,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
+    // Backdrop click & Escape to close add-word modal
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+
     if(saveWordBtn) {
         saveWordBtn.addEventListener('click', async () => {
             const wordVal = document.getElementById('newWord').value.trim();

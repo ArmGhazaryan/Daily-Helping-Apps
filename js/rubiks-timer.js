@@ -166,6 +166,7 @@
     let rafId = null;
     let holdTimeout = null;
     let spaceDown = false;
+    let lastTouch = 0;
     let inspectionEnabled = false;
     let inspectionTimer = null;
     let inspectionRemaining = 15;
@@ -310,10 +311,10 @@
     function handlePressEnd() { releaseHold(); }
 
     if (timerArea) {
-      timerArea.addEventListener("touchstart", (e) => { e.preventDefault(); handlePressStart(); }, { passive: false });
+      timerArea.addEventListener("touchstart", (e) => { e.preventDefault(); lastTouch = Date.now(); handlePressStart(); }, { passive: false });
       timerArea.addEventListener("touchend", (e) => { e.preventDefault(); handlePressEnd(); }, { passive: false });
-      timerArea.addEventListener("mousedown", (e) => { e.preventDefault(); handlePressStart(); });
-      timerArea.addEventListener("mouseup", (e) => { e.preventDefault(); handlePressEnd(); });
+      timerArea.addEventListener("mousedown", (e) => { if (Date.now() - lastTouch < 500) return; e.preventDefault(); handlePressStart(); });
+      timerArea.addEventListener("mouseup", (e) => { if (Date.now() - lastTouch < 500) return; e.preventDefault(); handlePressEnd(); });
     }
 
     document.addEventListener("keydown", (e) => {

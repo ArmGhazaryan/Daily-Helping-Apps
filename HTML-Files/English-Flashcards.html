@@ -30,8 +30,7 @@
     <div class="app-layout">
         <aside class="sidebar" id="flashcardSidebar">
             <div class="sidebar-title">Filters</div>
-            <button class="sidebar-link active" data-filter="all" id="filterAllWords">📚 All Words <span class="count-badge" id="allWordsCount">(0)</span></button>
-            <button class="sidebar-link" data-filter="official" id="filterOfficial">🌐 Official Library</button>
+            <button class="sidebar-link active" data-filter="official" id="filterOfficial">🌐 Official Library</button>
             <button class="sidebar-link" data-filter="myWords" id="filterMyWords">✏️ My Words <span class="count-badge" id="myWordsCount">(0)</span></button>
             <button class="sidebar-link" data-filter="favorites" id="filterFavorites">❤️ Favorites <span class="fav-count" id="favoritesCount">(0)</span></button>
             <div class="accordion" id="levelAccordion">
@@ -95,7 +94,9 @@
             <button id="nextBtn">Next ➡</button>
 
             <!-- Ջնջելու կոճակ -->
-            <button id="deleteBtn" class="delete-btn">🗑️ Delete</button>
+            <button id="deleteBtn" class="delete-btn">🗑️ Remove from My Words</button>
+                <!-- Add to My Words (official cards) -->
+                <button id="addToMyWordsBtn" class="add-to-my-words-btn" style="display:none;">➕ Add to My Words</button>
         </div>
 
         <!-- Թաքնված Փոփ-ափ (Modal) պատուհանը նոր բառերի համար -->

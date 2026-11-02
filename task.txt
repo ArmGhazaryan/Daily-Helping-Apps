@@ -1,12 +1,20 @@
 Task Goal:
-Set the "Level Filters" accordion in the left sidebar to be collapsed/hidden by default on page load.
+Perform a full codebase audit across all project files (HTML, CSS, JS) to detect and resolve any logical bugs, runtime errors, and ensure 100% mobile responsiveness across all viewport sizes.
 
 Requirements:
 
-1. Default Collapsed State (`index.html`, CSS, `js/flashcards.js`):
-   - Ensure the Level Filters menu options (All Levels, A1, A2, B1, B2, C1, C2) are hidden by default when the page loads (`display: none` or removing the `.active`/`.open` CSS class).
-   - Set the default indicator arrow on the Level Filters button to point downwards (`▾`).
+1. Full Codebase Bug Audit & Fixes (`js/`, `index.html`, `css/`):
+   - Scan all JavaScript files (`flashcards.js`, `rubiks-timer.js`, `auth.js`, etc.) for runtime bugs, console errors, unhandled promise rejections, or memory leaks.
+   - Verify Supabase async queries and ensure fallback mechanisms (LocalStorage) work seamlessly when offline or logged out.
+   - Check DOM event listeners to prevent duplicate listener bindings or missing element reference crashes (`null` checks).
+   - Verify all modal dialogs (Auth modal, Add Flashcard modal) have working exit paths (`✕` button, backdrop click, `Escape` key).
 
-2. Interactive Toggle Logic:
-   - When the user clicks "🎯 Level Filters", toggle the sub-menu visibility (`display: block` or toggle `.open` class).
-   - Dynamically switch the indicator arrow between `▾` (when collapsed) and `▴` (when expanded).
+2. Universal Mobile Responsiveness Audit (< 768px Mobile & Tablets):
+   - Check all page sections, sidebars, grids, and modal popups on mobile resolution breaking points (320px, 375px, 425px, 768px).
+   - Prevent horizontal page overflow: ensure no elements cause unwanted horizontal scrolling (`overflow-x: hidden` on container level).
+   - Touch Ergonomics: Ensure buttons and interactive icons have minimum 44x44px touch targets.
+   - Text & Element Scaling: Use flexible CSS units (`clamp()`, `rem`, `vw`) so timer numbers, flashcards, and navigation items scale cleanly without breaking layouts.
+
+3. Code Cleanup & UI Consistency:
+   - Remove unused CSS styles, orphaned JavaScript variables, and temporary debug `console.log` statements.
+   - Test full navigation flow between modules (Flashcards -> Rubik's Timer -> Auth) to ensure smooth state transitions.

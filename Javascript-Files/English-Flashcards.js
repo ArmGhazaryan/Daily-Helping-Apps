@@ -291,6 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const addToMyWordsBtn = document.getElementById('addToMyWordsBtn');
     const speakBtn = document.getElementById('speakBtn');
     const backSpeakBtn = document.getElementById('backSpeakBtn');
+    const exampleSpeakBtn = document.getElementById('exampleSpeakBtn');
     const counter = document.getElementById('counter');
     const cardsGallery = document.getElementById('cardsGallery');
     const emptyState = document.getElementById('emptyState');
@@ -597,13 +598,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function speakWord(text) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.85;
-            window.speechSynthesis.speak(utterance);
-        }
+        if (!isSpeechSupported()) return;
+        speakText(text, 'en-US', {
+            onStart: () => {
+                document.querySelectorAll('.speak-btn').forEach(btn => btn.classList.add('speaking'));
+            },
+            onEnd: () => {
+                document.querySelectorAll('.speak-btn').forEach(btn => btn.classList.remove('speaking'));
+            },
+            onError: () => {
+                document.querySelectorAll('.speak-btn').forEach(btn => btn.classList.remove('speaking'));
+            }
+        });
     }
 
     // 3. EVENTS
@@ -647,6 +653,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 speakWord(flashcardsData[currentIndex].word);
             }
         });
+    }
+
+    if (exampleSpeakBtn) {
+        exampleSpeakBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (flashcardsData.length > 0 && flashcardsData[currentIndex]) {
+                const example = flashcardsData[currentIndex].example || flashcardsData[currentIndex].example_sentence || '';
+                if (example) {
+                    speakText(example, 'en-US', {
+                        onStart: () => {
+                            document.querySelectorAll('.speak-btn').forEach(btn => btn.classList.add('speaking'));
+                        },
+                        onEnd: () => {
+                            document.querySelectorAll('.speak-btn').forEach(btn => btn.classList.remove('speaking'));
+                        },
+                        onError: () => {
+                            document.querySelectorAll('.speak-btn').forEach(btn => btn.classList.remove('speaking'));
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // Hide speaker buttons if speechSynthesis is not supported
+    if (!isSpeechSupported()) {
+        document.querySelectorAll('.speak-btn').forEach(btn => btn.style.display = 'none');
     }
 
     if (favoriteBtn) {

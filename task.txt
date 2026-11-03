@@ -1,20 +1,12 @@
 Task Goal:
-Perform a comprehensive code review, bug sweep, and mobile responsiveness verification across the entire project, focusing on the newly added Admin Analytics Panel and all core modules.
+Fix the Supabase query error in `admin.js` where fetching recent users fails with "column profiles.email does not exist".
 
 Requirements:
 
-1. Full Bug Audit & Code Reliability:
-   - Inspect all JavaScript files (`js/admin.js`, `js/auth.js`, `js/flashcards.js`, `js/rubiks-timer.js`, `js/workout.js`).
-   - Fix any null-reference errors, unhandled promise rejections from Supabase queries, or duplicate DOM event listeners.
-   - Verify that non-admin users cannot trigger admin-related API/database calls or encounter broken DOM elements.
-   - Ensure state persistence (LocalStorage fallbacks + Supabase sync) works flawlessly without throwing console errors.
+1. Update Supabase Query (`admin.js` line ~80):
+   - Locate the `.select()` query fetching recent user profiles.
+   - Remove `email` from the column list (e.g., change `.select('id, email, created_at')` to `.select('id, created_at')` or query only valid existing columns like `id, username, created_at`).
+   - In the UI rendering code, if `email` is not available, display a formatted identifier like `User #${user.id.slice(0, 6)}` or `user.username || 'Anonymous User'`.
 
-2. Complete Mobile Responsiveness Audit (< 768px Viewports):
-   - Test all pages and the new Admin Panel on mobile screen sizes (320px, 375px, 425px, 768px).
-   - Eliminate any horizontal scrolling/overflow issues (`overflow-x: hidden` safety check on main containers).
-   - Adjust touch targets for all interactive buttons, cards, and modal triggers to at least 44x44px.
-   - Ensure metric cards, charts, and tables in the Admin section stack cleanly on narrow mobile displays.
-
-3. Performance & Clean Code:
-   - Remove debug `console.log` statements, unused CSS rules, and temporary variables.
-   - Ensure smooth scrolling and clean visual separation between page modules and the footer Admin section.
+2. Robust Error & Null Safety:
+   - Ensure the recent users table in the Admin Panel handles missing profile fields gracefully without throwing console 400 errors or stopping execution.

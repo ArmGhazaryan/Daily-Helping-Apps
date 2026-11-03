@@ -15,7 +15,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 // 🟢 Google OAuth trigger
 async function signInWithGoogle() {
-  console.log("signInWithGoogle triggered");
   const currentOrigin = window.location.origin + window.location.pathname;
   const { data, error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
@@ -66,7 +65,6 @@ async function handleAuthRedirect() {
 // 🟢 Event delegation for Google Sign-In buttons (robust DOM binding)
 document.addEventListener('click', function (e) {
   if (e.target.closest('#google-login-btn') || e.target.closest('.google-auth-btn')) {
-    console.log('Google Auth button clicked dynamically!');
     signInWithGoogle();
   }
 });

@@ -9,6 +9,8 @@
     <title>DHA</title>
     <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="CSS-Files/main.css">
+    <link rel="stylesheet" href="CSS-Files/admin.css">
+
     <link rel="stylesheet" href="CSS-Files/auth.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -95,6 +97,43 @@
             </div>
         </a>
     </main>
+    <!-- 🟢 Admin Analytics & User Insights (admin-only) -->
+    <section id="adminInsights" class="admin-console" style="display:none;" aria-label="Admin Console">
+        <div class="admin-console-header">
+            <span class="admin-badge">👑 Admin Console</span>
+            <div class="admin-console-actions">
+                <button id="adminRefreshBtn" class="admin-btn primary" type="button">Refresh Stats</button>
+                <button id="adminToggleBtn" class="admin-btn" type="button" aria-expanded="true">Collapse</button>
+            </div>
+        </div>
+        <div class="admin-console-body" id="adminConsoleBody">
+            <div class="admin-metrics-grid">
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">👥 Total Registered Users</div>
+                    <div class="admin-metric-value" id="adminTotalUsers">—</div>
+                </div>
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">📊 Total Flashcards Created</div>
+                    <div class="admin-metric-value" id="adminTotalFlashcards">—</div>
+                </div>
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">⏱️ Total Solves Recorded</div>
+                    <div class="admin-metric-value" id="adminTotalSolves">—</div>
+                </div>
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">✅ Total Tasks Logged</div>
+                    <div class="admin-metric-value" id="adminTotalTasks">—</div>
+                </div>
+            </div>
+            <div class="admin-activity">
+                <h3>⏱️ Recent User Activity</h3>
+                <ul id="adminActivityLog" class="admin-activity-list"></ul>
+            </div>
+            <div id="adminStatus" class="admin-status"></div>
+        </div>
+    </section>
+
+
 
     <script>
         function updateClock() {
@@ -168,11 +207,13 @@
     <script src="Javascript-Files/supabase.js" defer></script>
     <script src="Javascript-Files/auth.js" defer></script>
     <script src="Javascript-Files/header-auth.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/admin.js" defer></script>
+
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('PWA Service Worker Registered!'))
             .catch(err => console.error('SW Registration Failed:', err));
         });
       }

@@ -46,7 +46,6 @@ async function syncLocalTasksToSupabase() {
     const localTasks = JSON.parse(localStorage.getItem('workoutTasks')) || [];
     if (localTasks.length === 0) return;
 
-    console.log("Migrating local tasks to Supabase cloud...");
 
     const tasksToInsert = localTasks.map(task => ({
         user_id: user.id,
@@ -61,7 +60,6 @@ async function syncLocalTasksToSupabase() {
         .insert(tasksToInsert);
 
     if (!error) {
-        console.log("Local tasks successfully synced to account!");
         localStorage.removeItem('workoutTasks');
         if (typeof showNotification === 'function') {
             showNotification("Your local progress was synced to your account!");
@@ -80,7 +78,6 @@ async function syncLocalRoutinesToSupabase() {
     const names = Object.keys(localRoutines);
     if (names.length === 0) return;
 
-    console.log("Migrating local routines to Supabase cloud...");
 
     const { data: existing, error: fetchError } = await supabaseClient
         .from('routines')
@@ -122,7 +119,6 @@ async function syncLocalRoutinesToSupabase() {
     }
 
     if (!hasError) {
-        console.log("Local routines successfully synced to account!");
         localStorage.removeItem('savedRoutines');
         if (typeof showNotification === 'function') {
             showNotification("Your local routines were synced to your account!");

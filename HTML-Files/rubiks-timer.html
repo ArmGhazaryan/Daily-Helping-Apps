@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="../CSS-Files/rubiks-timer.css">
     <link rel="stylesheet" href="../CSS-Files/auth.css">
     <link rel="stylesheet" href="../CSS-Files/main.css">
+    <link rel="stylesheet" href="../CSS-Files/admin.css">
+
 </head>
 <body>
     <header>
@@ -53,11 +55,51 @@
             <div id="historyList" class="history-list"></div>
         </section>
     </main>
+    <!-- 🟢 Admin Analytics & User Insights (admin-only) -->
+    <section id="adminInsights" class="admin-console" style="display:none;" aria-label="Admin Console">
+        <div class="admin-console-header">
+            <span class="admin-badge">👑 Admin Console</span>
+            <div class="admin-console-actions">
+                <button id="adminRefreshBtn" class="admin-btn primary" type="button">Refresh Stats</button>
+                <button id="adminToggleBtn" class="admin-btn" type="button" aria-expanded="true">Collapse</button>
+            </div>
+        </div>
+        <div class="admin-console-body" id="adminConsoleBody">
+            <div class="admin-metrics-grid">
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">👥 Total Registered Users</div>
+                    <div class="admin-metric-value" id="adminTotalUsers">—</div>
+                </div>
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">📊 Total Flashcards Created</div>
+                    <div class="admin-metric-value" id="adminTotalFlashcards">—</div>
+                </div>
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">⏱️ Total Solves Recorded</div>
+                    <div class="admin-metric-value" id="adminTotalSolves">—</div>
+                </div>
+                <div class="admin-metric-card">
+                    <div class="admin-metric-label">✅ Total Tasks Logged</div>
+                    <div class="admin-metric-value" id="adminTotalTasks">—</div>
+                </div>
+            </div>
+            <div class="admin-activity">
+                <h3>⏱️ Recent User Activity</h3>
+                <ul id="adminActivityLog" class="admin-activity-list"></ul>
+            </div>
+            <div id="adminStatus" class="admin-status"></div>
+        </div>
+    </section>
+
+
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS-Files/supabase.js"></script>
     <script src="../JS-Files/auth.js"></script>
-    <script src="../JS-Files/header-auth.js"></script>
+    <script src="../Javascript-Files/header-auth.js"></script>
     <script src="../js/rubiks-timer.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/admin.js"></script>
+
 </body>
 </html>

@@ -1,20 +1,20 @@
 Task Goal:
-Perform a full codebase audit across all project files (HTML, CSS, JS) to detect and resolve any logical bugs, runtime errors, and ensure 100% mobile responsiveness across all viewport sizes.
+Perform a comprehensive code review, bug sweep, and mobile responsiveness verification across the entire project, focusing on the newly added Admin Analytics Panel and all core modules.
 
 Requirements:
 
-1. Full Codebase Bug Audit & Fixes (`js/`, `index.html`, `css/`):
-   - Scan all JavaScript files (`flashcards.js`, `rubiks-timer.js`, `auth.js`, etc.) for runtime bugs, console errors, unhandled promise rejections, or memory leaks.
-   - Verify Supabase async queries and ensure fallback mechanisms (LocalStorage) work seamlessly when offline or logged out.
-   - Check DOM event listeners to prevent duplicate listener bindings or missing element reference crashes (`null` checks).
-   - Verify all modal dialogs (Auth modal, Add Flashcard modal) have working exit paths (`✕` button, backdrop click, `Escape` key).
+1. Full Bug Audit & Code Reliability:
+   - Inspect all JavaScript files (`js/admin.js`, `js/auth.js`, `js/flashcards.js`, `js/rubiks-timer.js`, `js/workout.js`).
+   - Fix any null-reference errors, unhandled promise rejections from Supabase queries, or duplicate DOM event listeners.
+   - Verify that non-admin users cannot trigger admin-related API/database calls or encounter broken DOM elements.
+   - Ensure state persistence (LocalStorage fallbacks + Supabase sync) works flawlessly without throwing console errors.
 
-2. Universal Mobile Responsiveness Audit (< 768px Mobile & Tablets):
-   - Check all page sections, sidebars, grids, and modal popups on mobile resolution breaking points (320px, 375px, 425px, 768px).
-   - Prevent horizontal page overflow: ensure no elements cause unwanted horizontal scrolling (`overflow-x: hidden` on container level).
-   - Touch Ergonomics: Ensure buttons and interactive icons have minimum 44x44px touch targets.
-   - Text & Element Scaling: Use flexible CSS units (`clamp()`, `rem`, `vw`) so timer numbers, flashcards, and navigation items scale cleanly without breaking layouts.
+2. Complete Mobile Responsiveness Audit (< 768px Viewports):
+   - Test all pages and the new Admin Panel on mobile screen sizes (320px, 375px, 425px, 768px).
+   - Eliminate any horizontal scrolling/overflow issues (`overflow-x: hidden` safety check on main containers).
+   - Adjust touch targets for all interactive buttons, cards, and modal triggers to at least 44x44px.
+   - Ensure metric cards, charts, and tables in the Admin section stack cleanly on narrow mobile displays.
 
-3. Code Cleanup & UI Consistency:
-   - Remove unused CSS styles, orphaned JavaScript variables, and temporary debug `console.log` statements.
-   - Test full navigation flow between modules (Flashcards -> Rubik's Timer -> Auth) to ensure smooth state transitions.
+3. Performance & Clean Code:
+   - Remove debug `console.log` statements, unused CSS rules, and temporary variables.
+   - Ensure smooth scrolling and clean visual separation between page modules and the footer Admin section.

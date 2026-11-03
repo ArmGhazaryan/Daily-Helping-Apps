@@ -100,7 +100,6 @@ async function syncGuestFlashcardsToSupabase() {
 
     const { error } = await supabaseClient.from('flashcards').insert(cardsToInsert);
     if (!error) {
-        console.log("Guest cards migrated successfully!");
         localStorage.removeItem('guest_flashcards');
     }
 }

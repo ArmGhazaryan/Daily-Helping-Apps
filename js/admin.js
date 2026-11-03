@@ -71,7 +71,7 @@
     try {
       const { data, error } = await client
         .from("profiles")
-        .select("id, username, email, created_at, is_admin")
+        .select("id, username, created_at, is_admin")
         .order("created_at", { ascending: false })
         .limit(8);
       if (error) throw error;
@@ -95,7 +95,7 @@
       return;
     }
     list.innerHTML = rows.map(function (u) {
-      const name = escapeHtml(u.username || u.email || u.id || "Unknown");
+      const name = escapeHtml(u.username || "User #" + String(u.id || "").slice(0, 6) || "Unknown");
       const meta = escapeHtml((u.is_admin === true ? "Admin" : "User") + " · " + formatDate(u.created_at));
       return "<li class='admin-activity-item'><span class='name'>" + name + "</span><span class='meta'>" + meta + "</span></li>";
     }).join("");

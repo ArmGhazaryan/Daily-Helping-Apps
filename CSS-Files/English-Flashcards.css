@@ -455,11 +455,44 @@ header {
     border: none;
     font-size: 1.4rem;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 4px;
+    border-radius: 8px;
 }
 
 .speak-btn:hover {
     transform: scale(1.2);
+}
+
+.speak-btn.speaking {
+    animation: speakPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4);
+    color: #3b82f6;
+}
+
+@keyframes speakPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2);
+    }
+}
+
+.example-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
 }
 
 

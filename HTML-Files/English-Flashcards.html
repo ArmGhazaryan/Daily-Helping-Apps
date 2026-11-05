@@ -55,6 +55,7 @@
         <!-- ԳԼԽԱՎՈՐ ԳՈՐԾՈՂՈՒԹՅՈՒՆՆԵՐ -->
         <div class="top-actions">
             <button id="openModalBtn" class="add-word-btn">+ Add New Word</button>
+            <button id="matchingGameBtn" class="matching-game-btn" type="button">🎮 Matching Game</button>
         </div>
 
         <div class="cards-gallery" id="cardsGallery">
@@ -93,6 +94,30 @@
         </div>
 
         <!-- Կառավարման կոճակներ -->
+<section id="matching-game-section" class="matching-game-section mg-hidden">
+    <div class="matching-header">
+        <div class="matching-stats">
+            <span id="matching-timer">Time: 0.0s</span>
+            <span id="matching-score">Score: 0</span>
+            <span id="matching-pairs">Pairs: 0/6</span>
+        </div>
+        <button id="matching-exit-btn" class="matching-exit-btn" type="button">Exit Game</button>
+    </div>
+    <p id="matching-empty" class="matching-empty mg-hidden">Not enough words in the current filter (need at least 6). Add more words or choose another level.</p>
+    <div id="matching-grid" class="matching-grid"></div>
+</section>
+
+<div id="matching-completion-modal" class="modal-overlay matching-modal">
+    <div class="modal-content matching-result">
+        <h2 id="matching-result-title">🎉 Congratulations!</h2>
+        <p id="matching-result-time">Time: 0.0s</p>
+        <p id="matching-result-accuracy">Accuracy: 0%</p>
+        <div class="modal-actions">
+            <button id="matching-play-again" class="matching-play-again" type="button">🔄 Play Again</button>
+            <button id="matching-result-close" class="matching-result-close" type="button">Close</button>
+        </div>
+    </div>
+</div>
         <div class="controls">
             <button id="prevBtn">⬅ Prev</button>
             <span id="counter">1 / 1</span>
@@ -102,6 +127,8 @@
             <button id="deleteBtn" class="delete-btn">🗑️ Remove from My Words</button>
                 <!-- Add to My Words (official cards) -->
                 <button id="addToMyWordsBtn" class="add-to-my-words-btn" style="display:none;">➕ Add to My Words</button>
+                <!-- Admin Delete (official cards) -->
+                <button id="adminDeleteBtn" class="delete-btn admin-delete" style="display:none;">🗑️ Delete Word (Admin)</button>
         </div>
 
         <!-- Թաքնված Փոփ-ափ (Modal) պատուհանը նոր բառերի համար -->

@@ -1,0 +1,35 @@
+/* Flashcard container overflow fix */
+.flashcard-card,
+.card-back,
+.card-body {
+    max-height: 100%;
+    overflow-y: auto;
+    word-break: break-word;
+}
+
+.definition,
+.example,
+.example-container {
+    max-height: 100%;
+    overflow-y: auto;
+    word-break: break-word;
+}
+
+/* Keep TTS audio button and card flip triggers pinned/visible */
+.speak-btn {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
+}
+
+/* Red Admin Delete button */
+.delete-btn.admin-delete {
+    background-color: #ef4444;
+    color: #fff;
+    border: 2px solid #ef4444;
+    font-weight: bold;
+}
+.delete-btn.admin-delete:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}

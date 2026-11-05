@@ -65,6 +65,28 @@
     return null;
   }
 
+  function showRubiksToast(message, isError) {
+    try {
+      if (typeof window.showNotification === "function") { window.showNotification(message, !!isError); return; }
+    } catch (e) {}
+    try {
+      var toast = document.createElement("div");
+      toast.textContent = message;
+      toast.className = "dha-rubiks-toast" + (isError ? " dha-rubiks-toast-error" : "");
+      Object.assign(toast.style, {
+        position: "fixed", top: isError ? "80px" : "20px", left: "50%", transform: "translateX(-50%)",
+        padding: "10px 16px", borderRadius: "8px", color: "#fff",
+        background: isError ? "#ef4444" : "#10b981", fontSize: "14px", zIndex: 10000,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)", pointerEvents: "none", opacity: "1", transition: "opacity 0.3s ease"
+      });
+      document.body.appendChild(toast);
+      setTimeout(function () {
+        toast.style.opacity = "0";
+        setTimeout(function () { try { toast.remove(); } catch (e) {} }, 300);
+      }, 2500);
+    } catch (e) { try { alert(message); } catch (e2) {} }
+  }
+
   async function getCurrentUser() {
     const client = getClient();
     if (!client) return null;
@@ -112,8 +134,10 @@
         }]).select();
         if (error) throw error;
         if (Array.isArray(data) && data[0]) solve.id = data[0].id;
+        showRubiksToast("Solve saved.", false);
       } catch (e) {
         console.error("Save solve failed:", e);
+        showRubiksToast("Failed to save solve: " + (e && e.message ? e.message : e), true);
       }
     } else {
       solve.id = solve.id || Date.now() + Math.random();
@@ -131,9 +155,10 @@
     if (user) {
       const client = getClient();
       try {
-        await client.from("solves").delete().eq("id", id);
+        await client.from("solves").delete().eq("id", id).eq("user_id", user.id);
       } catch (e) {
         console.error("Delete solve failed:", e);
+        showRubiksToast("Failed to delete solve: " + (e && e.message ? e.message : e), true);
       }
     } else {
       try {

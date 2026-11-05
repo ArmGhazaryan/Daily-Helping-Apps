@@ -12,6 +12,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         storageKey: 'sb_auth_token'  // Հստակ բանալի storage-ի համար
     }
 });
+if (typeof window !== 'undefined') { window.supabaseClient = supabaseClient; }
 // 🟢 Google OAuth trigger
 async function signInWithGoogle() {
   const currentOrigin = window.location.origin + window.location.pathname;

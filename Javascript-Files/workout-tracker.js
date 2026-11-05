@@ -55,9 +55,17 @@ async function syncLocalTasksToSupabase() {
         is_completed: !!task.completed
     }));
 
-    const { error } = await supabaseClient
-        .from('daily_tasks')
-        .insert(tasksToInsert);
+    let error = null;
+    try {
+        const res = await supabaseClient
+            .from('daily_tasks')
+            .insert(tasksToInsert);
+        error = res.error;
+    } catch (e) {
+        error = e;
+        console.error("Sync tasks failed:", e.message);
+        showNotification("Network error: tasks kept locally for retry.", true);
+    }
 
     if (!error) {
         localStorage.removeItem('workoutTasks');
@@ -98,19 +106,35 @@ async function syncLocalRoutinesToSupabase() {
     for (const name of names) {
         const tasks = Array.isArray(localRoutines[name]) ? localRoutines[name] : [];
         if (existingMap[name]) {
-            const { error } = await supabaseClient
-                .from('routines')
-                .update({ tasks: tasks })
-                .eq('id', existingMap[name])
-                .eq('user_id', user.id);
+            let error = null;
+            try {
+                const res = await supabaseClient
+                    .from('routines')
+                    .update({ tasks: tasks })
+                    .eq('id', existingMap[name])
+                    .eq('user_id', user.id);
+                error = res.error;
+            } catch (e) {
+                error = e;
+                console.error("Migration error (update routine):", e.message);
+                showNotification("Network error: routine sync partially failed.", true);
+            }
             if (error) {
                 console.error("Migration error (update routine):", error.message);
                 hasError = true;
             }
         } else {
-            const { error } = await supabaseClient
-                .from('routines')
-                .insert({ user_id: user.id, routine_name: name, tasks: tasks });
+            let error = null;
+            try {
+                const res = await supabaseClient
+                    .from('routines')
+                    .insert({ user_id: user.id, routine_name: name, tasks: tasks });
+                error = res.error;
+            } catch (e) {
+                error = e;
+                console.error("Migration error (insert routine):", e.message);
+                showNotification("Network error: routine sync partially failed.", true);
+            }
             if (error) {
                 console.error("Migration error (insert routine):", error.message);
                 hasError = true;
@@ -259,17 +283,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const user = await getCurrentUser();
 
             if (user) {
-                const { data, error } = await supabaseClient
-                    .from('daily_tasks')
-                    .insert([{
-                        user_id: user.id,
-                        date: date,
-                        task_text: text,
-                        time_text: time || '',
-                        is_completed: false
-                    }])
-                    .select();
-
+                let data = null, error = null;
+                try {
+                    const res = await supabaseClient
+                        .from('daily_tasks')
+                        .insert([{
+                            user_id: user.id,
+                            date: date,
+                            task_text: text,
+                            time_text: time || '',
+                            is_completed: false
+                        }])
+                        .select();
+                    data = res.data; error = res.error;
+                } catch (e) {
+                    error = e;
+                    console.error("Error adding task to Supabase:", e.message);
+                    showNotification('Network error: goal kept locally.', true);
+                    return;
+                }
                 if (error) {
                     console.error("Error adding task to Supabase:", error.message);
                     showNotification('Failed to add goal.', true);
@@ -407,21 +439,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             const existingId = routineIds[name];
             if (existingId) {
-                const { error } = await supabaseClient
-                    .from('routines')
-                    .update({ tasks: taskList })
-                    .eq('id', existingId)
-                    .eq('user_id', user.id);
+                let error = null;
+                try {
+                    const res = await supabaseClient
+                        .from('routines')
+                        .update({ tasks: taskList })
+                        .eq('id', existingId)
+                        .eq('user_id', user.id);
+                    error = res.error;
+                } catch (e) {
+                    error = e;
+                    console.error("Error updating routine in Supabase:", e.message);
+                    showNotification('Network error: routine kept locally.', true);
+                    return;
+                }
                 if (error) {
                     console.error("Error updating routine in Supabase:", error.message);
                     showNotification('Failed to save routine.', true);
                     return;
                 }
             } else {
-                const { data, error } = await supabaseClient
-                    .from('routines')
-                    .insert({ user_id: user.id, routine_name: name, tasks: taskList })
-                    .select();
+                let data = null, error = null;
+                try {
+                    const res = await supabaseClient
+                        .from('routines')
+                        .insert({ user_id: user.id, routine_name: name, tasks: taskList })
+                        .select();
+                    data = res.data; error = res.error;
+                } catch (e) {
+                    error = e;
+                    console.error("Error saving routine to Supabase:", e.message);
+                    showNotification('Network error: routine kept locally.', true);
+                    return;
+                }
                 if (error) {
                     console.error("Error saving routine to Supabase:", error.message);
                     showNotification('Failed to save routine.', true);
@@ -459,11 +509,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = await getCurrentUser();
 
         if (user) {
-            const { error: delError } = await supabaseClient
-                .from('daily_tasks')
-                .delete()
-                .eq('user_id', user.id)
-                .eq('date', selectedDate);
+            let delError = null;
+            try {
+                const res = await supabaseClient
+                    .from('daily_tasks')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('date', selectedDate);
+                delError = res.error;
+            } catch (e) {
+                delError = e;
+                console.error("Error clearing tasks in Supabase:", e.message);
+                showNotification('Network error: paste aborted.', true);
+                return;
+            }
             if (delError) {
                 console.error("Error clearing tasks in Supabase:", delError.message);
                 showNotification('Failed to paste routine.', true);
@@ -559,22 +618,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             const existingId = routineIds[name];
             if (existingId) {
-                const { error } = await supabaseClient
-                    .from('routines')
-                    .delete()
-                    .eq('id', existingId)
-                    .eq('user_id', user.id);
+                let error = null;
+                try {
+                    const res = await supabaseClient
+                        .from('routines')
+                        .delete()
+                        .eq('id', existingId)
+                        .eq('user_id', user.id);
+                    error = res.error;
+                } catch (e) {
+                    error = e;
+                    console.error("Error deleting routine from Supabase:", e.message);
+                    showNotification('Network error: delete failed.', true);
+                    return;
+                }
                 if (error) {
                     console.error("Error deleting routine from Supabase:", error.message);
                     showNotification('Failed to delete routine.', true);
                     return;
                 }
             } else {
-                const { error } = await supabaseClient
-                    .from('routines')
-                    .delete()
-                    .eq('user_id', user.id)
-                    .eq('routine_name', name);
+                let error = null;
+                try {
+                    const res = await supabaseClient
+                        .from('routines')
+                        .delete()
+                        .eq('user_id', user.id)
+                        .eq('routine_name', name);
+                    error = res.error;
+                } catch (e) {
+                    error = e;
+                    console.error("Error deleting routine from Supabase:", e.message);
+                    showNotification('Network error: delete failed.', true);
+                    return;
+                }
                 if (error) {
                     console.error("Error deleting routine from Supabase:", error.message);
                     showNotification('Failed to delete routine.', true);
@@ -597,11 +674,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Clear ALL tasks for ${formatDate(selectedDate)}?`)) {
             const user = await getCurrentUser();
             if (user) {
-                const { error } = await supabaseClient
-                    .from('daily_tasks')
-                    .delete()
-                    .eq('user_id', user.id)
-                    .eq('date', selectedDate);
+                let error = null;
+                try {
+                    const res = await supabaseClient
+                        .from('daily_tasks')
+                        .delete()
+                        .eq('user_id', user.id)
+                        .eq('date', selectedDate);
+                    error = res.error;
+                } catch (e) {
+                    error = e;
+                    console.error("Error clearing tasks in Supabase:", e.message);
+                    showNotification('Network error: clear aborted.', true);
+                    return;
+                }
                 if (error) {
                     console.error("Error clearing tasks in Supabase:", error.message);
                     showNotification('Failed to clear tasks.', true);

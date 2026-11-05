@@ -14,34 +14,187 @@
         return null;
     }
 
+    function showFlashcardNotification(message, isError) {
+        try {
+            if (typeof window.showNotification === "function") {
+                window.showNotification(message, !!isError);
+                return;
+            }
+        } catch (e) {}
+        try {
+            var toast = document.createElement("div");
+            toast.textContent = message;
+            toast.className = "dha-flashcard-toast" + (isError ? " dha-flashcard-toast-error" : "");
+            Object.assign(toast.style, {
+                position: "fixed",
+                top: isError ? "80px" : "20px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                padding: "10px 16px",
+                borderRadius: "8px",
+                color: "#fff",
+                background: isError ? "#ef4444" : "#10b981",
+                fontSize: "14px",
+                zIndex: 10000,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                pointerEvents: "none",
+                opacity: "1",
+                transition: "opacity 0.3s ease"
+            });
+            document.body.appendChild(toast);
+            setTimeout(function () {
+                toast.style.opacity = "0";
+                setTimeout(function () { try { toast.remove(); } catch (e) {} }, 300);
+            }, 2500);
+        } catch (e) {
+            try { alert(message); } catch (e2) {}
+        }
+    }
+
     async function fetchFlashcards() {
         var client = getClient();
         if (!client) return [];
         try {
-            const { data, error } = await client.from("flashcards").select("*");
+            // Fetch both global official words AND the current user's custom words.
+            // This prevents other users' custom words from leaking into this user's library.
+            var session = await getSession(client);
+            var user = session && session.user ? session.user : null;
+            var query = client.from("flashcards").select("*");
+            if (user) {
+                // OR filter: global words (is_global=true) OR user's own words (user_id match)
+                query = query.or("is_global.eq.true,user_id.eq." + user.id);
+            } else {
+                // Anonymous users only see global official words
+                query = query.eq("is_global", true);
+            }
+            const { data, error } = await query;
             if (error) throw error;
             return Array.isArray(data) ? data : [];
         } catch (err) {
+            console.error("fetchFlashcards error:", err?.message || err);
             return [];
+        }
+    }
+
+    async function isAdminUser(user) {
+        if (!user) return false;
+        if (user.user_metadata && user.user_metadata.role === "admin") return true;
+        var client = getClient();
+        if (!client) return false;
+        try {
+            // Check global admin helper if available
+            if (typeof window.dhaIsAdmin === "function") {
+                return await window.dhaIsAdmin(user);
+            }
+            const { data, error } = await client
+                .from("profiles")
+                .select("is_admin")
+                .eq("id", user.id)
+                .maybeSingle();
+            return !error && data && data.is_admin === true;
+        } catch (e) {
+            return false;
         }
     }
 
     async function saveFlashcard(word, definition, example, level, isGlobal) {
         var client = getClient();
         if (!client) return false;
+
+        // Require an active user session before writing (RLS requires user_id).
+        var session = await getSession(client);
+        var user = session && session.user ? session.user : null;
+
+        // Offline / guest fallback: persist locally and sync later without duplicate keys.
+        // Guests are never admins, so is_global is always false for pending items.
+        if (!user) {
+            try {
+                var pending = JSON.parse(localStorage.getItem("dha_flashcards_pending") || "[]");
+                if (!Array.isArray(pending)) pending = [];
+                pending.push({
+                    id: "pending_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+                    word: word,
+                    level: level || "B2",
+                    definition: definition || "",
+                    example: example || "",
+                    translation: "",
+                    is_global: false,
+                    created_at: new Date().toISOString()
+                });
+                localStorage.setItem("dha_flashcards_pending", JSON.stringify(pending));
+            } catch (e) { /* ignore storage errors */ }
+            showFlashcardNotification("Saved locally. Sign in to sync to your account.", false);
+            return true;
+        }
+
+        // Determine if the current user is an admin
+        var admin = await isAdminUser(user);
+
         try {
-            const { error } = await client.from("flashcards").insert([{
+            var payload = {
                 word: word,
                 level: level || "B2",
                 definition: definition,
-                translation: "",
                 example: example || "",
-                is_global: isGlobal === true
-            }]);
+                translation: ""
+            };
+            if (admin) {
+                // Admin words become global/official for all users
+                payload.is_global = true;
+            } else {
+                // Regular users: personal word, not global
+                payload.is_global = false;
+                payload.user_id = user.id;
+            }
+            const { error } = await client.from("flashcards").insert([payload]);
             if (error) throw error;
+            await syncPendingFlashcards(user);
+            showFlashcardNotification("Word saved.", false);
             return true;
         } catch (err) {
+            var msg = err && err.message ? err.message : String(err);
+            console.error("saveFlashcard error:", msg);
+            showFlashcardNotification("Failed to save word: " + msg, true);
             return false;
+        }
+    }
+
+    async function syncPendingFlashcards(user) {
+        if (!user) return;
+        var client = getClient();
+        if (!client) return;
+        try {
+            var pending = JSON.parse(localStorage.getItem("dha_flashcards_pending") || "[]");
+            if (!Array.isArray(pending) || pending.length === 0) return;
+            var syncedIndexes = [];
+            for (var i = 0; i < pending.length; i++) {
+                var c = pending[i];
+                const { data: existing, error: fetchError } = await client
+                    .from("flashcards")
+                    .select("id")
+                    .eq("user_id", user.id)
+                    .eq("word", c.word)
+                    .eq("level", c.level || "B2")
+                    .maybeSingle();
+                if (fetchError) throw fetchError;
+                if (existing) { syncedIndexes.push(i); continue; }
+                const { error } = await client.from("flashcards").insert([{
+                    user_id: user.id,
+                    word: c.word,
+                    level: c.level || "B2",
+                    definition: c.definition || "",
+                    example: c.example || "",
+                    translation: c.translation || "",
+                    is_global: c.is_global === true
+                }]);
+                if (error) throw error;
+                syncedIndexes.push(i);
+            }
+            var remaining = pending.filter(function (_, idx) { return syncedIndexes.indexOf(idx) === -1; });
+            if (remaining.length === 0) localStorage.removeItem("dha_flashcards_pending");
+            else localStorage.setItem("dha_flashcards_pending", JSON.stringify(remaining));
+        } catch (e) {
+            console.error("syncPendingFlashcards error:", e?.message || e);
         }
     }
 
@@ -111,13 +264,14 @@
             return true;
         } catch (err) {
             console.error("Add to My Words failed:", err?.message || err);
+            showFlashcardNotification("Failed to add word: " + (err?.message || err), true);
             return false;
         }
     }
 
     async function removeFromMyWords(card, session) {
-        var client = getClient();
-        if (!client) return false;
+        const client = (typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient) || null;
+        if (!client || typeof client.from !== 'function') { alert('Supabase client not initialized properly'); return false; }
 
         let target = card;
         if (typeof card === "string") target = { id: card };
@@ -130,17 +284,43 @@
 
         if (!confirm("Are you sure you want to delete this word?")) return false;
 
-        try {
-            const { error } = await client
-                .from("flashcards")
-                .delete()
-                .eq("id", target.id);
-            if (error) throw error;
-            return true;
-        } catch (err) {
-            console.error("Remove from My Words failed:", err?.message || err);
+        // ID Type Safety: target.id must match Supabase primary key column type (UUID vs integer).
+        const cardId = target.id;
+
+        console.log('Sending Supabase DELETE for card ID:', cardId);
+
+        // RLS Check: Ensure a DELETE policy exists on flashcards table for authenticated users.
+        const { data, error } = await client
+            .from("flashcards")
+            .delete()
+            .eq("id", cardId)
+            .select();
+        if (error || !data || data.length === 0) {
+            console.error('Database delete failed or 0 rows deleted:', error || 'No matching row deleted');
+            alert('Database delete failed: Item was not deleted from Supabase. Check RLS policies.');
             return false;
         }
+
+        // Update LocalStorage cache after successful DB deletion.
+        try {
+            var pending = JSON.parse(localStorage.getItem("dha_flashcards_pending") || "[]");
+            if (Array.isArray(pending)) {
+                var filtered = pending.filter(function (c) { return String(c.id) !== String(cardId); });
+                if (filtered.length !== pending.length) {
+                    localStorage.setItem("dha_flashcards_pending", JSON.stringify(filtered));
+                }
+            }
+        } catch (e) { /* ignore storage errors */ }
+
+        // Remove card element from DOM after successful DB deletion.
+        try {
+            var cardElement = document.querySelector('[data-id="' + cardId + '"]') || document.getElementById('myCard');
+            if (cardElement) cardElement.remove();
+        } catch (e) { /* ignore DOM errors */ }
+
+        console.log('Successfully deleted from Supabase DB');
+
+        return true;
     }
 
     function isInMyWords(card, userId, allCards) {
@@ -287,7 +467,58 @@
         window.speakText = window.speakText || speakText;
     }
 
-    if (typeof module !== "undefined" && module.exports) {
+    async function deleteOfficialFlashcard(card, isAdmin) {
+    if (!card) return false;
+    if (isAdmin === true) {
+        try {
+            var confirmed = confirm("Delete this official word from the database?");
+            if (!confirmed) return false;
+            const client = (typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient) || null;
+            if (!client || typeof client.from !== 'function') { alert('Supabase client not initialized properly'); return false; }
+
+            // ID Type Safety: card.id must match Supabase primary key column type (UUID vs integer).
+            var cardId = card.id;
+
+            console.log('Sending Supabase DELETE for card ID:', cardId);
+
+            // RLS Check: Ensure a DELETE policy exists on flashcards table for authenticated admins.
+            var { data, error } = await client.from('flashcards').delete().eq('id', cardId).select();
+            if (error || !data || data.length === 0) {
+                console.error('Database delete failed or 0 rows deleted:', error || 'No matching row deleted');
+                alert('Database delete failed: Item was not deleted from Supabase. Check RLS policies.');
+                return false;
+            }
+
+            // Update LocalStorage cache after successful DB deletion.
+            try {
+                var pending = JSON.parse(localStorage.getItem("dha_flashcards_pending") || "[]");
+                if (Array.isArray(pending)) {
+                    var filtered = pending.filter(function (c) { return String(c.id) !== String(cardId); });
+                    if (filtered.length !== pending.length) {
+                        localStorage.setItem("dha_flashcards_pending", JSON.stringify(filtered));
+                    }
+                }
+            } catch (e) { /* ignore storage errors */ }
+
+            // Remove card element from DOM after successful DB deletion.
+            try {
+                var cardElement = document.querySelector('[data-id="' + cardId + '"]') || document.getElementById('myCard');
+                if (cardElement) cardElement.remove();
+            } catch (e) { /* ignore DOM errors */ }
+
+            console.log('Successfully deleted from Supabase DB');
+
+            return true;
+        } catch (err) {
+            console.error('Database delete failed:', err);
+            showFlashcardNotification("Failed to delete word from database.", true);
+            return false;
+        }
+    }
+    return false;
+}
+
+if (typeof module !== "undefined" && module.exports) {
         module.exports = {
             fetchFlashcards: fetchFlashcards,
             saveFlashcard: saveFlashcard,
@@ -308,7 +539,8 @@
             getUniqueWordCount: getUniqueWordCount,
             speakText: speakText,
             selectTTSVoice: selectTTSVoice,
-            isSpeechSupported: isSpeechSupported
+            isSpeechSupported: isSpeechSupported,
+            deleteOfficialFlashcard: deleteOfficialFlashcard
         };
     } else {
         global.fetchFlashcards = fetchFlashcards;
@@ -331,6 +563,7 @@
         global.speakText = speakText;
         global.selectTTSVoice = selectTTSVoice;
         global.isSpeechSupported = isSpeechSupported;
+    global.deleteOfficialFlashcard = deleteOfficialFlashcard;
     }
 })(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : this));
 

@@ -1,4 +1,4 @@
-// 🟢 JS-Files/supabase.js
+// 🟢 js/supabase.js
 const SUPABASE_URL = 'https://ypdjnzqkvqgjcrgtefsf.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_7_tQfI0y-jCQODj2RGMxyw_MSXMfHlb'; // Քո Publishable Key-ը
 
@@ -13,6 +13,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     }
 });
 if (typeof window !== 'undefined') { window.supabaseClient = supabaseClient; }
+
 // 🟢 Google OAuth trigger
 async function signInWithGoogle() {
   const currentOrigin = window.location.origin + window.location.pathname;

@@ -1,17 +1,24 @@
-/* Flashcard container overflow fix */
+/* Flashcard container overflow fix.
+   overflow-y / max-height must NOT be applied to 3D card faces (WebKit flattens
+   the 3D context and breaks backface-visibility). Only inner text wrappers scroll. */
 .flashcard-card,
 .card-back,
 .card-body {
+    word-break: break-word;
+}
+
+#backDefinition,
+#backExample {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #f8fafc !important;
     max-height: 100%;
     overflow-y: auto;
     word-break: break-word;
 }
 
-.definition,
-.example,
 .example-container {
-    max-height: 100%;
-    overflow-y: auto;
     word-break: break-word;
 }
 

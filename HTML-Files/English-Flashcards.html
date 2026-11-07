@@ -8,10 +8,10 @@
     <link rel="manifest" href="../manifest.json">
     <title>English Flashcards</title>
     <link rel="icon" type="image/png" href="../Img/logo.png">
-    <link rel="stylesheet" href="../CSS-Files/English-Flashcards.css">
-    <link rel="stylesheet" href="../CSS-Files/auth.css">
-    <link rel="stylesheet" href="../CSS-Files/main.css">
-    <link rel="stylesheet" href="../CSS-Files/admin.css">
+    <link rel="stylesheet" href="../css/English-Flashcards.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/admin.css">
 
 </head>
 
@@ -248,12 +248,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- 🟢 2. Supabase Configuration ֆայլը -->
-<script src="../Javascript-Files/supabase.js"></script>
-<script src="../Javascript-Files/auth.js"></script>
-<script src="../Javascript-Files/header-auth.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth-ui.js"></script>
+<script src="../js/header-auth.js"></script>
 
 <!-- 🟢 3. Flashcards-ի JS ֆայլը -->
-<script src="../Javascript-Files/English-Flashcards.js"></script>
+<script src="../js/English-Flashcards.js"></script>
 <script src="../js/flashcards.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/admin.js"></script>
@@ -261,7 +261,7 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/js/sw.js')
         .catch(err => console.error('SW Registration Failed:', err));
     });
   }

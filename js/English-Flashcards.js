@@ -385,6 +385,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (['A1','A2','B1','B2','C1','C2'].includes(currentFilter)) {
             filtered = filtered.filter(card => card.level === currentFilter);
         }
+
+        // Dynamically deduplicate words for any combined view (e.g., allLevels or level-specific filters)
+        if (currentFilter !== 'official' && currentFilter !== 'myWords') {
+            // Prioritize custom words (is_global: false) over official ones
+            filtered.sort((a, b) => (a.is_global === b.is_global) ? 0 : a.is_global ? 1 : -1);
+
+            const seenWords = new Set();
+            filtered = filtered.filter(card => {
+                const wordLower = card.word.toLowerCase().trim();
+                if (seenWords.has(wordLower)) return false;
+                seenWords.add(wordLower);
+                return true;
+            });
+        }
         flashcardsData = filtered;
         if (currentIndex >= flashcardsData.length) currentIndex = 0;
         loadCard(currentIndex);
@@ -569,8 +583,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if(frontWord) frontWord.textContent = data.word;
         if(backWord) backWord.textContent = data.word;
-        if(backDefinition) backDefinition.textContent = data.definition;
-        if(backExample) backExample.textContent = data.example ? `"${data.example}"` : '';
+        if(backDefinition) {
+            backDefinition.textContent = data.definition;
+
+            // Dynamic font sizing: shrink longer definitions so they fit the card
+            if (data.definition && data.definition.length > 140) {
+                backDefinition.style.fontSize = '0.9rem';
+                backDefinition.style.lineHeight = '1.3';
+            } else if (data.definition && data.definition.length > 90) {
+                backDefinition.style.fontSize = '1rem';
+                backDefinition.style.lineHeight = '1.4';
+            } else {
+                backDefinition.style.fontSize = '1.15rem';
+                backDefinition.style.lineHeight = '1.5';
+            }
+        }
+        if(backExample) {
+            backExample.textContent = data.example ? `"${data.example}"` : '';
+
+            // Dynamic font sizing: shrink longer example sentences
+            if (data.example && data.example.length > 100) {
+                backExample.style.fontSize = '0.85rem';
+                backExample.style.padding = '8px 10px';
+            } else {
+                backExample.style.fontSize = '0.95rem';
+                backExample.style.padding = '10px 12px';
+            }
+        }
 
         if(frontLevel) frontLevel.textContent = data.level;
         if(backLevel) backLevel.textContent = data.level;
@@ -1014,9 +1053,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         var score = 0;
         var attempts = 0;
         var matchedPairs = 0;
-        var selected = [];
+        var selectedWord = null;
+        var selectedDef = null;
+        var processing = false;
         var matchedIds = new Set();
-        var gameCards = [];
+        var gameCards = {};
 
         function fmtTime(ms) { return (ms / 1000).toFixed(1) + 's'; }
 
@@ -1093,88 +1134,116 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (pool.length < 6) return null;
             var picked = shuffle(pool.slice()).slice(0, 6);
-            var cards = [];
+            var words = [];
+            var definitions = [];
             picked.forEach(function (c, i) {
                 var pairId = 'p' + i;
                 var text = (c.translation && c.translation.trim()) ? c.translation : c.definition;
-                cards.push({ id: 'w' + i, pairId: pairId, type: 'word', text: c.word });
-                cards.push({ id: 'd' + i, pairId: pairId, type: 'def', text: text });
+                words.push({ id: 'w' + i, pairId: pairId, type: 'word', text: c.word });
+                definitions.push({ id: 'd' + i, pairId: pairId, type: 'def', text: text });
             });
-            return shuffle(cards);
+            return { words: words, definitions: shuffle(definitions) };
         }
 
         function renderGrid() {
             grid.innerHTML = '';
-            gameCards.forEach(function (card) {
-                var el = document.createElement('button');
-                el.type = 'button';
-                el.className = 'matching-card';
-                el.setAttribute('role', 'button');
-                el.setAttribute('aria-label', card.text);
-                el.dataset.pairId = card.pairId;
-                el.dataset.cardId = card.id;
-                el.dataset.type = card.type;
-                var inner = document.createElement('div');
-                inner.className = 'matching-card-inner';
-                var back = document.createElement('div');
-                back.className = 'matching-card-face matching-card-back';
-                back.textContent = '\u2753';
-                var front = document.createElement('div');
-                front.className = 'matching-card-face matching-card-front';
-                var typeSpan = document.createElement('span');
-                typeSpan.className = 'card-type';
-                typeSpan.textContent = card.type === 'word' ? 'Word' : 'Translation';
-                var textDiv = document.createElement('div');
-                textDiv.className = 'card-text';
-                textDiv.textContent = card.text;
-                front.appendChild(typeSpan);
-                front.appendChild(textDiv);
-                inner.appendChild(back);
-                inner.appendChild(front);
-                el.appendChild(inner);
-                (function (elRef, pid) {
-                    elRef.addEventListener('click', function () { handleCardClick(elRef, pid); });
-                })(el, card.pairId);
-                grid.appendChild(el);
+            var wordsCol = document.createElement('div');
+            wordsCol.className = 'matching-words';
+            var defsCol = document.createElement('div');
+            defsCol.className = 'matching-defs';
+            grid.appendChild(wordsCol);
+            grid.appendChild(defsCol);
+            // Left column: words
+            (gameCards.words || []).forEach(function (card) {
+                wordsCol.appendChild(createCardEl(card));
+            });
+            // Right column: definitions (shuffled)
+            (gameCards.definitions || []).forEach(function (card) {
+                defsCol.appendChild(createCardEl(card));
             });
         }
 
-        function handleCardClick(el, pairId) {
+        function createCardEl(card) {
+            var el = document.createElement('button');
+            el.type = 'button';
+            el.className = 'matching-card';
+            el.setAttribute('role', 'button');
+            el.setAttribute('aria-label', card.text);
+            el.dataset.pairId = card.pairId;
+            el.dataset.cardId = card.id;
+            el.dataset.type = card.type;
+            var typeSpan = document.createElement('span');
+            typeSpan.className = 'card-type';
+            typeSpan.textContent = card.type === 'word' ? 'Word' : 'Definition';
+            var textDiv = document.createElement('div');
+            textDiv.className = 'card-text';
+            textDiv.textContent = card.text;
+            el.appendChild(typeSpan);
+            el.appendChild(textDiv);
+            (function (elRef, pid, typ) {
+                elRef.addEventListener('click', function () { handleCardClick(elRef, pid, typ); });
+            })(el, card.pairId, card.type);
+            return el;
+        }
+
+        function handleCardClick(el, pairId, type) {
+            if (processing) return;
             if (matchedIds.has(pairId)) return;
-            if (selected.length >= 2) return;
-            if (selected.some(function (s) { return s.el === el; })) return;
             if (!timerRunning) startTimer();
 
-            flipCard(el, true);
-            selected.push({ el: el, pairId: pairId });
+            if (type === 'word') {
+                if (selectedWord && selectedWord.el === el) {
+                    el.classList.remove('selected');
+                    selectedWord = null;
+                    return;
+                }
+                if (selectedWord) selectedWord.el.classList.remove('selected');
+                selectedWord = { el: el, pairId: pairId };
+                el.classList.add('selected');
+            } else {
+                if (selectedDef && selectedDef.el === el) {
+                    el.classList.remove('selected');
+                    selectedDef = null;
+                    return;
+                }
+                if (selectedDef) selectedDef.el.classList.remove('selected');
+                selectedDef = { el: el, pairId: pairId };
+                el.classList.add('selected');
+            }
 
-            if (selected.length === 2) {
+            if (selectedWord && selectedDef) {
+                processing = true;
                 attempts++;
-                var a = selected[0], b = selected[1];
-                if (a.pairId === b.pairId) {
-                    matchedIds.add(a.pairId);
+                if (selectedWord.pairId === selectedDef.pairId) {
+                    matchedIds.add(selectedWord.pairId);
                     matchedPairs++;
                     score += 100;
                     scoreEl.textContent = 'Score: ' + score;
                     pairsEl.textContent = 'Pairs: ' + matchedPairs + '/6';
-                    a.el.classList.add('card-correct', 'matched');
-                    b.el.classList.add('card-correct', 'matched');
+                    selectedWord.el.classList.add('card-correct', 'matched');
+                    selectedDef.el.classList.add('card-correct', 'matched');
+                    selectedWord.el.disabled = true;
+                    selectedDef.el.disabled = true;
+                    selectedWord.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
                     playSound('correct');
-                    selected = [];
+                    selectedWord = null;
+                    selectedDef = null;
+                    processing = false;
                     if (matchedPairs === 6) {
                         stopTimer();
                         showCompletion();
                     }
                 } else {
-                    a.el.classList.add('card-wrong');
-                    b.el.classList.add('card-wrong');
+                    selectedWord.el.classList.add('card-wrong');
+                    selectedDef.el.classList.add('card-wrong');
                     playSound('wrong');
                     setTimeout(function () {
-                        a.el.classList.remove('card-wrong');
-                        b.el.classList.remove('card-wrong');
-                        flipCard(a.el, false);
-                        flipCard(b.el, false);
-                        selected = [];
+                        selectedWord.el.classList.remove('card-wrong', 'selected', 'matched');
+                        selectedDef.el.classList.remove('card-wrong', 'selected', 'matched');
+                        selectedWord = null;
+                        selectedDef = null;
+                        processing = false;
                     }, 600);
                 }
             }
@@ -1195,7 +1264,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             score = 0;
             attempts = 0;
             matchedPairs = 0;
-            selected = [];
+            selectedWord = null;
+            selectedDef = null;
+            processing = false;
             matchedIds = new Set();
             scoreEl.textContent = 'Score: 0';
             pairsEl.textContent = 'Pairs: 0/6';

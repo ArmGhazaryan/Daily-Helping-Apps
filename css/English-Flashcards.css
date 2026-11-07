@@ -97,27 +97,34 @@ header {
 .flashcard-container {
     width: min(320px, 90vw);
     height: min(420px, 70vh);
-    perspective: 1000px;
+    perspective: 1000px !important;
 }
 
-.flashcard {
+.flashcard,
+#myCard {
     width: 100%;
     height: 100%;
     position: relative;
     transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-    transform-style: preserve-3d;
+    transform-style: preserve-3d !important;
+    -webkit-transform-style: preserve-3d !important;
     cursor: pointer;
 }
 
-.flashcard.is-flipped {
-    transform: rotateY(180deg);
+.flashcard.is-flipped,
+#myCard.is-flipped {
+    transform: rotateY(180deg) !important;
 }
 
 .flashcard-face {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    backface-visibility: hidden;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    overflow: visible !important;
     border-radius: 16px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
     display: flex;
@@ -132,13 +139,30 @@ header {
 .flashcard-front {
     background: linear-gradient(145deg, #1e293b, #0f172a);
     border: 2px solid #334155;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    overflow: visible !important;
+    transform: rotateY(0deg) !important;
 }
 
 .flashcard-back {
     background: linear-gradient(145deg, #1e293b, #0f172a);
     border: 2px solid #38bdf8;
-    transform: rotateY(180deg);
-    gap: 25px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    overflow: visible !important;
+    transform: rotateY(180deg) !important;
+    gap: 12px;
     /* Տարածություն բացատրության և օրինակի միջև */
 }
 
@@ -496,7 +520,11 @@ header {
 }
 
 
-/* Content overflow fix for flashcard containers */
+/* Content overflow fix for flashcard containers.
+   NOTE: overflow-y / max-height must NEVER be set on the 3D faces
+   (.flashcard, .flashcard-face, .flashcard-front, .flashcard-back):
+   in WebKit it flattens the 3D context and breaks backface-visibility.
+   Scrolling is applied only to the inner text wrappers below. */
 .flashcard-card,
 .card-back,
 .card-body,
@@ -504,17 +532,45 @@ header {
 .flashcard-face,
 .flashcard-front,
 .flashcard-back {
-    max-height: 100%;
-    overflow-y: auto;
     word-break: break-word;
 }
 
-.definition,
-.example,
 .example-container {
-    max-height: 100%;
-    overflow-y: auto;
     word-break: break-word;
+}
+
+/* Inner text wrappers: safe place for scrolling */
+#backDefinition,
+#backExample {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #f8fafc !important;
+    max-height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    /* Keep (invisible) touch/wheel scrolling for extreme cases, hide the scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    word-break: break-word;
+}
+
+#backDefinition::-webkit-scrollbar,
+#backExample::-webkit-scrollbar {
+    display: none;
+}
+
+#backDefinition {
+    max-height: 30%;
+}
+
+#backExample {
+    max-height: 100%;
+}
+
+.example-container {
+    max-height: 30%;
+    min-height: 0;
 }
 
 /* Keep TTS audio button and card flip triggers pinned/visible */
@@ -650,6 +706,7 @@ header {
 .accordion {
     display: flex;
     flex-direction: column;
+}
 
 .admin-toggle {
     margin: 10px 0;
@@ -689,7 +746,6 @@ header {
     background: rgba(168, 85, 247, 0.2);
     color: #d8b4fe;
     border: 1px solid rgba(168, 85, 247, 0.4);
-}
 }
 .accordion-header {
     width: 100%;
@@ -836,6 +892,39 @@ header {
         padding: 8px 10px;
     }
 }
+
+@media (max-width: 480px) {
+    header {
+        padding: 14px 16px;
+    }
+    .top-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        width: 100%;
+    }
+    .top-actions button {
+        width: 100%;
+    }
+    .app-layout {
+        padding: 12px 16px 30px;
+        gap: 16px;
+    }
+    .sidebar {
+        padding: 12px 14px;
+    }
+    .controls {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .modal-content {
+        width: 92%;
+        padding: 18px 20px;
+    }
+    .matching-game-section {
+        padding: 0 8px 30px;
+    }
+}
 .empty-state {
     text-align: center;
     color: #cbd5e1;
@@ -894,101 +983,135 @@ header {
 }
 .matching-exit-btn:hover { border-color: #38bdf8; color: #38bdf8; }
 .matching-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 14px;
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    justify-content: center;
     width: 100%;
-    max-width: 660px;
+    max-width: 900px;
     padding: 8px;
     box-sizing: border-box;
 }
+
+.matching-words,
+.matching-defs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    max-width: 400px;
+}
 @media (max-width: 768px) {
     .matching-grid {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(6, 1fr);
-        gap: 10px;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .matching-grid {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    .matching-words,
+    .matching-defs {
+        width: 100%;
+        max-width: 100%;
     }
 }
 .matching-card {
     position: relative;
     width: 100%;
-    min-height: 80px;
-    min-width: 80px;
-    aspect-ratio: 1 / 1;
-    background: transparent;
-    border: none;
+    height: 95px !important;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    background: #1e293b;
+    border: 2px solid #334155;
+    color: #f8fafc;
     cursor: pointer;
-    padding: 0;
     touch-action: manipulation;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    border-radius: 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    word-break: break-word;
+    overflow: hidden;
+}
+.matching-card-face {
+    position: relative;
 }
 .matching-card:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
-.matching-card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
-    transform-style: preserve-3d;
-    border-radius: 12px;
+.matching-card:hover:not(.matched):not(.selected) { border-color: #38bdf8; }
+.matching-card.selected {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.15);
 }
-.matching-card-inner.is-flipped { transform: rotateY(180deg); }
-.matching-card-face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 10px;
-    box-sizing: border-box;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+.matching-card.card-correct {
+    border-color: #10b981;
+    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.15);
 }
-.matching-card-back {
-    background: linear-gradient(145deg, #1e293b, #0f172a);
-    border: 2px solid #334155;
-    color: #94a3b8;
-    font-size: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.matching-card.card-correct:disabled {
+    opacity: 0.7;
+    cursor: default;
 }
-.matching-card-front {
-    background: linear-gradient(145deg, #334155, #1e293b);
-    border: 2px solid #3b82f6;
-    color: #f8fafc;
-    transform: rotateY(180deg);
-    gap: 8px;
+.matching-card.card-wrong {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.15);
+    animation: cardShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 .card-type {
-    font-size: 0.75rem;
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-size: 0.65rem;
+    opacity: 0.6;
+    margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #93c5fd;
+    letter-spacing: 0.5px;
     font-weight: 700;
+    color: #93c5fd;
+    white-space: nowrap;
+    z-index: 2;
 }
 .card-text {
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.3;
     word-break: break-word;
-    padding: 0 6px;
+    padding: 0 8px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    box-sizing: border-box;
+    flex: 1;
+    min-width: 0;
 }
-.matching-card.card-correct .matching-card-inner { transform: rotateY(180deg); }
-.matching-card.card-correct .matching-card-back,
-.matching-card.card-correct .matching-card-front {
-    border-color: #10b981;
-    box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.25), 0 10px 25px rgba(0, 0, 0, 0.45);
+
+.matching-card[data-type="word"] .card-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f8fafc;
 }
-.matching-card.card-wrong { animation: cardShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
-.matching-card.card-wrong .matching-card-back,
-.matching-card.card-wrong .matching-card-front {
-    border-color: #ef4444;
-    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0.25), 0 10px 25px rgba(0, 0, 0, 0.45);
+
+.matching-card[data-type="def"] .card-text {
+    font-size: 0.9rem;
+    color: #cbd5e1;
 }
 @keyframes cardShake {
     0%, 100% { transform: translateX(0); }

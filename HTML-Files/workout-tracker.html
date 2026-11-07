@@ -8,8 +8,8 @@
     <link rel="manifest" href="../manifest.json">
     <title>Workout & Nutrition Tracker</title>
     <link rel="icon" type="image/png" href="../Img/logo.png">
-    <link rel="stylesheet" href="../CSS-Files/workout-tracker.css">
-    <link rel="stylesheet" href="../CSS-Files/admin.css">
+    <link rel="stylesheet" href="../css/workout-tracker.css">
+    <link rel="stylesheet" href="../css/admin.css">
 
 </head>
 
@@ -249,17 +249,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- 🟢 2. Supabase Configuration ֆայլը -->
-    <script src="../Javascript-Files/supabase.js"></script>
+    <script src="../js/supabase.js"></script>
 
     <!-- 🟢 3. Workout Tracker-ի հիմնական JS ֆայլը -->
-    <script src="../Javascript-Files/workout-tracker.js"></script>
+    <script src="../js/workout-tracker.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/admin.js"></script>
 
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          navigator.serviceWorker.register('/js/sw.js')
             .catch(err => console.error('SW Registration Failed:', err));
         });
       }

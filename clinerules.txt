@@ -18,3 +18,7 @@
   - Fixing minor typos, wording, or text content.
   - Making tiny CSS adjustments (e.g., padding, color tweaks, font size).
   - Adding code comments or formatting whitespace.
+
+  - STRICT BOUNDARY: You are restricted to the current VS Code workspace folder.
+- DO NOT touch, read, or modify any files on the Desktop or outside this project.
+- DO NOT use terminal commands to delete files. Use file system tools instead.

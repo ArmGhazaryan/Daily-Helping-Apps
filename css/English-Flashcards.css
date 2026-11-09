@@ -1,4 +1,4 @@
-body {
+html, body {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -6,13 +6,17 @@ body {
     color: #f8fafc;
     min-height: 100vh;
     min-height: 100dvh;
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 
 header {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 24px 32px;
+    padding: 24px 20px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -660,7 +664,11 @@ header {
     }
 
     .cards-gallery {
-        width: 95%;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: auto !important;
+        padding-bottom: 10px !important;
     }
 
     .mini-card {
@@ -670,14 +678,40 @@ header {
     }
 
     .controls {
-        gap: 12px;
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        box-sizing: border-box !important;
+        padding: 0 10px !important;
         margin-top: 24px;
-        flex-wrap: wrap;
     }
 
     .controls button {
-        padding: 10px 16px;
-        min-height: 44px;
+        flex: 1 1 auto !important;
+        min-width: 110px !important;
+        font-size: 0.9rem !important;
+        padding: 8px 12px !important;
+    }
+
+    #counter {
+        width: 100% !important;
+        text-align: center !important;
+        order: -1 !important;
+        margin-bottom: 4px !important;
+    }
+
+    .sidebar {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .top-actions {
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     .modal-content {
@@ -871,8 +905,26 @@ header {
 }
 @media (max-width: 768px) {
     .app-layout {
-        flex-direction: column;
-        padding: 16px;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 12px 10px !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+    .app-main {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        min-width: 0 !important;
+    }
+    .flashcard-container {
+        width: min(320px, 92vw) !important;
+        height: 380px !important;
+        margin: 0 auto 20px auto !important;
     }
     .sidebar {
         width: 100%;
@@ -898,24 +950,65 @@ header {
         padding: 14px 16px;
     }
     .top-actions {
+        width: 100% !important;
+        box-sizing: border-box !important;
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
-        width: 100%;
     }
     .top-actions button {
         width: 100%;
     }
     .app-layout {
-        padding: 12px 16px 30px;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 12px 10px !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
         gap: 16px;
     }
+    .app-main {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        min-width: 0 !important;
+    }
+    .flashcard-container {
+        width: min(320px, 92vw) !important;
+        height: 380px !important;
+        margin: 0 auto 20px auto !important;
+    }
     .sidebar {
+        width: 100% !important;
+        box-sizing: border-box !important;
         padding: 12px 14px;
     }
     .controls {
-        flex-wrap: wrap;
-        gap: 12px;
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        box-sizing: border-box !important;
+        padding: 0 10px !important;
+    }
+    .controls button {
+        flex: 1 1 auto !important;
+        min-width: 110px !important;
+        font-size: 0.9rem !important;
+        padding: 8px 12px !important;
+    }
+    #counter {
+        width: 100% !important;
+        text-align: center !important;
+        order: -1 !important;
+        margin-bottom: 4px !important;
     }
     .modal-content {
         width: 92%;

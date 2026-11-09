@@ -7,12 +7,16 @@
 
 
 header {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 24px 32px;
+    padding: 24px 20px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 body {
@@ -163,7 +167,7 @@ body {
 .timer-controls {
     display: flex;
     gap: 8px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
 
 .timer-btn {
@@ -790,5 +794,136 @@ select option {
     .dha-brand .expand {
         animation: none;
         transition: none;
+    }
+}
+
+/* ==========================================
+   🟢 RESPONSIVE / DEVICE OPTIMIZATION
+   ========================================== */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+        max-width: 100%;
+    }
+
+    .app-header {
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .header-top-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .header-buttons {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .utility-btn {
+        white-space: normal;
+        text-align: center;
+        flex: 1;
+    }
+
+    .timer-widget {
+        padding: 8px 16px;
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    #timerDisplay {
+        font-size: 1.75rem;
+    }
+
+    .timer-controls {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .title-section h1 {
+        font-size: 1.5rem;
+    }
+
+    .shape-red {
+        width: 300px;
+        height: 300px;
+    }
+
+    .shape-dark {
+        width: 350px;
+        height: 350px;
+    }
+
+    #floatingControlsPanel {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        align-items: center;
+    }
+
+    #floatingControlsPanel #mafiaPlanSection,
+    #floatingControlsPanel #mainTimerWidget,
+    #floatingControlsPanel div:has(#addNominationBtn) {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+    }
+
+    .app-header {
+        padding: 10px 16px;
+    }
+
+    .utility-btn {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+    }
+
+    .timer-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    #timerDisplay {
+        font-size: 1.5rem;
+    }
+
+    .title-section h1 {
+        font-size: 1.25rem;
+    }
+
+    .dha-brand {
+        font-size: 1.25rem;
+        padding: 6px 14px;
+    }
+
+    .dha-brand .letter {
+        font-size: 1.4rem;
+    }
+
+    .dha-brand .expand {
+        font-size: 0.95rem;
+    }
+
+    .shape-red {
+        width: 250px;
+        height: 250px;
+    }
+
+    .shape-dark {
+        width: 300px;
+        height: 300px;
     }
 }

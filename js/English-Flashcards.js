@@ -1042,9 +1042,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         var resultAccuracy = document.getElementById('matching-result-accuracy');
         var playAgainBtn = document.getElementById('matching-play-again');
         var closeBtn = document.getElementById('matching-result-close');
-        var matchingGameBtn = document.getElementById('matchingGameBtn');
-
-        var mainViews = document.querySelectorAll('.top-actions, #cardsGallery, #emptyState, .flashcard-container, .controls');
+        var startScreen = document.getElementById('matchingStartScreen');
+        var gameContent = document.getElementById('matchingGameContent');
+        var startBtn = document.getElementById('startMatchingBtn');
 
         var timerStart = 0;
         var elapsed = 0;
@@ -1272,6 +1272,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             pairsEl.textContent = 'Pairs: 0/6';
         }
 
+        function showStartScreen() {
+            if (startScreen) startScreen.style.display = 'flex';
+            if (gameContent) gameContent.style.display = 'none';
+            stopTimer();
+            // Clear any active selections
+            if (selectedWord) {
+                selectedWord.el.classList.remove('selected');
+                selectedWord = null;
+            }
+            if (selectedDef) {
+                selectedDef.el.classList.remove('selected');
+                selectedDef = null;
+            }
+        }
+
+        function startGame() {
+            if (startScreen) startScreen.style.display = 'none';
+            if (gameContent) gameContent.style.display = 'block';
+            showGame(true);
+            startTimer();
+        }
+
         function showGame(show) {
             if (!section) return;
             if (show) {
@@ -1280,21 +1302,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     grid.innerHTML = '';
                     grid.classList.add('mg-hidden');
                     if (emptyMsg) emptyMsg.classList.remove('mg-hidden');
-                    section.classList.remove('mg-hidden');
-                    mainViews.forEach(function (v) { if (v) v.classList.add('mg-hidden'); });
                     return;
                 }
                 if (emptyMsg) emptyMsg.classList.add('mg-hidden');
                 grid.classList.remove('mg-hidden');
-                section.classList.remove('mg-hidden');
-                mainViews.forEach(function (v) { if (v) v.classList.add('mg-hidden'); });
                 resetGameState();
                 gameCards = cards;
                 renderGrid();
             } else {
-                section.classList.add('mg-hidden');
-                mainViews.forEach(function (v) { if (v) v.classList.remove('mg-hidden'); });
-                stopTimer();
+                showStartScreen();
             }
         }
 
@@ -1312,16 +1328,167 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (modal) modal.style.display = 'none';
         }
 
-        if (matchingGameBtn) matchingGameBtn.addEventListener('click', function () { showGame(true); });
-        if (exitBtn) exitBtn.addEventListener('click', function () { hideCompletion(); showGame(false); });
-        if (playAgainBtn) playAgainBtn.addEventListener('click', function () { hideCompletion(); showGame(true); });
-        if (closeBtn) closeBtn.addEventListener('click', function () { hideCompletion(); showGame(false); });
-        if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) { hideCompletion(); showGame(false); } });
+        if (exitBtn) exitBtn.addEventListener('click', function () { hideCompletion(); showStartScreen(); });
+        if (playAgainBtn) playAgainBtn.addEventListener('click', function () { hideCompletion(); startGame(); });
+        if (closeBtn) closeBtn.addEventListener('click', function () { hideCompletion(); showStartScreen(); });
+        if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) { hideCompletion(); showStartScreen(); } });
+        if (startBtn) startBtn.addEventListener('click', function () { startGame(); });
 
-        window.matchingGame = { show: function () { showGame(true); }, hide: function () { showGame(false); } };
+        window.matchingGame = { show: function () { startGame(); }, hide: function () { showStartScreen(); } };
     })();
+
+    // ==========================================
+    // Fill-in-the-Blank (Context Quiz) Mini-Game
+    // ==========================================
+    let quizQuestions = [];
+    let quizIndex = 0;
+    let quizScore = 0;
+
+    function escapeRegExp(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function shuffleArray(array) {
+        const arr = array.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function startFillBlankQuiz() {
+        const pool = flashcardsData.filter(c => c && typeof c.example === 'string' && c.example.trim().length > 0);
+        if (pool.length === 0) {
+            alert('No cards with example sentences available for the quiz.');
+            return;
+        }
+        const picked = shuffleArray(pool.slice()).slice(0, 5);
+        quizQuestions = picked.map(card => {
+            const sentence = card.example.replace(new RegExp(escapeRegExp(card.word), 'gi'), '<span class="blank-target">______</span>');
+            const distractors = flashcardsData
+                .filter(c => c && c.word && c.word.toLowerCase() !== card.word.toLowerCase())
+                .map(c => c.word);
+            const uniqueDistractors = [...new Set(distractors)];
+            const pickedDistractors = shuffleArray(uniqueDistractors.slice()).slice(0, 3);
+            const options = shuffleArray([card.word, ...pickedDistractors]);
+            return { sentence, targetWord: card.word, options };
+        });
+        quizIndex = 0;
+        quizScore = 0;
+        const startScreen = document.getElementById('fillBlankStartScreen');
+        const gameContent = document.getElementById('fillBlankGameContent');
+        if (startScreen) startScreen.style.display = 'none';
+        if (gameContent) gameContent.style.display = 'block';
+        renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+        const q = quizQuestions[quizIndex];
+        if (!q) return;
+        const progressEl = document.getElementById('quizProgress');
+        const scoreEl = document.getElementById('quizScore');
+        const sentenceEl = document.getElementById('quizSentence');
+        const optionsGrid = document.getElementById('quizOptionsGrid');
+        const feedbackEl = document.getElementById('quizFeedback');
+        if (progressEl) progressEl.textContent = `Question ${quizIndex + 1} / 5`;
+        if (scoreEl) scoreEl.textContent = `Score: ${quizScore}`;
+        if (sentenceEl) sentenceEl.innerHTML = q.sentence;
+        if (feedbackEl) feedbackEl.textContent = '';
+        if (optionsGrid) {
+            optionsGrid.innerHTML = '';
+            q.options.forEach(word => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'quiz-option-btn';
+                btn.textContent = word;
+                btn.addEventListener('click', () => handleQuizOptionClick(btn, word));
+                optionsGrid.appendChild(btn);
+            });
+        }
+    }
+
+    function handleQuizOptionClick(btn, selectedWord) {
+        const q = quizQuestions[quizIndex];
+        if (!q) return;
+        const buttons = document.querySelectorAll('#quizOptionsGrid .quiz-option-btn');
+        buttons.forEach(b => b.disabled = true);
+        const correctWord = q.targetWord;
+        const feedbackEl = document.getElementById('quizFeedback');
+        if (selectedWord === correctWord) {
+            btn.classList.add('correct');
+            quizScore += 10;
+            const scoreEl = document.getElementById('quizScore');
+            if (scoreEl) scoreEl.textContent = `Score: ${quizScore}`;
+            if (feedbackEl) { feedbackEl.textContent = 'Correct! 🎉'; feedbackEl.style.color = '#10b981'; }
+        } else {
+            btn.classList.add('wrong');
+            buttons.forEach(b => { if (b.textContent === correctWord) b.classList.add('correct'); });
+            if (feedbackEl) { feedbackEl.textContent = 'Incorrect!'; feedbackEl.style.color = '#ef4444'; }
+        }
+        setTimeout(() => {
+            quizIndex++;
+            if (quizIndex < quizQuestions.length) {
+                renderQuizQuestion();
+            } else {
+                showQuizFinished();
+            }
+        }, 1300);
+    }
+
+    function showQuizFinished() {
+        const gameContent = document.getElementById('fillBlankGameContent');
+        const resultsModal = document.getElementById('fillBlankResultsModal');
+        const finalScoreEl = document.getElementById('finalQuizScore');
+        const finalAccuracyEl = document.getElementById('finalQuizAccuracy');
+        const correctCount = Math.round(quizScore / 10);
+        const totalQuestions = quizQuestions.length;
+        const maxScore = totalQuestions * 10;
+        if (gameContent) gameContent.style.display = 'none';
+        if (finalScoreEl) finalScoreEl.textContent = `${quizScore} / ${maxScore}`;
+        if (finalAccuracyEl) finalAccuracyEl.textContent = `${correctCount} / ${totalQuestions}`;
+        if (resultsModal) resultsModal.style.display = 'flex';
+    }
+
+    const startFillBlankBtn = document.getElementById('startFillBlankBtn');
+    const exitFillBlankBtn = document.getElementById('exitFillBlankBtn');
+    if (startFillBlankBtn) startFillBlankBtn.addEventListener('click', startFillBlankQuiz);
+    if (exitFillBlankBtn) exitFillBlankBtn.addEventListener('click', () => {
+        const gameContent = document.getElementById('fillBlankGameContent');
+        const startScreen = document.getElementById('fillBlankStartScreen');
+        if (gameContent) gameContent.style.display = 'none';
+        if (startScreen) startScreen.style.display = 'block';
+        quizIndex = 0;
+        quizScore = 0;
+    });
+
+    const retryFillBlankBtn = document.getElementById('retryFillBlankBtn');
+    const closeFillBlankResultsBtn = document.getElementById('closeFillBlankResultsBtn');
+    if (retryFillBlankBtn) {
+        retryFillBlankBtn.addEventListener('click', () => {
+            const resultsModal = document.getElementById('fillBlankResultsModal');
+            if (resultsModal) resultsModal.style.display = 'none';
+            startFillBlankQuiz();
+        });
+    }
+    if (closeFillBlankResultsBtn) {
+        closeFillBlankResultsBtn.addEventListener('click', () => {
+            const resultsModal = document.getElementById('fillBlankResultsModal');
+            const startScreen = document.getElementById('fillBlankStartScreen');
+            if (resultsModal) resultsModal.style.display = 'none';
+            if (startScreen) startScreen.style.display = 'block';
+            quizIndex = 0;
+            quizScore = 0;
+        });
+    }
+
     await syncGuestFlashcardsToSupabase();
     await fetchAndRenderCards();
+
+    // Show the pre-game start screen on load — the game only starts when the user clicks "Start Game".
+    if (typeof window.matchingGame !== 'undefined') {
+        window.matchingGame.hide();
+    }
 
     // Refresh favorites when auth state changes
     supabaseClient.auth.onAuthStateChange(async () => {

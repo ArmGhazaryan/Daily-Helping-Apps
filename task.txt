@@ -1,11 +1,56 @@
 Task Goal:
-Fix the "Access Denied" race condition bug in `admin-dashboard.js`. Ensure the Auth Guard safely resolves the Supabase client using a fallback helper (`getClient()`) and implements retry logic for session retrieval before verifying admin privileges.
+1. Completely replace the native browser `alert()` at the end of the Fill-in-the-Blank game with a custom results modal (matching the 1st game's completion screen format).
+2. Polish the visual styling of the Fill-in-the-Blank quiz card, question text, option buttons, and feedback state.
 
-File Scope:
-- Active Admin JS File: @js/admin-dashboard.js (or @Javascript-Files/admin-dashboard.js)
+File Scope (STRICT):
+- HTML File: @index.html (or active HTML file)
+- Active CSS: @css/English-Flashcards.css
+- Active JS: @js/English-Flashcards.js
 
 CRITICAL INSTRUCTIONS:
-1. Add a safe `getClient()` helper that checks `typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient`.
-2. Inside `checkAdminAccess()`, implement a retry loop (5 retries with 150ms delay) for `client.auth.getSession()` to wait for Supabase session restoration from localStorage.
-3. Update all table operations (`loadDashboard`, `toggleAdminRole`, `deleteUser`) to use `client` instead of direct `supabaseClient` references.
-4. DO NOT use terminal commands. Edit the file directly.
+
+1. Add Custom Completion Modal (@index.html):
+   - Inside `#fillBlankGameWrapper`, add a results modal container:
+     ```html
+     <div id="fillBlankResultsModal" class="game-results-modal" style="display: none;">
+         <div class="results-card glass-card">
+             <div class="results-icon">🏆</div>
+             <h3>Quiz Completed!</h3>
+             <div class="results-stats">
+                 <div class="stat-box">
+                     <span class="stat-label">Final Score</span>
+                     <span id="finalQuizScore" class="stat-value">0</span>
+                 </div>
+                 <div class="stat-box">
+                     <span class="stat-label">Accuracy</span>
+                     <span id="finalQuizAccuracy" class="stat-value">0 / 5</span>
+                 </div>
+             </div>
+             <div class="results-actions">
+                 <button id="retryFillBlankBtn" class="btn-primary-start">🔄 Play Again</button>
+                 <button id="closeFillBlankResultsBtn" class="btn-exit-game">Close</button>
+             </div>
+         </div>
+     </div>
+     ```
+
+2. Refactor JavaScript End-Game Logic (@js/English-Flashcards.js):
+   - Locate the function handling Fill-in-the-Blank quiz flow.
+   - Completely REMOVE any `alert(...)` call when the 5 questions are complete.
+   - When the quiz ends:
+     * Hide `#fillBlankGameContent`.
+     * Update `#finalQuizScore` with `quizScore` (e.g. `30 / 50`).
+     * Update `#finalQuizAccuracy` with the correct count (e.g. `3 / 5`).
+     * Show `#fillBlankResultsModal` (set `display: flex;`).
+   - Wire event listeners:
+     * `#retryFillBlankBtn` -> hide modal, restart `startFillBlankQuiz()`.
+     * `#closeFillBlankResultsBtn` -> hide modal, display `#fillBlankStartScreen`.
+
+3. UI & CSS Polish (@css/English-Flashcards.css):
+   - Style `.quiz-card`:
+     `background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; padding: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);`
+   - Style `.quiz-option-btn`:
+     `min-height: 54px; font-size: 1.05rem; border-radius: 12px; font-weight: 600; transition: all 0.2s ease;`
+   - Add hover, correct (`.correct`), and wrong (`.wrong`) feedback styling matching the 1st game's visual design palette.
+
+4. STRICT RULE: DO NOT use terminal commands. Edit files directly.

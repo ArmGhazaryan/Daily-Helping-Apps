@@ -55,7 +55,6 @@
         <!-- ԳԼԽԱՎՈՐ ԳՈՐԾՈՂՈՒԹՅՈՒՆՆԵՐ -->
         <div class="top-actions">
             <button id="openModalBtn" class="add-word-btn">+ Add New Word</button>
-            <button id="matchingGameBtn" class="matching-game-btn" type="button">🎮 Matching Game</button>
         </div>
 
         <div class="cards-gallery" id="cardsGallery">
@@ -94,30 +93,6 @@
         </div>
 
         <!-- Կառավարման կոճակներ -->
-<section id="matching-game-section" class="matching-game-section mg-hidden">
-    <div class="matching-header">
-        <div class="matching-stats">
-            <span id="matching-timer">Time: 0.0s</span>
-            <span id="matching-score">Score: 0</span>
-            <span id="matching-pairs">Pairs: 0/6</span>
-        </div>
-        <button id="matching-exit-btn" class="matching-exit-btn" type="button">Exit Game</button>
-    </div>
-    <p id="matching-empty" class="matching-empty mg-hidden">Not enough words in the current filter (need at least 6). Add more words or choose another level.</p>
-    <div id="matching-grid" class="matching-grid"></div>
-</section>
-
-<div id="matching-completion-modal" class="modal-overlay matching-modal">
-    <div class="modal-content matching-result">
-        <h2 id="matching-result-title">🎉 Congratulations!</h2>
-        <p id="matching-result-time">Time: 0.0s</p>
-        <p id="matching-result-accuracy">Accuracy: 0%</p>
-        <div class="modal-actions">
-            <button id="matching-play-again" class="matching-play-again" type="button">🔄 Play Again</button>
-            <button id="matching-result-close" class="matching-result-close" type="button">Close</button>
-        </div>
-    </div>
-</div>
         <div class="controls">
             <button id="prevBtn">⬅ Prev</button>
             <span id="counter">1 / 1</span>
@@ -129,6 +104,98 @@
                 <button id="addToMyWordsBtn" class="add-to-my-words-btn" style="display:none;">➕ Add to My Words</button>
                 <!-- Admin Delete (official cards) -->
                 <button id="adminDeleteBtn" class="delete-btn admin-delete" style="display:none;">🗑️ Delete Word (Admin)</button>
+        </div>
+
+        <!-- Natural Page Scroll Continues Here -->
+        <div class="section-divider"></div>
+        <section id="practice-zone" class="practice-zone">
+            <div class="section-header">
+                <h2>Interactive Practice Zone</h2>
+                <p>Scroll down to reinforce your vocabulary with mini-games</p>
+            </div>
+
+            <!-- Matching Game Sub-Container -->
+            <div id="matchingGameWrapper" class="game-card-wrapper">
+                <div class="game-header">
+                    <h3>1. Matching Exercise</h3>
+                </div>
+                <div id="matchingStartScreen" class="game-start-screen">
+                    <div class="start-badge">🎮 Mini-Game 1</div>
+                    <h3>Matching Exercise</h3>
+                    <p>Match all 6 words with their correct definitions as fast as you can!</p>
+                    <button id="startMatchingBtn" class="btn-primary-start">▶ Start Game</button>
+                </div>
+                <div id="matchingGameContent" style="display: none;">
+                    <section id="matching-game-section" class="matching-game-section">
+                        <div class="matching-header">
+                            <div class="matching-stats">
+                                <span id="matching-timer">Time: 0.0s</span>
+                                <span id="matching-score">Score: 0</span>
+                                <span id="matching-pairs">Pairs: 0/6</span>
+                            </div>
+                            <button id="matching-exit-btn" class="matching-exit-btn" type="button">Exit Game</button>
+                        </div>
+                        <p id="matching-empty" class="matching-empty mg-hidden">Not enough words in the current filter (need at least 6). Add more words or choose another level.</p>
+                        <div id="matching-grid" class="matching-grid"></div>
+                    </section>
+                </div>
+            </div>
+
+            <div id="fillBlankGameWrapper" class="game-card-wrapper" style="margin-top: 36px;">
+                <div class="game-header">
+                    <h3>2. Fill in the Blank (Context Quiz)</h3>
+                </div>
+                <div id="fillBlankStartScreen" class="game-start-screen">
+                    <div class="start-badge">📝 Mini-Game 2</div>
+                    <h3>Fill in the Blank</h3>
+                    <p>Test your contextual vocabulary! Choose the correct word to complete each sentence.</p>
+                    <button id="startFillBlankBtn" class="btn-primary-start">▶ Start Quiz</button>
+                </div>
+                <div id="fillBlankGameContent" style="display: none;">
+                    <div class="quiz-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span id="quizProgress" style="font-weight: 600; color: #94a3b8;">Question 1 / 5</span>
+                        <span id="quizScore" style="font-weight: 700; color: #3b82f6;">Score: 0</span>
+                        <button id="exitFillBlankBtn" class="btn-exit-game">Exit Quiz</button>
+                    </div>
+                    <div class="quiz-card">
+                        <p id="quizSentence" class="quiz-sentence" style="font-size: 1.2rem; line-height: 1.6; text-align: center; color: #f8fafc; min-height: 60px; display: flex; align-items: center; justify-content: center;"></p>
+                        <div id="quizOptionsGrid" class="quiz-options-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px;"></div>
+                        <div id="quizFeedback" class="quiz-feedback" style="min-height: 24px; text-align: center; margin-top: 14px; font-weight: 600;"></div>
+                    </div>
+                </div>
+                <div id="fillBlankResultsModal" class="game-results-modal" style="display: none;">
+                    <div class="results-card glass-card">
+                        <div class="results-icon">🏆</div>
+                        <h3>Quiz Completed!</h3>
+                        <div class="results-stats">
+                            <div class="stat-box">
+                                <span class="stat-label">Final Score</span>
+                                <span id="finalQuizScore" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">Accuracy</span>
+                                <span id="finalQuizAccuracy" class="stat-value">0 / 5</span>
+                            </div>
+                        </div>
+                        <div class="results-actions">
+                            <button id="retryFillBlankBtn" class="btn-primary-start" type="button">🔄 Play Again</button>
+                            <button id="closeFillBlankResultsBtn" class="btn-exit-game" type="button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="matching-completion-modal" class="modal-overlay matching-modal">
+            <div class="modal-content matching-result">
+                <h2 id="matching-result-title">🎉 Congratulations!</h2>
+                <p id="matching-result-time">Time: 0.0s</p>
+                <p id="matching-result-accuracy">Accuracy: 0%</p>
+                <div class="modal-actions">
+                    <button id="matching-play-again" class="matching-play-again" type="button">🔄 Play Again</button>
+                    <button id="matching-result-close" class="matching-result-close" type="button">Close</button>
+                </div>
+            </div>
         </div>
 
         <!-- Թաքնված Փոփ-ափ (Modal) պատուհանը նոր բառերի համար -->

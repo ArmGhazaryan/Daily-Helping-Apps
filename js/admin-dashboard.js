@@ -11,6 +11,20 @@
         window.location.replace('../index.html');
     }
 
+    function showLoading() {
+        const loadingEl = document.getElementById('admin-loading');
+        const mainEl = document.querySelector('main.admin-container');
+        if (loadingEl) loadingEl.style.display = 'flex';
+        if (mainEl) mainEl.style.display = 'none';
+    }
+
+    function hideLoading() {
+        const loadingEl = document.getElementById('admin-loading');
+        const mainEl = document.querySelector('main.admin-container');
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (mainEl) mainEl.style.display = '';
+    }
+
     function formatDate(value) {
         if (!value) return '—';
         const d = new Date(value);
@@ -24,22 +38,72 @@
         });
     }
 
-    async function isAdminUser(user) {
-        if (!user) return false;
+    function getClient() {
+        return typeof supabaseClient !== 'undefined' ? supabaseClient : window.supabaseClient;
+    }
+
+    async function checkAdminAccess() {
+        showLoading();
+        const client = getClient();
+
         try {
-            const { data: profile, error } = await supabaseClient
-                .from('profiles')
-                .select('is_admin')
-                .eq('id', user.id)
-                .single();
-            if (error) {
-                console.error('Profile fetch error:', error.message);
-                return false;
+            // 1. Wait for Supabase session to resolve (retry to allow localStorage restoration)
+            let sessionData;
+            for (let attempt = 1; attempt <= 5; attempt++) {
+                const result = await client.auth.getSession();
+                sessionData = result.data;
+                if (sessionData?.session) break;
+                if (attempt < 5) await new Promise((resolve) => setTimeout(resolve, 150));
             }
-            return profile?.is_admin === true;
+            const session = sessionData?.session;
+
+            if (!session || !session.user) {
+                alert("Access Denied: Please sign in as an admin.");
+                window.location.href = "../index.html";
+                return;
+            }
+
+            const user = session.user;
+            let isAdmin = false;
+
+            // Check 1: Metadata Role
+            if (user.user_metadata?.role === 'admin') {
+                isAdmin = true;
+            } else {
+                // Check 2: Database Profile is_admin column
+                try {
+                    const { data, error } = await client
+                        .from('profiles')
+                        .select('is_admin')
+                        .eq('id', user.id)
+                        .maybeSingle();
+                    if (!error && data?.is_admin === true) {
+                        isAdmin = true;
+                    }
+                } catch (e) {
+                    console.error('Admin profile check failed:', e);
+                }
+            }
+
+            if (!isAdmin) {
+                alert("Access Denied: Admin privileges required.");
+                window.location.href = "../index.html";
+                return;
+            }
+
+            // Set current user info
+            currentUserId = user?.id || null;
+            currentUserEmail = user?.email || null;
+
+            // If verified admin, initialize Dashboard data rendering
+            hideLoading();
+            if (typeof loadDashboard === 'function') {
+                await loadDashboard();
+            }
         } catch (e) {
-            console.error('Admin check failed:', e);
-            return false;
+            console.error('Admin guard error:', e);
+            hideLoading();
+            denyAccess();
         }
     }
 
@@ -123,9 +187,10 @@
         const target = (allUsers || []).find(function (u) { return u.id === userId; });
         const newStatus = !(target && target.is_admin === true);
 
+        const client = getClient();
         const statusEl = document.getElementById('adminStatus');
         try {
-            const { error } = await supabaseClient
+            const { error } = await client
                 .from('profiles')
                 .update({ is_admin: newStatus })
                 .eq('id', userId);
@@ -161,9 +226,10 @@
         const confirmed = confirm('Are you sure you want to delete this user?');
         if (!confirmed) return;
 
+        const client = getClient();
         const statusEl = document.getElementById('adminStatus');
         try {
-            const { error } = await supabaseClient
+            const { error } = await client
                 .from('profiles')
                 .delete()
                 .eq('id', userId);
@@ -190,9 +256,10 @@
     }
 
     async function loadDashboard() {
+        const client = getClient();
         const statusEl = document.getElementById('adminStatus');
         try {
-            const { data, error } = await supabaseClient
+            const { data, error } = await client
                 .from('profiles')
                 .select('*');
 
@@ -217,36 +284,12 @@
         }
     }
 
-    async function init() {
-        try {
-            const { data: { user }, error } = await supabaseClient.auth.getUser();
-            if (error || !user) {
-                denyAccess();
-                return;
-            }
-
-            const admin = await isAdminUser(user);
-            if (!admin) {
-                denyAccess();
-                return;
-            }
-
-            currentUserId = user?.id || null;
-            currentUserEmail = user?.email || null;
-
-            await loadDashboard();
-        } catch (e) {
-            console.error('Admin guard error:', e);
-            denyAccess();
-        }
-    }
-
     window.toggleAdminRole = toggleAdminRole;
     window.deleteUser = deleteUser;
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', checkAdminAccess);
     } else {
-        init();
+        checkAdminAccess();
     }
 })();

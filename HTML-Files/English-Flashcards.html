@@ -75,6 +75,7 @@
                         <div class="word" id="frontWord">Word</div>
                         <button id="speakBtn" class="speak-btn" title="Listen pronunciation">🔊</button>
                     </div>
+                    <button id="addNoteBtn" class="card-action-btn" title="Add Memory Note">✏️ Note</button>
 
                     <div class="hint">Click to flip ⤵</div>
                 </div>
@@ -88,6 +89,7 @@
                     <div class="example" id="backExample">"Example sentence"</div>
                     <button id="exampleSpeakBtn" class="speak-btn" title="Listen pronunciation">🔊</button>
                 </div>
+                <div id="cardNotePreview" class="card-note-preview" style="display: none;"></div>
                 </div>
             </div>
         </div>
@@ -113,6 +115,13 @@
                 <h2>Interactive Practice Zone</h2>
                 <p>Scroll down to reinforce your vocabulary with mini-games</p>
             </div>
+            <div class="practice-filter-bar" style="display: flex; justify-content: center; margin-bottom: 24px;">
+                <div class="filter-toggle-container" style="display: flex; background: rgba(15, 23, 42, 0.8); padding: 4px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <button id="filterAllWordsBtn" class="filter-btn active" data-mode="all">📚 All Words</button>
+                    <button id="filterFavoritesBtn" class="filter-btn" data-mode="favorites">⭐ Only My Favorites</button>
+                </div>
+            </div>
+            <div id="favoritesWarningMsg" class="favorites-warning" style="display: none; text-align: center; color: #f59e0b; margin-bottom: 16px; font-weight: 600;"></div>
 
             <!-- Matching Game Sub-Container -->
             <div id="matchingGameWrapper" class="game-card-wrapper">
@@ -180,6 +189,116 @@
                         <div class="results-actions">
                             <button id="retryFillBlankBtn" class="btn-primary-start" type="button">🔄 Play Again</button>
                             <button id="closeFillBlankResultsBtn" class="btn-exit-game" type="button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="spellingGameWrapper" class="game-card-wrapper" style="margin-top: 36px;">
+                <div class="game-header">
+                    <h3>3. Audio Spelling Bee</h3>
+                </div>
+                <div id="spellingStartScreen" class="game-start-screen">
+                    <div class="start-badge">🎧 Mini-Game 3</div>
+                    <h3>Audio Spelling Bee</h3>
+                    <p>Listen to the word pronunciation and type the correct spelling!</p>
+                    <button id="startSpellingBtn" class="btn-primary-start">▶ Start Challenge</button>
+                </div>
+                <div id="spellingGameContent" style="display: none; background: rgba(15, 23, 42, 0.85); padding: 28px; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <div class="quiz-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <span id="spellingProgress" style="font-weight: 600; color: #94a3b8;">Word 1 / 5</span>
+                        <span id="spellingScore" style="font-weight: 700; color: #3b82f6;">Score: 0</span>
+                        <button id="exitSpellingBtn" class="btn-exit-game">Exit Game</button>
+                    </div>
+                    <div style="text-align: center;">
+                        <button id="playAudioBtn" type="button" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: #fff; padding: 16px 28px; border-radius: 50px; font-size: 1.15rem; font-weight: 700; cursor: pointer; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(59,130,246,0.4); transition: transform 0.2s ease;">🔊 Listen Word</button>
+                        <p id="spellingDefinition" style="color: #94a3b8; font-size: 1.05rem; margin-bottom: 24px; min-height: 48px; line-height: 1.5;"></p>
+                        <form id="spellingForm" style="display: flex; justify-content: center; gap: 12px; max-width: 460px; margin: 0 auto;">
+                            <input type="text" id="spellingInput" placeholder="Type the word here..." autocomplete="off" style="flex: 1; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(30,41,59,0.8); color: #fff; font-size: 1.1rem; text-align: center;">
+                            <button type="submit" style="background: #10b981; border: none; color: #fff; padding: 0 24px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s ease;">Check</button>
+                        </form>
+                        <div id="spellingFeedback" style="margin-top: 16px; font-weight: 600; min-height: 24px;"></div>
+                    </div>
+                </div>
+
+                <!-- Custom Completion Modal -->
+                <div id="spellingResultsModal" class="game-results-modal" style="display: none;">
+                    <div class="results-card glass-card" style="text-align: center; padding: 32px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px;">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">🎧</div>
+                        <h3 style="font-size: 1.6rem; color: #f8fafc; margin-bottom: 8px;">Spelling Challenge Complete!</h3>
+                        <div class="results-stats" style="display: flex; justify-content: center; gap: 24px; margin: 20px 0;">
+                            <div class="stat-box" style="background: rgba(30, 41, 59, 0.7); padding: 12px 20px; border-radius: 12px;">
+                                <span style="display: block; font-size: 0.85rem; color: #94a3b8;">Final Score</span>
+                                <span id="finalSpellingScore" style="font-size: 1.4rem; font-weight: 700; color: #3b82f6;">0</span>
+                            </div>
+                            <div class="stat-box" style="background: rgba(30, 41, 59, 0.7); padding: 12px 20px; border-radius: 12px;">
+                                <span style="display: block; font-size: 0.85rem; color: #94a3b8;">Accuracy</span>
+                                <span id="finalSpellingAccuracy" style="font-size: 1.4rem; font-weight: 700; color: #10b981;">0 / 5</span>
+                            </div>
+                        </div>
+                        <div class="results-actions" style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+                            <button id="retrySpellingBtn" class="btn-primary-start">🔄 Play Again</button>
+                            <button id="closeSpellingResultsBtn" class="btn-exit-game">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="voiceGameWrapper" class="game-card-wrapper" style="margin-top: 36px;">
+                <div class="game-header">
+                    <h3>4. Voice Pronunciation Checker</h3>
+                </div>
+                <div id="voiceStartScreen" class="game-start-screen">
+                    <div class="start-badge">🎙️ Speaking Practice</div>
+                    <h3>Pronunciation Practice</h3>
+                    <p>Listen to the target word and speak into your microphone to test your pronunciation!</p>
+                    <button id="startVoiceBtn" class="btn-primary-start">▶ Start Practice</button>
+                </div>
+                <div id="voiceGameContent" style="display: none; background: rgba(15, 23, 42, 0.85); padding: 28px; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    <div class="quiz-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <span id="voiceProgress" style="font-weight: 600; color: #94a3b8;">Word 1 / 5</span>
+                        <span id="voiceScore" style="font-weight: 700; color: #3b82f6;">Score: 0</span>
+                        <button id="exitVoiceBtn" class="btn-exit-game">Exit Game</button>
+                    </div>
+                    <div style="text-align: center;">
+                        <h2 id="voiceTargetWord" style="font-size: 2.2rem; color: #f8fafc; margin-bottom: 8px;">Word</h2>
+                        <p id="voiceTargetDef" style="color: #94a3b8; font-size: 1rem; margin-bottom: 20px;"></p>
+                        
+                        <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;">
+                            <button id="voiceListenBtn" type="button" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #60a5fa; padding: 10px 20px; border-radius: 30px; font-weight: 600; cursor: pointer;">🔊 Listen Native</button>
+                        </div>
+
+                        <!-- Mic Trigger Button -->
+                        <div style="margin: 20px 0;">
+                            <button id="micRecordBtn" type="button" class="mic-record-btn">
+                                <span class="mic-icon">🎙️</span>
+                                <span id="micStatusText">Tap to Speak</span>
+                            </button>
+                        </div>
+
+                        <div id="speechRecognizedOutput" style="min-height: 28px; font-size: 1.1rem; color: #cbd5e1; margin-top: 12px;"></div>
+                        <div id="voiceFeedback" style="min-height: 28px; font-weight: 700; margin-top: 8px;"></div>
+                    </div>
+                </div>
+
+                <!-- Custom Results Modal -->
+                <div id="voiceResultsModal" class="game-results-modal" style="display: none;">
+                    <div class="results-card glass-card" style="text-align: center; padding: 32px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px;">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">🎙️</div>
+                        <h3 style="font-size: 1.6rem; color: #f8fafc; margin-bottom: 8px;">Pronunciation Practice Complete!</h3>
+                        <div class="results-stats" style="display: flex; justify-content: center; gap: 24px; margin: 20px 0;">
+                            <div class="stat-box" style="background: rgba(30, 41, 59, 0.7); padding: 12px 20px; border-radius: 12px;">
+                                <span style="display: block; font-size: 0.85rem; color: #94a3b8;">Final Score</span>
+                                <span id="finalVoiceScore" style="font-size: 1.4rem; font-weight: 700; color: #3b82f6;">0</span>
+                            </div>
+                            <div class="stat-box" style="background: rgba(30, 41, 59, 0.7); padding: 12px 20px; border-radius: 12px;">
+                                <span style="display: block; font-size: 0.85rem; color: #94a3b8;">Accuracy</span>
+                                <span id="finalVoiceAccuracy" style="font-size: 1.4rem; font-weight: 700; color: #10b981;">0 / 5</span>
+                            </div>
+                        </div>
+                        <div class="results-actions" style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+                            <button id="retryVoiceBtn" class="btn-primary-start">🔄 Try Again</button>
+                            <button id="closeVoiceResultsBtn" class="btn-exit-game">Close</button>
                         </div>
                     </div>
                 </div>
@@ -333,6 +452,21 @@
     });
   }
 </script>
+
+    <!-- Personal Memory Note Modal -->
+    <div id="noteModal" class="game-results-modal" style="display: none;">
+        <div class="results-card glass-card" style="max-width: 450px; width: 90%; text-align: left; padding: 28px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px;">
+            <h3 style="font-size: 1.4rem; color: #f8fafc; margin-bottom: 8px;">✏️ Personal Memory Note</h3>
+            <p id="noteModalWord" style="color: #3b82f6; font-weight: 700; font-size: 1.1rem; margin-bottom: 16px;"></p>
+            <textarea id="noteTextInput" placeholder="Write your association, Armenian translation, or memory hint..." rows="4" style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(30, 41, 59, 0.8); color: #fff; font-size: 1rem; resize: vertical; outline: none; margin-bottom: 16px;"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button id="deleteNoteBtn" class="btn-exit-game" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;">Delete Note</button>
+                <button id="closeNoteModalBtn" class="btn-exit-game">Cancel</button>
+                <button id="saveNoteBtn" class="btn-primary-start" style="padding: 10px 20px;">Save Note</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

@@ -1,56 +1,49 @@
 Task Goal:
-1. Completely replace the native browser `alert()` at the end of the Fill-in-the-Blank game with a custom results modal (matching the 1st game's completion screen format).
-2. Polish the visual styling of the Fill-in-the-Blank quiz card, question text, option buttons, and feedback state.
+Fix state persistence for Personal Memory Notes so that saved notes are permanently linked to their respective words and remain visible on the card back when flipping or navigating between flashcards (Next / Prev).
 
 File Scope (STRICT):
-- HTML File: @index.html (or active HTML file)
-- Active CSS: @css/English-Flashcards.css
-- Active JS: @js/English-Flashcards.js
+- Active JS File: @js/English-Flashcards.js
+- Active HTML File: @index.html
 
 CRITICAL INSTRUCTIONS:
 
-1. Add Custom Completion Modal (@index.html):
-   - Inside `#fillBlankGameWrapper`, add a results modal container:
-     ```html
-     <div id="fillBlankResultsModal" class="game-results-modal" style="display: none;">
-         <div class="results-card glass-card">
-             <div class="results-icon">🏆</div>
-             <h3>Quiz Completed!</h3>
-             <div class="results-stats">
-                 <div class="stat-box">
-                     <span class="stat-label">Final Score</span>
-                     <span id="finalQuizScore" class="stat-value">0</span>
-                 </div>
-                 <div class="stat-box">
-                     <span class="stat-label">Accuracy</span>
-                     <span id="finalQuizAccuracy" class="stat-value">0 / 5</span>
-                 </div>
-             </div>
-             <div class="results-actions">
-                 <button id="retryFillBlankBtn" class="btn-primary-start">🔄 Play Again</button>
-                 <button id="closeFillBlankResultsBtn" class="btn-exit-game">Close</button>
-             </div>
-         </div>
-     </div>
+1. Synchronize Note State with Card Rendering (@js/English-Flashcards.js):
+   - Ensure `userNotes` state object is loaded from `localStorage` (`dha_user_notes`) or Supabase on initialization.
+   - Update `renderCard(cardIndex)` function:
+     ```javascript
+     const currentCard = currentCardsArray[cardIndex];
+     const cardNote = userNotes[currentCard.id] || userNotes[currentCard.word.toLowerCase()];
+
+     const notePreviewEl = document.getElementById('cardNotePreview');
+     const addNoteBtnEl = document.getElementById('addNoteBtn');
+
+     if (cardNote && cardNote.trim() !== '') {
+         // Display note on card back
+         if (notePreviewEl) {
+             notePreviewEl.textContent = `💡 Note: ${cardNote}`;
+             notePreviewEl.style.display = 'block';
+         }
+         // Update button text on card front
+         if (addNoteBtnEl) {
+             addNoteBtnEl.innerHTML = '✏️ Edit Note';
+             addNoteBtnEl.classList.add('has-note');
+         }
+     } else {
+         // Hide note preview if no note exists
+         if (notePreviewEl) {
+             notePreviewEl.style.display = 'none';
+             notePreviewEl.textContent = '';
+         }
+         // Reset button text on card front
+         if (addNoteBtnEl) {
+             addNoteBtnEl.innerHTML = '✏️ Note';
+             addNoteBtnEl.classList.remove('has-note');
+         }
+     }
      ```
 
-2. Refactor JavaScript End-Game Logic (@js/English-Flashcards.js):
-   - Locate the function handling Fill-in-the-Blank quiz flow.
-   - Completely REMOVE any `alert(...)` call when the 5 questions are complete.
-   - When the quiz ends:
-     * Hide `#fillBlankGameContent`.
-     * Update `#finalQuizScore` with `quizScore` (e.g. `30 / 50`).
-     * Update `#finalQuizAccuracy` with the correct count (e.g. `3 / 5`).
-     * Show `#fillBlankResultsModal` (set `display: flex;`).
-   - Wire event listeners:
-     * `#retryFillBlankBtn` -> hide modal, restart `startFillBlankQuiz()`.
-     * `#closeFillBlankResultsBtn` -> hide modal, display `#fillBlankStartScreen`.
+2. Card Navigation Event Listeners:
+   - Ensure Next (`#nextBtn`), Prev (`#prevBtn`), and card tab selectors explicitly call `renderCard()` so note state updates synchronously whenever the active card changes.
+   - When saving/deleting a note in `#noteModal`, update `userNotes` in memory and `localStorage`, then immediately call `renderCard(currentCardIndex)` to update the live DOM without requiring a manual page refresh.
 
-3. UI & CSS Polish (@css/English-Flashcards.css):
-   - Style `.quiz-card`:
-     `background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; padding: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);`
-   - Style `.quiz-option-btn`:
-     `min-height: 54px; font-size: 1.05rem; border-radius: 12px; font-weight: 600; transition: all 0.2s ease;`
-   - Add hover, correct (`.correct`), and wrong (`.wrong`) feedback styling matching the 1st game's visual design palette.
-
-4. STRICT RULE: DO NOT use terminal commands. Edit files directly.
+3. STRICT RULE: DO NOT use terminal commands. Edit files directly.

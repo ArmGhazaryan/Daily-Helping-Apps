@@ -274,8 +274,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let allFlashcardsData = [];
     let favoriteIds = new Set();
     let currentFilter = 'official';
+    let currentPracticeFilter = 'all';
     let currentUserId = null;
     let isAdmin = false;
+    let userNotes = {};
 
     // DOM Ã”Â·Ã•Â¬Ã•Â¥Ã•Â´Ã•Â¥Ã•Â¶Ã•Â¿Ã•Â¶Ã•Â¥Ã–â‚¬
     const card = document.getElementById('myCard');
@@ -312,6 +314,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterC1 = document.getElementById('filterC1');
     const filterC2 = document.getElementById('filterC2');
 
+    const filterAllWordsBtn = document.getElementById('filterAllWordsBtn');
+    const filterFavoritesBtn = document.getElementById('filterFavoritesBtn');
+
     const levelAccordion = document.getElementById('levelAccordion');
     const levelAccordionHeader = document.getElementById('levelAccordionHeader');
 
@@ -341,6 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }));
 
         await loadFavorites();
+        loadNotes();
         applyFilter(false);
     }
 
@@ -371,6 +377,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         updateFavoritesCounter();
         updateHeartUI();
+    }
+
+    // ==========================================
+    // PERSONAL MEMORY NOTES
+    // ==========================================
+
+    function loadNotes() {
+        try {
+            const raw = localStorage.getItem('dha_user_notes');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    userNotes = parsed;
+                }
+            }
+        } catch (e) {
+            console.error('loadNotes error:', e);
+            userNotes = {};
+        }
+    }
+
+    function saveNote(wordId, text) {
+        userNotes[String(wordId)] = text;
+        try {
+            localStorage.setItem('dha_user_notes', JSON.stringify(userNotes));
+        } catch (e) {
+            console.error('saveNote error:', e);
+        }
+    }
+
+    function deleteNote(wordId) {
+        delete userNotes[String(wordId)];
+        try {
+            localStorage.setItem('dha_user_notes', JSON.stringify(userNotes));
+        } catch (e) {
+            console.error('deleteNote error:', e);
+        }
     }
 
     function applyFilter(resetIndex) {
@@ -405,6 +448,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateFavoritesCounter();
         updateSidebarCounts();
         updateSidebarActive();
+    }
+
+    function getFilteredCards() {
+        if (currentPracticeFilter === 'all') {
+            return flashcardsData;
+        }
+        // Favorites mode: only favorited cards
+        return flashcardsData.filter((card) =>
+            favoriteIds.has(String(card.id))
+        );
+    }
+
+    function showFavoritesWarning(message) {
+        const msgEl = document.getElementById('favoritesWarningMsg');
+        if (msgEl) {
+            msgEl.textContent = message;
+            msgEl.style.display = 'block';
+        }
+    }
+
+    function hideFavoritesWarning() {
+        const msgEl = document.getElementById('favoritesWarningMsg');
+        if (msgEl) msgEl.style.display = 'none';
+    }
+
+    function switchPracticeFilter(mode) {
+        currentPracticeFilter = mode;
+        hideFavoritesWarning();
+        if (filterAllWordsBtn) {
+            filterAllWordsBtn.classList.toggle('active', mode === 'all');
+        }
+        if (filterFavoritesBtn) {
+            filterFavoritesBtn.classList.toggle('active', mode === 'favorites');
+        }
+        // Reset active game screens back to their start screens
+        if (typeof window.matchingGame !== 'undefined' && window.matchingGame.hide) {
+            window.matchingGame.hide();
+        }
+        const fillBlankContent = document.getElementById('fillBlankGameContent');
+        const fillBlankStart = document.getElementById('fillBlankStartScreen');
+        if (fillBlankContent && fillBlankStart && fillBlankContent.style.display !== 'none') {
+            fillBlankContent.style.display = 'none';
+            fillBlankStart.style.display = 'block';
+        }
+        const spellingContent = document.getElementById('spellingGameContent');
+        const spellingStart = document.getElementById('spellingStartScreen');
+        if (spellingContent && spellingStart && spellingContent.style.display !== 'none') {
+            spellingContent.style.display = 'none';
+            spellingStart.style.display = 'block';
+        }
+        const voiceContent = document.getElementById('voiceGameContent');
+        const voiceStart = document.getElementById('voiceStartScreen');
+        if (voiceContent && voiceStart && voiceContent.style.display !== 'none') {
+            voiceContent.style.display = 'none';
+            voiceStart.style.display = 'block';
+        }
     }
 
     function updateFavoritesCounter() {
@@ -523,6 +622,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function renderCard(cardIndex) {
+        const currentCard = flashcardsData[cardIndex];
+        if (!currentCard) return;
+
+        const cardNote = userNotes[currentCard.id] || userNotes[currentCard.word.toLowerCase()];
+
+        const notePreviewEl = document.getElementById('cardNotePreview');
+        const addNoteBtnEl = document.getElementById('addNoteBtn');
+
+        if (cardNote && cardNote.trim() !== '') {
+            // Display note on card back
+            if (notePreviewEl) {
+                notePreviewEl.textContent = `💡 Note: ${cardNote}`;
+                notePreviewEl.style.display = 'block';
+            }
+            // Update button text on card front
+            if (addNoteBtnEl) {
+                addNoteBtnEl.innerHTML = '✏️ Edit Note';
+                addNoteBtnEl.classList.add('has-note');
+            }
+        } else {
+            // Hide note preview if no note exists
+            if (notePreviewEl) {
+                notePreviewEl.style.display = 'none';
+                notePreviewEl.textContent = '';
+            }
+            // Reset button text on card front
+            if (addNoteBtnEl) {
+                addNoteBtnEl.innerHTML = '✏️ Note';
+                addNoteBtnEl.classList.remove('has-note');
+            }
+        }
+    }
+
     function loadCard(index) {
         if (emptyState) {
             const showEmpty = (flashcardsData.length === 0);
@@ -636,6 +769,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(prevBtn) prevBtn.disabled = index === 0;
         if(nextBtn) nextBtn.disabled = index === flashcardsData.length - 1;
 
+        // --- Personal Memory Note Preview ---
+        renderCard(index);
+
         if(card) card.classList.remove('is-flipped');
         renderGallery();
         updateHeartUI();
@@ -675,6 +811,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (currentIndex < flashcardsData.length - 1) {
                 currentIndex++;
                 loadCard(currentIndex);
+                renderCard(currentIndex);
             }
         });
     }
@@ -684,6 +821,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (currentIndex > 0) {
                 currentIndex--;
                 loadCard(currentIndex);
+                renderCard(currentIndex);
             }
         });
     }
@@ -725,6 +863,75 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                 }
             }
+        });
+    }
+
+    // ==========================================
+    // PERSONAL MEMORY NOTE EVENT BINDINGS
+    // ==========================================
+    const noteModal = document.getElementById('noteModal');
+    const noteTextInput = document.getElementById('noteTextInput');
+    const noteModalWord = document.getElementById('noteModalWord');
+    const closeNoteModalBtn = document.getElementById('closeNoteModalBtn');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+    const addNoteBtn = document.getElementById('addNoteBtn');
+
+    // Open note modal
+    if (addNoteBtn) {
+        addNoteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currentCard = flashcardsData[currentIndex];
+            if (!currentCard) return;
+            if (noteModalWord) noteModalWord.textContent = currentCard.word;
+            const cardId = String(currentCard.id);
+            if (noteTextInput) noteTextInput.value = userNotes[cardId] || '';
+            if (noteModal) noteModal.style.display = 'flex';
+        });
+    }
+
+    // Save note
+    if (saveNoteBtn) {
+        saveNoteBtn.addEventListener('click', () => {
+            const currentCard = flashcardsData[currentIndex];
+            if (!currentCard) return;
+            const cardId = String(currentCard.id);
+            const text = noteTextInput ? noteTextInput.value.trim() : '';
+            if (text) {
+                saveNote(cardId, text);
+            } else {
+                deleteNote(cardId);
+            }
+            loadCard(currentIndex);
+            renderCard(currentIndex);
+            if (noteModal) noteModal.style.display = 'none';
+        });
+    }
+
+    // Delete note
+    if (deleteNoteBtn) {
+        deleteNoteBtn.addEventListener('click', () => {
+            const currentCard = flashcardsData[currentIndex];
+            if (!currentCard) return;
+            const cardId = String(currentCard.id);
+            deleteNote(cardId);
+            loadCard(currentIndex);
+            renderCard(currentIndex);
+            if (noteModal) noteModal.style.display = 'none';
+        });
+    }
+
+    // Close note modal
+    if (closeNoteModalBtn) {
+        closeNoteModalBtn.addEventListener('click', () => {
+            if (noteModal) noteModal.style.display = 'none';
+        });
+    }
+
+    // Close note modal on backdrop click
+    if (noteModal) {
+        noteModal.addEventListener('click', (e) => {
+            if (e.target === noteModal) noteModal.style.display = 'none';
         });
     }
 
@@ -1114,14 +1321,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (e) { /* audio may be blocked until a user gesture */ }
         }
 
-        function shuffle(array) {
-            for (var i = array.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var tmp = array[i]; array[i] = array[j]; array[j] = tmp;
-            }
-            return array;
-        }
-
         function escapeHtml(str) {
             var d = document.createElement('div');
             d.textContent = str;
@@ -1129,11 +1328,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         function buildGameCards() {
             // Respects the user's current filter, including level filters A1-C2.
-            var pool = flashcardsData.filter(function (c) {
+            var pool = (typeof getFilteredCards === 'function' ? getFilteredCards() : flashcardsData).filter(function (c) {
                 return c.word && (c.translation || c.definition);
             });
             if (pool.length < 6) return null;
-            var picked = shuffle(pool.slice()).slice(0, 6);
+            var picked = shuffleArray(pool).slice(0, 6);
             var words = [];
             var definitions = [];
             picked.forEach(function (c, i) {
@@ -1142,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 words.push({ id: 'w' + i, pairId: pairId, type: 'word', text: c.word });
                 definitions.push({ id: 'd' + i, pairId: pairId, type: 'def', text: text });
             });
-            return { words: words, definitions: shuffle(definitions) };
+            return { words: words, definitions: shuffleArray(definitions) };
         }
 
         function renderGrid() {
@@ -1288,6 +1487,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function startGame() {
+            if (typeof currentPracticeFilter !== 'undefined' && currentPracticeFilter === 'favorites') {
+                var favPool = (typeof getFilteredCards === 'function' ? getFilteredCards() : []).filter(function (c) {
+                    return c.word && (c.translation || c.definition);
+                });
+                if (favPool.length < 6) {
+                    showFavoritesWarning('You need at least 6 favorite words to play in Favorites mode! Add more cards to favorites first.');
+                    return;
+                }
+            }
+            hideFavoritesWarning();
             if (startScreen) startScreen.style.display = 'none';
             if (gameContent) gameContent.style.display = 'block';
             showGame(true);
@@ -1349,7 +1558,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function shuffleArray(array) {
-        const arr = array.slice();
+        const arr = [...array];
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -1358,15 +1567,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function startFillBlankQuiz() {
-        const pool = flashcardsData.filter(c => c && typeof c.example === 'string' && c.example.trim().length > 0);
+        if (currentPracticeFilter === 'favorites') {
+            var favPool = getFilteredCards ? getFilteredCards().filter(c => c && typeof c.example === 'string' && c.example.trim().length > 0) : [];
+            if (favPool.length < 5) {
+                showFavoritesWarning('You need at least 5 favorite words to play in Favorites mode! Add more cards to favorites first.');
+                return;
+            }
+        }
+        hideFavoritesWarning();
+        var poolSource = getFilteredCards ? getFilteredCards() : flashcardsData;
+        const pool = poolSource.filter(c => c && typeof c.example === 'string' && c.example.trim().length > 0);
         if (pool.length === 0) {
             alert('No cards with example sentences available for the quiz.');
             return;
         }
-        const picked = shuffleArray(pool.slice()).slice(0, 5);
+        const picked = shuffleArray(getFilteredCards().filter(c => c && c.example)).slice(0, 5);
         quizQuestions = picked.map(card => {
             const sentence = card.example.replace(new RegExp(escapeRegExp(card.word), 'gi'), '<span class="blank-target">______</span>');
-            const distractors = flashcardsData
+            var distractorSource = getFilteredCards ? getFilteredCards() : flashcardsData;
+            const distractors = distractorSource
                 .filter(c => c && c.word && c.word.toLowerCase() !== card.word.toLowerCase())
                 .map(c => c.word);
             const uniqueDistractors = [...new Set(distractors)];
@@ -1482,12 +1701,188 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ==========================================
+    // 🎧 Audio Spelling Bee (Listen & Type) Mini-Game
+    // ==========================================
+    (function initSpellingGame() {
+        const startScreen = document.getElementById('spellingStartScreen');
+        const gameContent = document.getElementById('spellingGameContent');
+        const resultsModal = document.getElementById('spellingResultsModal');
+        const startBtn = document.getElementById('startSpellingBtn');
+        const exitBtn = document.getElementById('exitSpellingBtn');
+        const playAudioBtn = document.getElementById('playAudioBtn');
+        const spellingForm = document.getElementById('spellingForm');
+        const spellingInput = document.getElementById('spellingInput');
+        const spellingFeedback = document.getElementById('spellingFeedback');
+        const spellingDefinition = document.getElementById('spellingDefinition');
+        const spellingProgress = document.getElementById('spellingProgress');
+        const spellingScore = document.getElementById('spellingScore');
+        const retryBtn = document.getElementById('retrySpellingBtn');
+        const closeBtn = document.getElementById('closeSpellingResultsBtn');
+        const finalScoreEl = document.getElementById('finalSpellingScore');
+        const finalAccuracyEl = document.getElementById('finalSpellingAccuracy');
+
+        let spellingQuestions = [];
+        let spellingIndex = 0;
+        let spellingScoreVal = 0;
+        let spellingCorrectCount = 0;
+
+        function speakWord(word) {
+            if (typeof speechSynthesis !== 'undefined') {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function stopSpeech() {
+            if (typeof speechSynthesis !== 'undefined') {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function startSpellingGame() {
+            if (currentPracticeFilter === 'favorites') {
+                const favPool = (typeof getFilteredCards === 'function' ? getFilteredCards() : []).filter(c => c && c.word);
+                if (favPool.length < 5) {
+                    showFavoritesWarning('You need at least 5 favorite words to play in Favorites mode! Add more cards to favorites first.');
+                    return;
+                }
+            }
+            hideFavoritesWarning();
+            const poolSource = (typeof getFilteredCards === 'function' ? getFilteredCards() : flashcardsData);
+            const pool = poolSource.filter(c => c && c.word);
+            if (pool.length === 0) {
+                alert('No words available for the spelling game.');
+                return;
+            }
+            const picked = shuffleArray(getFilteredCards().filter(c => c && c.word)).slice(0, 5);
+            spellingQuestions = picked.map(card => ({
+                word: card.word,
+                definition: card.definition || card.translation || ''
+            }));
+            spellingIndex = 0;
+            spellingScoreVal = 0;
+            spellingCorrectCount = 0;
+            if (startScreen) startScreen.style.display = 'none';
+            if (gameContent) gameContent.style.display = 'block';
+            renderSpellingWord();
+        }
+
+        function renderSpellingWord() {
+            const q = spellingQuestions[spellingIndex];
+            if (!q) return;
+            if (spellingProgress) spellingProgress.textContent = `Word ${spellingIndex + 1} / 5`;
+            if (spellingScore) spellingScore.textContent = `Score: ${spellingScoreVal}`;
+            if (spellingDefinition) spellingDefinition.textContent = q.definition ? q.definition : '';
+            if (spellingInput) spellingInput.value = '';
+            if (spellingFeedback) spellingFeedback.textContent = '';
+            if (spellingInput) spellingInput.disabled = false;
+            if (spellingInput) spellingInput.focus();
+            stopSpeech();
+            speakWord(q.word);
+        }
+
+        function handleSpellingSubmit(e) {
+            e.preventDefault();
+            const q = spellingQuestions[spellingIndex];
+            if (!q) return;
+            const userAnswer = spellingInput.value.trim();
+            const correct = userAnswer.toLowerCase() === q.word.toLowerCase();
+            if (correct) {
+                spellingScoreVal += 10;
+                spellingCorrectCount++;
+                if (spellingFeedback) { spellingFeedback.textContent = 'Correct! 🎉'; spellingFeedback.style.color = '#10b981'; }
+                if (spellingScore) spellingScore.textContent = `Score: ${spellingScoreVal}`;
+            } else {
+                if (spellingFeedback) { spellingFeedback.textContent = `Incorrect! The word was "${q.word}".`; spellingFeedback.style.color = '#ef4444'; }
+            }
+            spellingInput.disabled = true;
+            stopSpeech();
+            setTimeout(() => {
+                spellingIndex++;
+                if (spellingIndex < spellingQuestions.length) {
+                    renderSpellingWord();
+                } else {
+                    showSpellingResults();
+                }
+            }, 1500);
+        }
+
+        function showSpellingResults() {
+            if (gameContent) gameContent.style.display = 'none';
+            if (finalScoreEl) finalScoreEl.textContent = spellingScoreVal;
+            if (finalAccuracyEl) finalAccuracyEl.textContent = `${spellingCorrectCount} / 5`;
+            if (resultsModal) resultsModal.style.display = 'flex';
+            stopSpeech();
+        }
+
+        function resetSpellingGame() {
+            spellingIndex = 0;
+            spellingScoreVal = 0;
+            spellingCorrectCount = 0;
+            spellingQuestions = [];
+            stopSpeech();
+            if (gameContent) gameContent.style.display = 'none';
+            if (startScreen) startScreen.style.display = 'block';
+            if (resultsModal) resultsModal.style.display = 'none';
+            if (spellingFeedback) spellingFeedback.textContent = '';
+        }
+
+        if (startBtn) startBtn.addEventListener('click', startSpellingGame);
+        if (exitBtn) exitBtn.addEventListener('click', resetSpellingGame);
+        if (playAudioBtn) playAudioBtn.addEventListener('click', () => {
+            const q = spellingQuestions[spellingIndex];
+            if (q) speakWord(q.word);
+        });
+        if (spellingForm) spellingForm.addEventListener('submit', handleSpellingSubmit);
+        if (retryBtn) retryBtn.addEventListener('click', () => {
+            if (resultsModal) resultsModal.style.display = 'none';
+            startSpellingGame();
+        });
+        if (closeBtn) closeBtn.addEventListener('click', () => {
+            if (resultsModal) resultsModal.style.display = 'none';
+            if (startScreen) startScreen.style.display = 'block';
+            resetSpellingGame();
+        });
+        if (resultsModal) resultsModal.addEventListener('click', (e) => {
+            if (e.target === resultsModal) {
+                if (resultsModal) resultsModal.style.display = 'none';
+                if (startScreen) startScreen.style.display = 'block';
+                resetSpellingGame();
+            }
+        });
+
+        window.spellingGame = {
+            show: function () { startSpellingGame(); },
+            hide: function () { resetSpellingGame(); }
+        };
+    })();
+
+    if (filterAllWordsBtn) {
+        filterAllWordsBtn.addEventListener('click', () => {
+            if (currentPracticeFilter !== 'all') switchPracticeFilter('all');
+        });
+    }
+    if (filterFavoritesBtn) {
+        filterFavoritesBtn.addEventListener('click', () => {
+            if (currentPracticeFilter !== 'favorites') switchPracticeFilter('favorites');
+        });
+    }
+
     await syncGuestFlashcardsToSupabase();
     await fetchAndRenderCards();
 
     // Show the pre-game start screen on load — the game only starts when the user clicks "Start Game".
     if (typeof window.matchingGame !== 'undefined') {
         window.matchingGame.hide();
+    }
+    if (typeof window.voiceGame !== 'undefined') {
+        window.voiceGame.hide();
     }
 
     // Refresh favorites when auth state changes
@@ -1498,4 +1893,229 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadFavorites();
         applyFilter(false);
     });
+
+    // ==========================================
+    // 🎙️ Voice Pronunciation Checker Mini-Game
+    // ==========================================
+    (function initVoiceGame() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        const startScreen = document.getElementById('voiceStartScreen');
+        const gameContent = document.getElementById('voiceGameContent');
+        const resultsModal = document.getElementById('voiceResultsModal');
+        const startBtn = document.getElementById('startVoiceBtn');
+        const exitBtn = document.getElementById('exitVoiceBtn');
+        const listenBtn = document.getElementById('voiceListenBtn');
+        const micRecordBtn = document.getElementById('micRecordBtn');
+        const micStatusText = document.getElementById('micStatusText');
+        const targetWordEl = document.getElementById('voiceTargetWord');
+        const targetDefEl = document.getElementById('voiceTargetDef');
+        const speechOutput = document.getElementById('speechRecognizedOutput');
+        const feedbackEl = document.getElementById('voiceFeedback');
+        const progressEl = document.getElementById('voiceProgress');
+        const scoreEl = document.getElementById('voiceScore');
+        const retryBtn = document.getElementById('retryVoiceBtn');
+        const closeBtn = document.getElementById('closeVoiceResultsBtn');
+        const finalScoreEl = document.getElementById('finalVoiceScore');
+        const finalAccuracyEl = document.getElementById('finalVoiceAccuracy');
+
+        let voiceQuestions = [];
+        let voiceIndex = 0;
+        let voiceScoreVal = 0;
+        let voiceCorrectCount = 0;
+        let recognition = null;
+
+        function checkSpeechSupport() {
+            return !!SpeechRecognition;
+        }
+
+        function speakWord(word) {
+            if (typeof speechSynthesis !== 'undefined') {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function initRecognition() {
+            if (!SpeechRecognition) return null;
+            const rec = new SpeechRecognition();
+            rec.lang = 'en-US';
+            rec.interimResults = false;
+            rec.maxAlternatives = 1;
+            return rec;
+        }
+
+        function startVoiceGame() {
+            if (!checkSpeechSupport()) {
+                if (feedbackEl) {
+                    feedbackEl.textContent = 'Speech Recognition is not supported in this browser. Please use Google Chrome or MS Edge.';
+                    feedbackEl.style.color = '#ef4444';
+                }
+                return;
+            }
+
+            hideFavoritesWarning();
+            const poolSource = (typeof getFilteredCards === 'function' ? getFilteredCards() : flashcardsData);
+            const pool = poolSource.filter(c => c && c.word);
+            if (pool.length === 0) {
+                alert('No words available for the voice game.');
+                return;
+            }
+            const picked = shuffleArray(getFilteredCards().filter(c => c && c.word)).slice(0, 5);
+            voiceQuestions = picked.map(card => ({
+                word: card.word,
+                definition: card.definition || card.translation || ''
+            }));
+            voiceIndex = 0;
+            voiceScoreVal = 0;
+            voiceCorrectCount = 0;
+            if (startScreen) startScreen.style.display = 'none';
+            if (gameContent) gameContent.style.display = 'block';
+            if (resultsModal) resultsModal.style.display = 'none';
+            renderVoiceWord();
+        }
+
+        function renderVoiceWord() {
+            const q = voiceQuestions[voiceIndex];
+            if (!q) return;
+            if (progressEl) progressEl.textContent = `Word ${voiceIndex + 1} / 5`;
+            if (scoreEl) scoreEl.textContent = `Score: ${voiceScoreVal}`;
+            if (targetWordEl) targetWordEl.textContent = q.word;
+            if (targetDefEl) targetDefEl.textContent = q.definition ? q.definition : '';
+            if (speechOutput) speechOutput.textContent = '';
+            if (feedbackEl) feedbackEl.textContent = '';
+            if (micRecordBtn) {
+                micRecordBtn.classList.remove('recording');
+                micStatusText.textContent = 'Tap to Speak';
+            }
+            stopRecognition();
+        }
+
+        function startRecognition() {
+            if (!SpeechRecognition) return;
+            stopRecognition();
+            recognition = initRecognition();
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript.trim().toLowerCase();
+                if (speechOutput) speechOutput.textContent = `You said: "${transcript}"`;
+                const q = voiceQuestions[voiceIndex];
+                if (!q) return;
+                const targetClean = q.word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+                const transcriptClean = transcript.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+                if (transcriptClean === targetClean) {
+                    if (feedbackEl) {
+                        feedbackEl.textContent = 'Great Pronunciation! 🎉 (+10 pts)';
+                        feedbackEl.style.color = '#10b981';
+                    }
+                    voiceScoreVal += 10;
+                    voiceCorrectCount++;
+                    if (scoreEl) scoreEl.textContent = `Score: ${voiceScoreVal}`;
+                    stopRecognition();
+                    setTimeout(() => {
+                        voiceIndex++;
+                        if (voiceIndex < voiceQuestions.length) {
+                            renderVoiceWord();
+                        } else {
+                            showVoiceResults();
+                        }
+                    }, 1400);
+                } else {
+                    if (feedbackEl) {
+                        feedbackEl.textContent = `Try again! Expected: ${q.word}`;
+                        feedbackEl.style.color = '#ef4444';
+                    }
+                    stopRecognition();
+                }
+            };
+            recognition.onerror = () => {
+                stopRecognition();
+                if (micRecordBtn) {
+                    micRecordBtn.classList.remove('recording');
+                    micStatusText.textContent = 'Tap to Speak';
+                }
+            };
+            recognition.onend = () => {
+                stopRecognition();
+                if (micRecordBtn) {
+                    micRecordBtn.classList.remove('recording');
+                    micStatusText.textContent = 'Tap to Speak';
+                }
+            };
+            try {
+                recognition.start();
+                if (micRecordBtn) {
+                    micRecordBtn.classList.add('recording');
+                    micStatusText.textContent = 'Listening...';
+                }
+            } catch (err) {
+                console.error('Recognition start error:', err);
+            }
+        }
+
+        function stopRecognition() {
+            if (recognition) {
+                try { recognition.stop(); } catch (e) {}
+                recognition = null;
+            }
+            if (micRecordBtn) {
+                micRecordBtn.classList.remove('recording');
+                micStatusText.textContent = 'Tap to Speak';
+            }
+        }
+
+        function showVoiceResults() {
+            if (gameContent) gameContent.style.display = 'none';
+            if (finalScoreEl) finalScoreEl.textContent = voiceScoreVal;
+            if (finalAccuracyEl) finalAccuracyEl.textContent = `${voiceCorrectCount} / 5`;
+            if (resultsModal) resultsModal.style.display = 'flex';
+            stopRecognition();
+        }
+
+        function resetVoiceGame() {
+            voiceIndex = 0;
+            voiceScoreVal = 0;
+            voiceCorrectCount = 0;
+            voiceQuestions = [];
+            stopRecognition();
+            if (gameContent) gameContent.style.display = 'none';
+            if (startScreen) startScreen.style.display = 'block';
+            if (resultsModal) resultsModal.style.display = 'none';
+            if (feedbackEl) feedbackEl.textContent = '';
+            if (speechOutput) speechOutput.textContent = '';
+        }
+
+        if (startBtn) startBtn.addEventListener('click', startVoiceGame);
+        if (exitBtn) exitBtn.addEventListener('click', resetVoiceGame);
+        if (listenBtn) listenBtn.addEventListener('click', () => {
+            const q = voiceQuestions[voiceIndex];
+            if (q) speakWord(q.word);
+        });
+        if (micRecordBtn) micRecordBtn.addEventListener('click', startRecognition);
+        if (retryBtn) retryBtn.addEventListener('click', () => {
+            if (resultsModal) resultsModal.style.display = 'none';
+            startVoiceGame();
+        });
+        if (closeBtn) closeBtn.addEventListener('click', () => {
+            if (resultsModal) resultsModal.style.display = 'none';
+            if (startScreen) startScreen.style.display = 'block';
+            resetVoiceGame();
+        });
+        if (resultsModal) resultsModal.addEventListener('click', (e) => {
+            if (e.target === resultsModal) {
+                if (resultsModal) resultsModal.style.display = 'none';
+                if (startScreen) startScreen.style.display = 'block';
+                resetVoiceGame();
+            }
+        });
+
+        window.voiceGame = {
+            show: function () { startVoiceGame(); },
+            hide: function () { resetVoiceGame(); }
+        };
+    })();
 });

@@ -100,6 +100,7 @@ header {
 /* 3D Քարտի Կառուցվածք */
 .flashcard-container {
     width: min(320px, 90vw);
+    min-height: 420px !important;
     height: min(420px, 70vh);
     perspective: 1000px !important;
 }
@@ -164,10 +165,15 @@ header {
     height: 100%;
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     transform: rotateY(180deg) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 24px 20px !important;
+    box-sizing: border-box !important;
     gap: 12px;
-    /* Տարածություն բացատրության և օրինակի միջև */
+    /* Տարածություն բացատրության և օրինակի помеѓу */
 }
 
 /* Մակարդակի Նշան (Level Badge) */
@@ -543,38 +549,23 @@ header {
     word-break: break-word;
 }
 
-/* Inner text wrappers: safe place for scrolling */
-#backDefinition,
-#backExample {
+/* Flashcard back text wrappers: no internal scrolling — content expands to fit the card */
+.flashcard-back #backDefinition,
+.flashcard-back #backExample,
+.flashcard-back .example-container {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
     color: #f8fafc !important;
-    max-height: 100%;
-    min-height: 0;
-    overflow-y: auto;
-    /* Keep (invisible) touch/wheel scrolling for extreme cases, hide the scrollbar */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow: visible !important;
+    max-height: none !important;
+    min-height: auto !important;
     word-break: break-word;
 }
 
-#backDefinition::-webkit-scrollbar,
-#backExample::-webkit-scrollbar {
-    display: none;
-}
-
-#backDefinition {
-    max-height: 30%;
-}
-
-#backExample {
-    max-height: 100%;
-}
-
-.example-container {
-    max-height: 30%;
-    min-height: 0;
+.flashcard-back #backDefinition::-webkit-scrollbar,
+.flashcard-back #backExample::-webkit-scrollbar {
+    display: none !important;
 }
 
 /* Keep TTS audio button and card flip triggers pinned/visible */
@@ -1120,7 +1111,7 @@ header {
     }
     .flashcard-container {
         width: min(320px, 92vw) !important;
-        height: 380px !important;
+        min-height: 390px !important;
         margin: 0 auto 20px auto !important;
     }
     .sidebar {
@@ -1555,10 +1546,79 @@ header {
     color: #94a3b8;
 }
 
+/* ==========================================
+   🎯 Practice Zone Filter Switch Bar
+   ========================================== */
+.filter-btn {
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.filter-btn.active {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+@media (max-width: 480px) {
+    .filter-toggle-container {
+        flex-wrap: wrap;
+        max-width: 100%;
+        padding: 4px;
+    }
+    .filter-btn {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+        flex: 1 1 45%;
+        text-align: center;
+    }
+}
+
 .game-card-wrapper {
     width: 100%;
     max-width: 720px;
     box-sizing: border-box;
+}
+
+/* ==========================================
+   🎧 Audio Spelling Bee
+   ========================================== */
+#playAudioBtn:hover {
+    transform: scale(1.03);
+}
+
+#spellingInput:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+@media (max-width: 480px) {
+    #spellingGameWrapper {
+        margin-top: 24px;
+    }
+    #spellingGameContent {
+        padding: 20px;
+    }
+    #playAudioBtn {
+        width: 100%;
+        max-width: 300px;
+        padding: 14px 24px;
+        font-size: 1rem;
+    }
+    #spellingForm {
+        flex-direction: column;
+        align-items: center;
+    }
+    #spellingInput {
+        min-width: 260px;
+    }
 }
 
 /* Keep the matching game visible in-flow; never collapse the flashcard gallery or the practice zone. */
@@ -1588,4 +1648,120 @@ header {
     .section-header h2 {
         font-size: 1.25rem;
     }
+}
+
+/* ==========================================
+   📝 Personal Memory Note Preview
+   ========================================== */
+.card-note-preview {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: rgba(59, 130, 246, 0.15);
+    border-left: 3px solid #3b82f6;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #93c5fd;
+    font-style: italic;
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.card-action-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: #3b82f6;
+}
+
+/* ==========================================
+   🎙️ Voice Pronunciation Checker — Mic Button
+   ========================================== */
+.mic-record-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: none;
+    color: #fff;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    transition: all 0.25s ease;
+}
+
+.mic-record-btn.recording {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    animation: micPulse 1.2s infinite;
+}
+
+@keyframes micPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 18px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* ==========================================
+   ✏️ Edit Note Button — Dark Glassmorphic Style
+   ========================================== */
+.btn-edit-note,
+#addNoteBtn {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+    color: #60a5fa !important;
+    padding: 6px 16px !important;
+    border-radius: 20px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    backdrop-filter: blur(8px) !important;
+    transition: all 0.25s ease !important;
+    margin-top: 12px !important;
+}
+
+.btn-edit-note:hover,
+#addNoteBtn:hover {
+    background: rgba(59, 130, 246, 0.3) !important;
+    border-color: #3b82f6 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* ==========================================
+   📝 Flashcard Back — Content Sizing & Spacing
+   ========================================== */
+.flashcard-back .word {
+    font-size: 1.8rem !important;
+    margin-bottom: 6px !important;
+}
+
+.flashcard-back .definition {
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+    color: #cbd5e1 !important;
+    margin: 8px 0 !important;
+}
+
+.flashcard-back .example-container {
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+    margin: 8px 0 !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    border-radius: 12px !important;
+}
+
+#cardNotePreview {
+    padding: 6px 12px !important;
+    font-size: 0.85rem !important;
+    margin-top: 6px !important;
+    border-radius: 8px !important;
 }

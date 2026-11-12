@@ -29,7 +29,8 @@ signupForm?.addEventListener('submit', async (e) => {
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
 
-    authMessage.style.color = '#3b82f6';
+    authMessage.classList.add('auth-msg-info');
+    authMessage.classList.remove('auth-msg-error', 'auth-msg-success');
     authMessage.textContent = 'Creating account...';
 
     const { data, error } = await supabaseClient.auth.signUp({
@@ -41,10 +42,12 @@ signupForm?.addEventListener('submit', async (e) => {
     });
 
     if (error) {
-        authMessage.style.color = '#ef4444';
+        authMessage.classList.add('auth-msg-error');
+        authMessage.classList.remove('auth-msg-info', 'auth-msg-success');
         authMessage.textContent = error.message;
     } else {
-        authMessage.style.color = '#10b981';
+        authMessage.classList.add('auth-msg-success');
+        authMessage.classList.remove('auth-msg-info', 'auth-msg-error');
         authMessage.textContent = 'Success! Check your email or login.';
         signupForm.reset();
     }
@@ -56,7 +59,8 @@ loginForm?.addEventListener('submit', async (e) => {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
 
-    authMessage.style.color = '#3b82f6';
+    authMessage.classList.add('auth-msg-info');
+    authMessage.classList.remove('auth-msg-error', 'auth-msg-success');
     authMessage.textContent = 'Logging in...';
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -65,14 +69,16 @@ loginForm?.addEventListener('submit', async (e) => {
     });
 
     if (error) {
-        authMessage.style.color = '#ef4444';
+        authMessage.classList.add('auth-msg-error');
+        authMessage.classList.remove('auth-msg-info', 'auth-msg-success');
         authMessage.textContent = error.message;
     } else {
-        authMessage.style.color = '#10b981';
+        authMessage.classList.add('auth-msg-success');
+        authMessage.classList.remove('auth-msg-info', 'auth-msg-error');
         authMessage.textContent = 'Welcome back! Redirecting...';
         
         const authModal = document.getElementById('auth-modal');
-        if (authModal) authModal.style.display = 'none';
+        if (authModal) authModal.classList.add('is-hidden');
         
         setTimeout(() => {
             const inHtmlFiles = window.location.pathname.includes('/HTML-Files/');
@@ -86,7 +92,7 @@ const authModal = document.getElementById('auth-modal');
 const authModalCloseBtn = document.getElementById('auth-modal-close');
 
 function closeAuthModal() {
-    if (authModal) authModal.style.display = 'none';
+    if (authModal) authModal.classList.add('is-hidden');
 }
 
 authModalCloseBtn?.addEventListener('click', closeAuthModal);
@@ -98,7 +104,7 @@ authModal?.addEventListener('click', (e) => {
 
 // Pressing Escape closes the modal if open
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && authModal && authModal.style.display !== 'none') {
+    if (e.key === 'Escape' && authModal && !authModal.classList.contains('is-hidden')) {
         closeAuthModal();
     }
 });

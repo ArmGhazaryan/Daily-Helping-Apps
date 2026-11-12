@@ -163,3 +163,10 @@
         align-items: flex-start;
     }
 }
+
+/* ==========================================
+   🟢 ADMIN CONSOLE STATE CLASSES
+   ========================================== */
+.admin-console.is-hidden {
+    display: none !important;
+}

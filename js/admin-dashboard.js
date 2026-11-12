@@ -14,15 +14,15 @@
     function showLoading() {
         const loadingEl = document.getElementById('admin-loading');
         const mainEl = document.querySelector('main.admin-container');
-        if (loadingEl) loadingEl.style.display = 'flex';
-        if (mainEl) mainEl.style.display = 'none';
+        if (loadingEl) loadingEl.classList.remove('is-hidden');
+        if (mainEl) mainEl.classList.add('is-hidden');
     }
 
     function hideLoading() {
         const loadingEl = document.getElementById('admin-loading');
         const mainEl = document.querySelector('main.admin-container');
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (mainEl) mainEl.style.display = '';
+        if (loadingEl) loadingEl.classList.add('is-hidden');
+        if (mainEl) mainEl.classList.remove('is-hidden');
     }
 
     function formatDate(value) {

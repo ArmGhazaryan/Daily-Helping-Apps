@@ -50,7 +50,14 @@ async function updateHeaderAuth() {
         navAuthBtn?.addEventListener('click', () => {
             const modal = document.getElementById('auth-modal');
             if (modal) {
-                modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+                const isHidden = modal.classList.contains('is-hidden');
+                if (isHidden) {
+                    modal.classList.remove('is-hidden');
+                    modal.classList.add('is-visible-flex');
+                } else {
+                    modal.classList.add('is-hidden');
+                    modal.classList.remove('is-visible-flex');
+                }
             } else {
                 window.location.href = authHref;
             }
@@ -74,8 +81,7 @@ function toggleAdminCard(isAdmin) {
     const link = document.createElement('a');
     link.id = 'admin-panel-card';
     link.href = 'HTML-Files/admin-dashboard.html';
-    link.style.textDecoration = 'none';
-    link.style.color = 'inherit';
+    link.classList.add('admin-panel-link');
     link.innerHTML = `
         <div class="glass-card admin-card">
             <div class="card-icon">🛡️</div>

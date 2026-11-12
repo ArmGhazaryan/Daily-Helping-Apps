@@ -402,4 +402,66 @@ header h1 {
 .glass-card.admin-card {
     border: 1px solid rgba(234, 179, 8, 0.4);
 }
+
+/* ==========================================
+   🟢 STATE UTILITY CLASSES (Separation of Concerns)
+   ========================================== */
+.is-hidden {
+    display: none !important;
+}
+.is-visible {
+    display: block !important;
+}
+/* Utility: show an element as a flex container (used to replace inline style.display='flex' for modals/overlays) */
+.is-visible-flex {
+    display: flex !important;
+}
+.is-visible-inline-block {
+    display: inline-block !important;
+}
+.is-active {
+    /* Active state for tabs, buttons, links */
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+/* Admin panel card link: no underline, inherit text color (replaces inline style set in JS) */
+.admin-panel-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Standalone utility state class (used when inline style="display:none" was removed) */
+.hidden {
+    display: none !important;
+}
+
+/* Indicates an item/content block has an attached personal note */
+.has-note {
+    position: relative;
+}
+.has-note::after {
+    content: "📝";
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    font-size: 0.75rem;
+    line-height: 1;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==========================================
+   🟢 INDEX / DASHBOARD CARD LINK STYLES
+   ========================================== */
+.grid-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
 }

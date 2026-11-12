@@ -139,7 +139,7 @@
     if (!section) return;
 
     // Hidden by default; only admins will reveal it.
-    section.style.display = "none";
+    section.classList.add("is-hidden", "hidden");
 
     const user = await getCurrentUser();
     const admin = await isAdminUser(user);
@@ -151,7 +151,7 @@
       return;
     }
 
-    section.style.display = "";
+    section.classList.remove("is-hidden", "hidden");
 
     const toggleBtn = document.getElementById("adminToggleBtn");
     const body = document.getElementById("adminConsoleBody");

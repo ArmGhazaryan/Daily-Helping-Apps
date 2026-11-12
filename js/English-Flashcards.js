@@ -277,7 +277,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentPracticeFilter = 'all';
     let currentUserId = null;
     let isAdmin = false;
-    let userNotes = {};
+    // Personal memory notes — single source of truth synced to Supabase (user_notes table)
+    window.dha_memory_notes = window.dha_memory_notes || {};
 
     // DOM Ã”Â·Ã•Â¬Ã•Â¥Ã•Â´Ã•Â¥Ã•Â¶Ã•Â¿Ã•Â¶Ã•Â¥Ã–â‚¬
     const card = document.getElementById('myCard');
@@ -346,7 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }));
 
         await loadFavorites();
-        loadNotes();
+        await loadNotes();
         applyFilter(false);
     }
 
@@ -383,36 +384,74 @@ document.addEventListener('DOMContentLoaded', async () => {
     // PERSONAL MEMORY NOTES
     // ==========================================
 
-    function loadNotes() {
+    async function loadNotes() {
+        if (!currentUserId) return;
         try {
-            const raw = localStorage.getItem('dha_user_notes');
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (typeof parsed === 'object' && parsed !== null) {
-                    userNotes = parsed;
-                }
+            const { data, error } = await supabaseClient
+                .from('user_notes')
+                .select('word_id, note_text')
+                .eq('user_id', currentUserId);
+            
+            if (error) throw error;
+            
+            window.dha_memory_notes = {};
+            if (data) {
+                data.forEach(item => {
+                    window.dha_memory_notes[item.word_id.toString().toLowerCase()] = item.note_text;
+                });
             }
-        } catch (e) {
-            console.error('loadNotes error:', e);
-            userNotes = {};
+            if (typeof renderCard === 'function' && typeof currentIndex !== 'undefined') {
+                renderCard(currentIndex);
+            }
+        } catch (err) {
+            console.error("Error fetching notes from Supabase:", err);
         }
     }
 
-    function saveNote(wordId, text) {
-        userNotes[String(wordId)] = text;
+    async function saveNote(wordId, text) {
+        if (!wordId || !currentUserId) return;
+        const key = wordId.toString().toLowerCase();
+        
+        window.dha_memory_notes[key] = text;
+        if (typeof renderCard === 'function' && typeof currentIndex !== 'undefined') {
+            renderCard(currentIndex);
+        }
+
         try {
-            localStorage.setItem('dha_user_notes', JSON.stringify(userNotes));
-        } catch (e) {
-            console.error('saveNote error:', e);
+            const { error } = await supabaseClient
+                .from('user_notes')
+                .upsert({
+                    user_id: currentUserId,
+                    word_id: key,
+                    note_text: text,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id, word_id' });
+                
+            if (error) throw error;
+        } catch (err) {
+            console.error("Error saving note to Supabase:", err);
         }
     }
 
-    function deleteNote(wordId) {
-        delete userNotes[String(wordId)];
+    async function deleteNote(wordId) {
+        if (!currentUserId) return;
+        const key = wordId.toString().toLowerCase();
+        
+        delete window.dha_memory_notes[key];
+        if (typeof renderCard === 'function' && typeof currentIndex !== 'undefined') {
+            renderCard(currentIndex);
+        }
+
         try {
-            localStorage.setItem('dha_user_notes', JSON.stringify(userNotes));
-        } catch (e) {
-            console.error('deleteNote error:', e);
+            const { error } = await supabaseClient
+                .from('user_notes')
+                .delete()
+                .eq('user_id', currentUserId)
+                .eq('word_id', key);
+                
+            if (error) throw error;
+        } catch (err) {
+            console.error("Error deleting note from Supabase:", err);
         }
     }
 
@@ -464,13 +503,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const msgEl = document.getElementById('favoritesWarningMsg');
         if (msgEl) {
             msgEl.textContent = message;
-            msgEl.style.display = 'block';
+            msgEl.classList.remove('is-hidden');
         }
     }
 
     function hideFavoritesWarning() {
         const msgEl = document.getElementById('favoritesWarningMsg');
-        if (msgEl) msgEl.style.display = 'none';
+        if (msgEl) msgEl.classList.add('is-hidden');
     }
 
     function switchPracticeFilter(mode) {
@@ -488,21 +527,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const fillBlankContent = document.getElementById('fillBlankGameContent');
         const fillBlankStart = document.getElementById('fillBlankStartScreen');
-        if (fillBlankContent && fillBlankStart && fillBlankContent.style.display !== 'none') {
-            fillBlankContent.style.display = 'none';
-            fillBlankStart.style.display = 'block';
+        if (fillBlankContent && fillBlankStart && fillBlankContent.classList.contains('is-hidden')) {
+            fillBlankContent.classList.remove('is-hidden');
+            fillBlankStart.classList.add('game-start-screen');
         }
         const spellingContent = document.getElementById('spellingGameContent');
         const spellingStart = document.getElementById('spellingStartScreen');
-        if (spellingContent && spellingStart && spellingContent.style.display !== 'none') {
-            spellingContent.style.display = 'none';
-            spellingStart.style.display = 'block';
+        if (spellingContent && spellingStart && spellingContent.classList.contains('is-hidden')) {
+            spellingContent.classList.remove('is-hidden');
+            spellingStart.classList.add('game-start-screen');
         }
         const voiceContent = document.getElementById('voiceGameContent');
         const voiceStart = document.getElementById('voiceStartScreen');
-        if (voiceContent && voiceStart && voiceContent.style.display !== 'none') {
-            voiceContent.style.display = 'none';
-            voiceStart.style.display = 'block';
+        if (voiceContent && voiceStart && voiceContent.classList.contains('is-hidden')) {
+            voiceContent.classList.remove('is-hidden');
+            voiceStart.classList.add('game-start-screen');
         }
     }
 
@@ -551,7 +590,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function showAuthModal() {
         const modal = document.getElementById('auth-modal');
-        if (modal) modal.style.display = 'flex';
+        if (modal) {
+            modal.classList.remove('is-hidden');
+            modal.classList.add('is-visible-flex');
+        }
     }
 
     async function toggleFavorite() {
@@ -616,6 +658,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             miniCard.addEventListener('click', () => {
                 currentIndex = index;
                 loadCard(currentIndex);
+                renderCard(currentIndex);
             });
 
             cardsGallery.appendChild(miniCard);
@@ -626,16 +669,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentCard = flashcardsData[cardIndex];
         if (!currentCard) return;
 
-        const cardNote = userNotes[currentCard.id] || userNotes[currentCard.word.toLowerCase()];
+        const noteKey = currentCard.id || currentCard.word.toLowerCase();
+        const cardNote = (window.dha_memory_notes && window.dha_memory_notes[noteKey]) ? window.dha_memory_notes[noteKey].trim() : '';
 
         const notePreviewEl = document.getElementById('cardNotePreview');
         const addNoteBtnEl = document.getElementById('addNoteBtn');
 
-        if (cardNote && cardNote.trim() !== '') {
-            // Display note on card back
+        if (cardNote !== '') {
+            // Display note preview on card back
             if (notePreviewEl) {
                 notePreviewEl.textContent = `💡 Note: ${cardNote}`;
-                notePreviewEl.style.display = 'block';
+                notePreviewEl.classList.remove('is-hidden');
             }
             // Update button text on card front
             if (addNoteBtnEl) {
@@ -645,7 +689,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             // Hide note preview if no note exists
             if (notePreviewEl) {
-                notePreviewEl.style.display = 'none';
+                notePreviewEl.classList.add('is-hidden');
                 notePreviewEl.textContent = '';
             }
             // Reset button text on card front
@@ -654,7 +698,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                 addNoteBtnEl.classList.remove('has-note');
             }
         }
+
+        // --- Adaptive note slot on card back (top-left, opposite the level badge) ---
+        const noteSlotEl = document.getElementById('cardBackNoteSlot');
+        if (noteSlotEl) {
+            if (cardNote !== '') {
+                if (cardNote.length <= 25) {
+                    // 1. Short note: compact badge directly in top-left
+                    noteSlotEl.innerHTML = `<span class="short-note-badge" title="Click to edit" data-note-key="${noteKey}">💡 ${cardNote}</span>`;
+                } else {
+                    // 2. Long note: View Note button
+                    noteSlotEl.innerHTML = `<button class="btn-view-note" data-note-key="${noteKey}">💡 View Note</button>`;
+                }
+            } else {
+                // 3. No note: Add Note button
+                noteSlotEl.innerHTML = `<button class="btn-view-note" style="opacity: 0.7;" data-note-key="${noteKey}">✏️ +Note</button>`;
+            }
+        }
     }
+
+    // Global helper: open the Personal Memory Note modal for a given word/note key
+    window.openNoteModal = function (wordKey) {
+        let targetCard = null;
+        if (Array.isArray(flashcardsData)) {
+            targetCard = flashcardsData.find((c) => {
+                if (c.id && String(c.id) === String(wordKey)) return true;
+                return String(c.word).toLowerCase() === String(wordKey).toLowerCase();
+            });
+        }
+        if (noteModalWord) noteModalWord.textContent = targetCard ? targetCard.word : String(wordKey);
+        if (noteTextInput) noteTextInput.value = (window.dha_memory_notes[wordKey] || '').trim();
+        if (noteModal) noteModal.style.display = 'flex';
+    };
 
     function loadCard(index) {
         if (emptyState) {
@@ -674,8 +749,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(prevBtn) prevBtn.disabled = true;
             if(nextBtn) nextBtn.disabled = true;
             if(deleteBtn) deleteBtn.disabled = true;
-            if(addToMyWordsBtn) addToMyWordsBtn.style.display = 'none';
-            if(adminDeleteBtn) adminDeleteBtn.style.display = 'none';
+            if(addToMyWordsBtn) addToMyWordsBtn.classList.add('is-hidden');
+            if(adminDeleteBtn) adminDeleteBtn.classList.add('is-hidden');
             if(cardsGallery) cardsGallery.innerHTML = '';
             if(card) card.classList.remove('is-flipped');
             return;
@@ -688,12 +763,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isOwnedCustom = !isGlobal && String(data.user_id) === String(currentUserId);
             deleteBtn.style.display = isOwnedCustom ? '' : 'none';
             deleteBtn.disabled = !isOwnedCustom;
+            if (!isOwnedCustom) deleteBtn.classList.add('is-hidden');
         }
 
         if (addToMyWordsBtn) {
             const isGlobal = data && data.is_global === true;
             if (isGlobal) {
-                addToMyWordsBtn.style.display = '';
+                addToMyWordsBtn.classList.remove('is-hidden');
                 const already = allFlashcardsData.some(c => c.is_global === false && String(c.user_id) === String(currentUserId) && c.word === data.word);
                 if (already) {
                     addToMyWordsBtn.disabled = true;
@@ -703,7 +779,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     addToMyWordsBtn.textContent = '➕ Add to My Words';
                 }
             } else {
-                addToMyWordsBtn.style.display = 'none';
+                addToMyWordsBtn.classList.add('is-hidden');
             }
         }
 
@@ -885,8 +961,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!currentCard) return;
             if (noteModalWord) noteModalWord.textContent = currentCard.word;
             const cardId = String(currentCard.id);
-            if (noteTextInput) noteTextInput.value = userNotes[cardId] || '';
-            if (noteModal) noteModal.style.display = 'flex';
+            if (noteTextInput) noteTextInput.value = window.dha_memory_notes[cardId] || '';
+            if (noteModal) {
+                noteModal.classList.remove('is-hidden');
+                noteModal.classList.add('is-visible-flex');
+            }
         });
     }
 
@@ -904,7 +983,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             loadCard(currentIndex);
             renderCard(currentIndex);
-            if (noteModal) noteModal.style.display = 'none';
+            if (noteModal) noteModal.classList.add('is-hidden');
         });
     }
 
@@ -917,27 +996,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             deleteNote(cardId);
             loadCard(currentIndex);
             renderCard(currentIndex);
-            if (noteModal) noteModal.style.display = 'none';
+            if (noteModal) noteModal.classList.add('is-hidden');
         });
     }
 
     // Close note modal
     if (closeNoteModalBtn) {
         closeNoteModalBtn.addEventListener('click', () => {
-            if (noteModal) noteModal.style.display = 'none';
+            if (noteModal) noteModal.classList.add('is-hidden');
         });
     }
 
     // Close note modal on backdrop click
     if (noteModal) {
         noteModal.addEventListener('click', (e) => {
-            if (e.target === noteModal) noteModal.style.display = 'none';
+            if (e.target === noteModal) noteModal.classList.add('is-hidden');
         });
     }
 
     // Hide speaker buttons if speechSynthesis is not supported
     if (!isSpeechSupported()) {
-        document.querySelectorAll('.speak-btn').forEach(btn => btn.style.display = 'none');
+        document.querySelectorAll('.speak-btn').forEach(btn => btn.classList.add('is-hidden'));
     }
 
     if (favoriteBtn) {
@@ -1178,7 +1257,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             showAuthModal();
             return;
         }
-        if (modal) modal.style.display = 'flex';
+        if (modal) {
+            modal.classList.remove('is-hidden');
+            modal.classList.add('is-visible-flex');
+        }
         const admin = await isAdminUser(user);
         if (adminGlobalToggle) {
             adminGlobalToggle.classList.toggle('hidden', !admin);
@@ -1187,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     function closeModal() {
-        if(modal) modal.style.display = 'none';
+        if(modal) modal.classList.add('is-hidden');
         document.getElementById('newWord').value = '';
         document.getElementById('newDefinition').value = '';
         document.getElementById('newExample').value = '';
@@ -1472,8 +1554,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function showStartScreen() {
-            if (startScreen) startScreen.style.display = 'flex';
-            if (gameContent) gameContent.style.display = 'none';
+            if (startScreen) startScreen.classList.add('game-start-screen');
+            if (gameContent) gameContent.classList.add('is-hidden');
             stopTimer();
             // Clear any active selections
             if (selectedWord) {
@@ -1497,8 +1579,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
             hideFavoritesWarning();
-            if (startScreen) startScreen.style.display = 'none';
-            if (gameContent) gameContent.style.display = 'block';
+            if (startScreen) startScreen.classList.add('is-hidden');
+            if (gameContent) gameContent.classList.remove('is-hidden');
             showGame(true);
             startTimer();
         }
@@ -1663,10 +1745,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const correctCount = Math.round(quizScore / 10);
         const totalQuestions = quizQuestions.length;
         const maxScore = totalQuestions * 10;
-        if (gameContent) gameContent.style.display = 'none';
+        if (gameContent) gameContent.classList.add('is-hidden');
         if (finalScoreEl) finalScoreEl.textContent = `${quizScore} / ${maxScore}`;
         if (finalAccuracyEl) finalAccuracyEl.textContent = `${correctCount} / ${totalQuestions}`;
-        if (resultsModal) resultsModal.style.display = 'flex';
+        if (resultsModal) {
+            resultsModal.classList.remove('is-hidden');
+            resultsModal.classList.add('is-visible-flex');
+        }
     }
 
     const startFillBlankBtn = document.getElementById('startFillBlankBtn');
@@ -1675,8 +1760,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (exitFillBlankBtn) exitFillBlankBtn.addEventListener('click', () => {
         const gameContent = document.getElementById('fillBlankGameContent');
         const startScreen = document.getElementById('fillBlankStartScreen');
-        if (gameContent) gameContent.style.display = 'none';
-        if (startScreen) startScreen.style.display = 'block';
+        if (gameContent) gameContent.classList.add('is-hidden');
+        if (startScreen) startScreen.classList.remove('is-hidden');
         quizIndex = 0;
         quizScore = 0;
     });
@@ -1686,7 +1771,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (retryFillBlankBtn) {
         retryFillBlankBtn.addEventListener('click', () => {
             const resultsModal = document.getElementById('fillBlankResultsModal');
-            if (resultsModal) resultsModal.style.display = 'none';
+            if (resultsModal) resultsModal.classList.add('is-hidden');
             startFillBlankQuiz();
         });
     }
@@ -1768,8 +1853,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             spellingIndex = 0;
             spellingScoreVal = 0;
             spellingCorrectCount = 0;
-            if (startScreen) startScreen.style.display = 'none';
-            if (gameContent) gameContent.style.display = 'block';
+            if (startScreen) startScreen.classList.add('is-hidden');
+            if (gameContent) gameContent.classList.remove('is-hidden');
             renderSpellingWord();
         }
 
@@ -1814,10 +1899,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function showSpellingResults() {
-            if (gameContent) gameContent.style.display = 'none';
+            if (gameContent) gameContent.classList.add('is-hidden');
             if (finalScoreEl) finalScoreEl.textContent = spellingScoreVal;
             if (finalAccuracyEl) finalAccuracyEl.textContent = `${spellingCorrectCount} / 5`;
-            if (resultsModal) resultsModal.style.display = 'flex';
+            if (resultsModal) resultsModal.classList.remove('is-hidden');
+            resultsModal.classList.add('is-visible-flex');
             stopSpeech();
         }
 
@@ -1827,9 +1913,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             spellingCorrectCount = 0;
             spellingQuestions = [];
             stopSpeech();
-            if (gameContent) gameContent.style.display = 'none';
-            if (startScreen) startScreen.style.display = 'block';
-            if (resultsModal) resultsModal.style.display = 'none';
+            if (gameContent) gameContent.classList.add('is-hidden');
+            if (startScreen) startScreen.classList.remove('is-hidden');
+            if (resultsModal) resultsModal.classList.add('is-hidden');
             if (spellingFeedback) spellingFeedback.textContent = '';
         }
 
@@ -1841,18 +1927,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (spellingForm) spellingForm.addEventListener('submit', handleSpellingSubmit);
         if (retryBtn) retryBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.style.display = 'none';
+            if (resultsModal) resultsModal.classList.add('is-hidden');
             startSpellingGame();
         });
         if (closeBtn) closeBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.style.display = 'none';
-            if (startScreen) startScreen.style.display = 'block';
+            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (startScreen) startScreen.classList.remove('is-hidden');
             resetSpellingGame();
         });
         if (resultsModal) resultsModal.addEventListener('click', (e) => {
             if (e.target === resultsModal) {
-                if (resultsModal) resultsModal.style.display = 'none';
-                if (startScreen) startScreen.style.display = 'block';
+                if (resultsModal) resultsModal.classList.add('is-hidden');
+                if (startScreen) startScreen.classList.remove('is-hidden');
                 resetSpellingGame();
             }
         });
@@ -1890,6 +1976,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = await getCurrentUser();
         isAdmin = await isAdminUser(user);
         currentUserId = user?.id || null;
+        await loadNotes();
         await loadFavorites();
         applyFilter(false);
     });
@@ -2069,10 +2156,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function showVoiceResults() {
-            if (gameContent) gameContent.style.display = 'none';
+            if (gameContent) gameContent.classList.add('is-hidden');
             if (finalScoreEl) finalScoreEl.textContent = voiceScoreVal;
             if (finalAccuracyEl) finalAccuracyEl.textContent = `${voiceCorrectCount} / 5`;
-            if (resultsModal) resultsModal.style.display = 'flex';
+            if (resultsModal) resultsModal.classList.remove('is-hidden');
+            resultsModal.classList.add('is-visible-flex');
             stopRecognition();
         }
 
@@ -2082,9 +2170,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             voiceCorrectCount = 0;
             voiceQuestions = [];
             stopRecognition();
-            if (gameContent) gameContent.style.display = 'none';
-            if (startScreen) startScreen.style.display = 'block';
-            if (resultsModal) resultsModal.style.display = 'none';
+            if (gameContent) gameContent.classList.add('is-hidden');
+            if (startScreen) startScreen.classList.remove('is-hidden');
+            if (resultsModal) resultsModal.classList.add('is-hidden');
             if (feedbackEl) feedbackEl.textContent = '';
             if (speechOutput) speechOutput.textContent = '';
         }
@@ -2097,18 +2185,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (micRecordBtn) micRecordBtn.addEventListener('click', startRecognition);
         if (retryBtn) retryBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.style.display = 'none';
+            if (resultsModal) resultsModal.classList.add('is-hidden');
             startVoiceGame();
         });
         if (closeBtn) closeBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.style.display = 'none';
-            if (startScreen) startScreen.style.display = 'block';
+            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (startScreen) startScreen.classList.remove('is-hidden');
             resetVoiceGame();
         });
         if (resultsModal) resultsModal.addEventListener('click', (e) => {
             if (e.target === resultsModal) {
-                if (resultsModal) resultsModal.style.display = 'none';
-                if (startScreen) startScreen.style.display = 'block';
+                if (resultsModal) resultsModal.classList.add('is-hidden');
+                if (startScreen) startScreen.classList.remove('is-hidden');
                 resetVoiceGame();
             }
         });

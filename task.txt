@@ -1,49 +1,23 @@
 Task Goal:
-Fix state persistence for Personal Memory Notes so that saved notes are permanently linked to their respective words and remain visible on the card back when flipping or navigating between flashcards (Next / Prev).
+Perform a systematic, module-by-module QA audit across the project to detect and fix any functional bugs (especially post-refactoring regressions) and responsive design issues across Desktop, Tablet, and Mobile viewports.
 
-File Scope (STRICT):
-- Active JS File: @js/English-Flashcards.js
-- Active HTML File: @index.html
+Execution Strategy (CRITICAL TO AVOID TIMEOUTS):
+- Audit and fix ONE page/module at a time sequentially (start with the main English Flashcards module, then proceed one by one through the remaining HTML/CSS/JS module pairs).
+- Apply ONLY targeted, surgical edits to the specific lines that need fixing. NEVER rewrite entire files from scratch.
+- STRICT RULE: DO NOT use terminal commands. Edit files directly.
 
-CRITICAL INSTRUCTIONS:
+AUDIT CHECKLIST FOR EACH MODULE:
 
-1. Synchronize Note State with Card Rendering (@js/English-Flashcards.js):
-   - Ensure `userNotes` state object is loaded from `localStorage` (`dha_user_notes`) or Supabase on initialization.
-   - Update `renderCard(cardIndex)` function:
-     ```javascript
-     const currentCard = currentCardsArray[cardIndex];
-     const cardNote = userNotes[currentCard.id] || userNotes[currentCard.word.toLowerCase()];
+1. Post-Refactoring Functional & Bug Check (HTML <-> CSS <-> JS Sync):
+   - Verify that every button, modal trigger, form, and tab in the HTML has a valid, working `addEventListener` or event delegation handler in its corresponding `.js` file (check for broken selectors, typos in `id`/`class`/`data-*` attributes, or `null` DOM references).
+   - Verify that visibility utility classes (`.is-hidden`, `.is-visible`, `.is-active`, `.has-note`) exist in the CSS and toggle properly without conflicts (e.g., `display: flex` vs `display: none !important`).
+   - For English Flashcards specifically: confirm that card flipping, Next/Prev navigation, Favorites filtering, all 4 Practice Zone mini-games, and Supabase `user_notes` (load, save/upsert, delete, adaptive top-left badge/modal) work without errors.
 
-     const notePreviewEl = document.getElementById('cardNotePreview');
-     const addNoteBtnEl = document.getElementById('addNoteBtn');
+2. Responsive Design & Layout Check (Mobile 360px–480px & Tablet 768px):
+   - Check CSS media queries (`@media (max-width: 768px)` and `@media (max-width: 480px)`) for every page.
+   - Eliminate any horizontal overflow (`overflow-x`), clipped text, or overlapping elements on small screens.
+   - Ensure multi-column grids, filter sidebars, navigation bars, game cards, and modals stack cleanly (`flex-direction: column` or 1-column grid) with proper padding and touch-friendly button sizes on mobile.
+   - Ensure flashcard front/back faces fit cleanly within mobile viewports without awkward internal scrollbars.
 
-     if (cardNote && cardNote.trim() !== '') {
-         // Display note on card back
-         if (notePreviewEl) {
-             notePreviewEl.textContent = `💡 Note: ${cardNote}`;
-             notePreviewEl.style.display = 'block';
-         }
-         // Update button text on card front
-         if (addNoteBtnEl) {
-             addNoteBtnEl.innerHTML = '✏️ Edit Note';
-             addNoteBtnEl.classList.add('has-note');
-         }
-     } else {
-         // Hide note preview if no note exists
-         if (notePreviewEl) {
-             notePreviewEl.style.display = 'none';
-             notePreviewEl.textContent = '';
-         }
-         // Reset button text on card front
-         if (addNoteBtnEl) {
-             addNoteBtnEl.innerHTML = '✏️ Note';
-             addNoteBtnEl.classList.remove('has-note');
-         }
-     }
-     ```
-
-2. Card Navigation Event Listeners:
-   - Ensure Next (`#nextBtn`), Prev (`#prevBtn`), and card tab selectors explicitly call `renderCard()` so note state updates synchronously whenever the active card changes.
-   - When saving/deleting a note in `#noteModal`, update `userNotes` in memory and `localStorage`, then immediately call `renderCard(currentCardIndex)` to update the live DOM without requiring a manual page refresh.
-
-3. STRICT RULE: DO NOT use terminal commands. Edit files directly.
+3. Reporting:
+   - After auditing and fixing each module, briefly list the exact bugs or responsive issues found and fixed before moving to the next module.

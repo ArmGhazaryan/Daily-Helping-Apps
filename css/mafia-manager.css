@@ -798,6 +798,34 @@ select option {
 }
 
 /* ==========================================
+   🟢 STATE / UTILITY CLASSES (Phase 3 refactor)
+   Replaces inline style manipulations in mafia-manager.js
+   ========================================== */
+/* Foul label text (was inline style in generated player card) */
+.foul-text { font-size: 0.9rem; color: #94a3b8; }
+
+/* Role border-top colors (was inline style.borderTopColor in JS) */
+.player-card.role-citizen { border-top-color: #10b981; }
+.player-card.role-sheriff { border-top-color: #3b82f6; }
+.player-card.role-mafia { border-top-color: #ef4444; }
+.player-card.role-don { border-top-color: #dc2626; }
+
+/* Default player-number state (was inline style reset in JS) */
+.player-card .player-number { background-color: #334155; transform: scale(1); }
+
+/* Nomination list row styles (was inline style in renderNominations template) */
+.nomination-row { display: flex; align-items: center; gap: 15px; }
+.nomination-name { font-size: 1.1rem; font-weight: bold; }
+.nomination-votes-label { color: #94a3b8; font-size: 0.9rem; margin-right: 5px; }
+
+/* Active turn highlight on player number */
+.player-card.active-turn .player-number { background-color: #10b981; transform: scale(1.2); }
+.player-card.active-turn.tie-breaker .player-number { background-color: #ef4444; }
+
+/* Active turn card tie-breaker override */
+.player-card.active-turn.tie-breaker { border-color: #ef4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.7); }
+
+/* ==========================================
    🟢 RESPONSIVE / DEVICE OPTIMIZATION
    ========================================== */
 @media (max-width: 768px) {

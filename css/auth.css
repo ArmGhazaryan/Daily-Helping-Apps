@@ -254,3 +254,16 @@
     font-size: 0.95rem;
     min-height: 24px;
 }
+
+/* ==========================================
+   🟢 AUTH STATE / UTILITY CLASSES
+   ========================================== */
+.auth-msg-info {
+    color: #3b82f6;
+}
+.auth-msg-error {
+    color: #ef4444;
+}
+.auth-msg-success {
+    color: #10b981;
+}

@@ -856,3 +856,9 @@ select.custom-input option {
     margin-right: 6px;
     color: #f8fafc;
 }
+
+/* State classes for collapsible water widget sections (replaces inline style.display set in JS) */
+.water-collapsed { display: none; }
+.water-expanded { display: block; }
+.water-settings { display: block; }
+.water-main { display: none; }

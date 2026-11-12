@@ -220,3 +220,13 @@
     border-color: rgba(239, 68, 68, 0.4);
     color: #ef4444;
 }
+
+/* ==========================================
+   🟢 ADMIN DASHBOARD STATE CLASSES
+   ========================================== */
+.admin-container.is-hidden {
+    display: none !important;
+}
+.admin-loading.is-hidden {
+    display: none !important;
+}

@@ -729,11 +729,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCollapseUI() {
         if (!waterCollapsed || !waterExpandedContent) return;
         if (isWaterCollapsed) {
-            waterCollapsed.style.display = 'block';
-            waterExpandedContent.style.display = 'none';
+            waterCollapsed.classList.remove('is-hidden');
+            waterExpandedContent.classList.add('is-hidden');
         } else {
-            waterCollapsed.style.display = 'none';
-            waterExpandedContent.style.display = 'block';
+            waterCollapsed.classList.add('is-hidden');
+            waterExpandedContent.classList.remove('is-hidden');
         }
 
         if (collapsedWaterText) {
@@ -761,12 +761,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function initWaterTracker() {
         if (!waterSettings || !waterMain) return;
         if (waterGoal > 0) {
-            waterSettings.style.display = 'none';
-            waterMain.style.display = 'block';
+            waterSettings.classList.add('is-hidden');
+            waterMain.classList.remove('is-hidden');
             updateWaterDisplay();
         } else {
-            waterSettings.style.display = 'block';
-            waterMain.style.display = 'none';
+            waterSettings.classList.remove('is-hidden');
+            waterMain.classList.add('is-hidden');
         }
         updateCollapseUI();
     }

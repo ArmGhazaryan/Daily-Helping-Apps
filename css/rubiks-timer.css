@@ -174,3 +174,33 @@
         padding: 2rem;
     }
 }
+
+/* ==========================================
+   🟢 RUBIK'S TIMER STATE CLASSES
+   ========================================== */
+.admin-console.is-hidden {
+    display: none !important;
+}
+
+/* Timer display state colors (replaces inline style.color set in JS) */
+.timer-holding { color: #f59e0b; }
+.timer-ready { color: #22c55e; }
+
+/* Rubiks toast (replaces Object.assign inline styles in JS) */
+.dha-rubiks-toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    z-index: 10000;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+.dha-rubiks-toast:not(.dha-rubiks-toast-error) { top: 20px; background: #10b981; }
+.dha-rubiks-toast.dha-rubiks-toast-error { top: 80px; background: #ef4444; }
+.dha-rubiks-toast-hiding { opacity: 0 !important; }

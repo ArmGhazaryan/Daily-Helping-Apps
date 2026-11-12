@@ -42,7 +42,7 @@
                 <div class="header-controls">
                     <button id="exportBtn" class="utility-btn" title="Download your data">💾 Backup</button>
                     <button id="importBtn" class="utility-btn" title="Load data from file">📁 Restore</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                    <input type="file" id="importFile" accept=".json" class="file-input-hidden">
                 </div>
             </div>
         </header>
@@ -205,7 +205,7 @@
     </div>
 
     <!-- 🟢 Admin Analytics & User Insights (admin-only) -->
-    <section id="adminInsights" class="admin-console" style="display:none;" aria-label="Admin Console">
+    <section id="adminInsights" class="admin-console hidden" aria-label="Admin Console">
         <div class="admin-console-header">
             <span class="admin-badge">👑 Admin Console</span>
             <div class="admin-console-actions">

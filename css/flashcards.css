@@ -40,3 +40,22 @@
     background-color: #dc2626;
     border-color: #dc2626;
 }
+
+/* Flashcard toast (replaces Object.assign inline styles in flashcards.js) */
+.dha-flashcard-toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 16px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    z-index: 10000;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+.dha-flashcard-toast:not(.dha-flashcard-toast-error) { top: 20px; background: #10b981; }
+.dha-flashcard-toast.dha-flashcard-toast-error { top: 80px; background: #ef4444; }
+.dha-flashcard-toast-hiding { opacity: 0 !important; }

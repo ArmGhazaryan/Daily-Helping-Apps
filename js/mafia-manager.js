@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         if (isGameStarted) {
                             const nextBtn = document.getElementById('nextTurnBtn');
-                            if(nextBtn && nextBtn.style.display !== 'none') {
+                            if(nextBtn && !nextBtn.classList.contains('is-hidden')) {
                                 nextBtn.click();
                             }
                         }
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
             config.totalBlack = parseInt(blackCountInput.value);
             config.totalRed = parseInt(redCountInput.value);
             const settingsModal = document.getElementById('settingsModal');
-            if(settingsModal) settingsModal.style.display = 'none';
+            if(settingsModal) settingsModal.classList.add('is-hidden');
             generateGame();
         });
     }
@@ -200,8 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const startGameSec = document.getElementById('startGameSection');
         const gamePhaseCont = document.getElementById('gamePhaseContainer');
         
-        if(startGameSec) startGameSec.style.display = 'block';
-        if(gamePhaseCont) gamePhaseCont.style.display = 'none';
+        if(startGameSec) startGameSec.classList.remove('is-hidden');
+        if(gamePhaseCont) gamePhaseCont.classList.add('is-hidden');
         
         resetTimerLogic();
         
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${roles.map(r => `<option value="${r.value}">${r.label}</option>`).join('')}
                 </select>
                 <div class="fouls-section">
-                    <span style="font-size: 0.9rem; color: #94a3b8;">Նկատողություն:</span>
+                    <span class="foul-text">Նկատողություն:</span>
                     <div class="fouls-controls">
                         <button class="foul-minus" disabled>-</button>
                         <span class="foul-count">0</span>
@@ -278,7 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     e.target.dataset.prevVal = e.target.value;
-                    card.style.borderTopColor = roles.find(r => r.value === e.target.value)?.color || '#64748b';
+                    card.classList.remove('role-citizen', 'role-sheriff', 'role-mafia', 'role-don');
+                    const selVal = e.target.value;
+                    if (selVal && roles.find(r => r.value === selVal)) {
+                        card.classList.add('role-' + selVal);
+                    }
                 });
             }
         }
@@ -299,8 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             isGameStarted = true;
-            document.getElementById('startGameSection').style.display = 'none';
-            document.getElementById('gamePhaseContainer').style.display = 'flex';
+            document.getElementById('startGameSection').classList.add('is-hidden');
+            document.getElementById('gamePhaseContainer').classList.remove('is-hidden');
+            document.getElementById('gamePhaseContainer').classList.add('is-visible-flex');
             
             if(planN1) planN1.disabled = true; 
             if(planN2) planN2.disabled = true; 
@@ -403,14 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetTimerLogic();
         
         document.querySelectorAll('.player-card').forEach(c => {
-            c.classList.remove('active-turn');
-            c.style.boxShadow = '';
-            c.style.transform = '';
-            c.style.borderColor = '';
-        });
-        document.querySelectorAll('.player-number').forEach(num => {
-            num.style.backgroundColor = '#334155'; 
-            num.style.transform = 'scale(1)';
+            c.classList.remove('active-turn', 'tie-breaker');
         });
         
         let currentOrder = isTieBreaker ? tiedPlayersOrder : alivePlayersOrder;
@@ -424,20 +422,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 turnTitle.textContent = isTieBreaker ? `🚗 Ավտովթար. Խոսում է ${activePlayer}. ${name}` : `🗣️ Խոսում է ${activePlayer}. ${name}`;
             }
             
-            if(startNightBtn) startNightBtn.style.display = 'none';
-            if(nextTurnBtn) nextTurnBtn.style.display = 'inline-block';
+            if(startNightBtn) startNightBtn.classList.add('is-hidden');
+            if(nextTurnBtn) nextTurnBtn.classList.remove('is-hidden');
+            if(nextTurnBtn) nextTurnBtn.classList.add('is-visible-inline-block');
             
             const activeCard = document.getElementById(`card_${activePlayer}`);
             if(activeCard) {
                 activeCard.classList.add('active-turn');
-                activeCard.style.boxShadow = isTieBreaker ? '0 0 25px rgba(239, 68, 68, 0.7)' : '0 0 25px rgba(16, 185, 129, 0.7)';
-                activeCard.style.transform = 'scale(1.03)';
-                activeCard.style.borderColor = isTieBreaker ? '#ef4444' : '#10b981';
-                
-                const playerNumBadge = activeCard.querySelector('.player-number');
-                if(playerNumBadge) {
-                    playerNumBadge.style.backgroundColor = isTieBreaker ? '#ef4444' : '#10b981';
-                    playerNumBadge.style.transform = 'scale(1.2)';
+                if (isTieBreaker) {
+                    activeCard.classList.add('tie-breaker');
                 }
             }
         } else {
@@ -445,8 +438,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => { handleTieBreakerResolution(); }, 100);
             } else {
                 if(turnTitle) turnTitle.textContent = `⚖️ Քվեարկության ժամանակն է`;
-                if(startNightBtn) startNightBtn.style.display = 'inline-block';
-                if(nextTurnBtn) nextTurnBtn.style.display = 'none';
+                if(startNightBtn) startNightBtn.classList.remove('is-hidden');
+                if(startNightBtn) startNightBtn.classList.add('is-visible-inline-block');
+                if(nextTurnBtn) nextTurnBtn.classList.add('is-hidden');
             }
         }
     }
@@ -474,9 +468,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const nightModal = document.getElementById('nightModal');
     
     window.goToNightStep = function(stepNum) {
-        document.querySelectorAll('.night-step').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.night-step').forEach(el => el.classList.add('is-hidden'));
         const stepEl = document.getElementById(`nightStep${stepNum}`);
-        if(stepEl) stepEl.style.display = 'block';
+        if(stepEl) stepEl.classList.remove('is-hidden');
+        if(stepEl) stepEl.classList.add('is-visible');
     }
     
     function triggerNightPhase() {
@@ -490,7 +485,8 @@ document.addEventListener('DOMContentLoaded', () => {
             nightVictimSelect.value = "";
         }
 
-        if(nightModal) nightModal.style.display = 'block';
+        if(nightModal) nightModal.classList.remove('is-hidden');
+        if(nightModal) nightModal.classList.add('is-visible');
         if(typeof goToNightStep === 'function') goToNightStep(1);
     }
     
@@ -592,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        if(nightModal) nightModal.style.display = 'none';
+        if(nightModal) nightModal.classList.add('is-hidden');
         currentDay++;
         startDayPhase();
     }
@@ -612,15 +608,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.className = 'nomination-item';
             li.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <span class="player-number" style="width: 28px; height: 28px; font-size: 0.9rem;">${nom.playerId}</span>
-                    <span style="font-size: 1.1rem; font-weight: bold;">${displayName}</span>
+                <div class="nomination-row">
+                    <span class="player-number">${nom.playerId}</span>
+                    <span class="nomination-name">${displayName}</span>
                 </div>
                 <div class="nomination-votes">
-                    <span style="color: #94a3b8; font-size: 0.9rem; margin-right: 5px;">Ձայներ:</span>
-                    <button class="vote-btn" onclick="updateVote(${index}, -1)">-</button>
+                    <span class="nomination-votes-label">Ձայներ:</span>
+                    <button class="vote-btn" data-index="${index}" data-change="-1" aria-label="Decrease vote">-</button>
                     <span class="vote-count">${nom.votes}</span>
-                    <button class="vote-btn" onclick="updateVote(${index}, 1)">+</button>
+                    <button class="vote-btn" data-index="${index}" data-change="1" aria-label="Increase vote">+</button>
                 </div>
             `;
             nominationsList.appendChild(li);
@@ -663,18 +659,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Event delegation for vote +/- buttons (replaces inline onclick in renderNominations template)
+    nominationsList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.vote-btn');
+        if (!btn) return;
+        const index = Number(btn.dataset.index);
+        const change = Number(btn.dataset.change);
+        updateVote(index, change);
+    });
+
     // Modal close listeners
     const rulesBtn = document.getElementById('rulesBtn');
     const rulesModal = document.getElementById('rulesModal');
     const closeRulesBtn = document.getElementById('closeRulesBtn');
     
-    if(rulesBtn && rulesModal) rulesBtn.addEventListener('click', () => rulesModal.style.display = 'block');
-    if(closeRulesBtn && rulesModal) closeRulesBtn.addEventListener('click', () => rulesModal.style.display = 'none');
+    if(rulesBtn && rulesModal) rulesBtn.addEventListener('click', () => {
+        rulesModal.classList.remove('is-hidden');
+        rulesModal.classList.add('is-visible-flex');
+    });
+    if(closeRulesBtn && rulesModal) closeRulesBtn.addEventListener('click', () => rulesModal.classList.add('is-hidden'));
     
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
     
-    if(settingsBtn && settingsModal) settingsBtn.addEventListener('click', () => settingsModal.style.display = 'block');
-    if(closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => settingsModal.style.display = 'none');
+    if(settingsBtn && settingsModal) settingsBtn.addEventListener('click', () => {
+        settingsModal.classList.remove('is-hidden');
+        settingsModal.classList.add('is-visible-flex');
+    });
+    if(closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('is-hidden'));
 });

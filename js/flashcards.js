@@ -25,25 +25,9 @@
             var toast = document.createElement("div");
             toast.textContent = message;
             toast.className = "dha-flashcard-toast" + (isError ? " dha-flashcard-toast-error" : "");
-            Object.assign(toast.style, {
-                position: "fixed",
-                top: isError ? "80px" : "20px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                padding: "10px 16px",
-                borderRadius: "8px",
-                color: "#fff",
-                background: isError ? "#ef4444" : "#10b981",
-                fontSize: "14px",
-                zIndex: 10000,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-                pointerEvents: "none",
-                opacity: "1",
-                transition: "opacity 0.3s ease"
-            });
             document.body.appendChild(toast);
             setTimeout(function () {
-                toast.style.opacity = "0";
+                toast.classList.add("dha-flashcard-toast-hiding");
                 setTimeout(function () { try { toast.remove(); } catch (e) {} }, 300);
             }, 2500);
         } catch (e) {
@@ -245,7 +229,10 @@
             try { alert("Please sign in to add words to your library"); } catch (e) {}
             try {
                 const m = document.getElementById("auth-modal");
-                if (m) m.style.display = "flex";
+                if (m) {
+                    m.classList.remove("is-hidden");
+                    m.classList.add("is-visible-flex");
+                }
             } catch (e) {}
             return false;
         }

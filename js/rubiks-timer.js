@@ -73,15 +73,9 @@
       var toast = document.createElement("div");
       toast.textContent = message;
       toast.className = "dha-rubiks-toast" + (isError ? " dha-rubiks-toast-error" : "");
-      Object.assign(toast.style, {
-        position: "fixed", top: isError ? "80px" : "20px", left: "50%", transform: "translateX(-50%)",
-        padding: "10px 16px", borderRadius: "8px", color: "#fff",
-        background: isError ? "#ef4444" : "#10b981", fontSize: "14px", zIndex: 10000,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)", pointerEvents: "none", opacity: "1", transition: "opacity 0.3s ease"
-      });
       document.body.appendChild(toast);
       setTimeout(function () {
-        toast.style.opacity = "0";
+        toast.classList.add("dha-rubiks-toast-hiding");
         setTimeout(function () { try { toast.remove(); } catch (e) {} }, 300);
       }, 2500);
     } catch (e) { try { alert(message); } catch (e2) {} }
@@ -286,10 +280,10 @@
     function startHold() {
       if (timerState === "running") return;
       timerState = "holding";
-      if (timerDisplay) { timerDisplay.style.color = "#f59e0b"; }
+      if (timerDisplay) { timerDisplay.classList.add("timer-holding"); timerDisplay.classList.remove("timer-ready"); }
       holdTimeout = setTimeout(() => {
         timerState = "ready";
-        if (timerDisplay) { timerDisplay.style.color = "#22c55e"; }
+        if (timerDisplay) { timerDisplay.classList.add("timer-ready"); timerDisplay.classList.remove("timer-holding"); }
       }, 300);
     }
 
@@ -297,13 +291,13 @@
       if (timerState === "holding") {
         clearTimeout(holdTimeout);
         timerState = "idle";
-        if (timerDisplay) { timerDisplay.style.color = ""; }
+        if (timerDisplay) { timerDisplay.classList.remove("timer-holding", "timer-ready"); }
         return;
       }
       if (timerState === "ready") {
         timerState = "running";
         startTime = performance.now();
-        if (timerDisplay) { timerDisplay.style.color = ""; }
+        if (timerDisplay) { timerDisplay.classList.remove("timer-holding", "timer-ready"); }
         rafId = requestAnimationFrame(updateTimerDisplay);
       }
     }

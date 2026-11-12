@@ -1666,6 +1666,49 @@ header {
     word-break: break-word;
 }
 
+/* ==========================================
+   📝 Adaptive Note Slot — Flashcard Back Top-Left
+   ========================================== */
+.note-slot-top-left {
+    display: inline-flex;
+    align-items: center;
+    z-index: 5;
+}
+
+.short-note-badge {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    max-width: 180px;
+    whitespace: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    backdrop-filter: blur(6px);
+}
+
+.btn-view-note {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    color: #60a5fa;
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-view-note:hover,
+.short-note-badge:hover {
+    transform: translateY(-1px);
+    background: rgba(59, 130, 246, 0.3);
+}
+
 .card-action-btn:hover {
     background: rgba(59, 130, 246, 0.25);
     border-color: #3b82f6;
@@ -1764,4 +1807,255 @@ header {
     font-size: 0.85rem !important;
     margin-top: 6px !important;
     border-radius: 8px !important;
+}
+
+/* ==========================================
+   🟢 FLASHCARDS STATE / UTILITY CLASSES
+   ========================================== */
+.empty-state.is-hidden {
+    display: none !important;
+}
+.card-note-preview.is-hidden {
+    display: none !important;
+}
+.card-back-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: absolute;
+    top: 16px;
+    left: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+.add-to-my-words-btn.is-hidden {
+    display: none !important;
+}
+.admin-delete-btn.is-hidden {
+    display: none !important;
+}
+.practice-filter-bar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+.filter-toggle-container {
+    display: flex;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.favorites-warning.is-hidden {
+    display: none !important;
+    text-align: center;
+    color: #f59e0b;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+#matchingGameContent.is-hidden,
+#fillBlankGameContent.is-hidden,
+#spellingGameContent.is-hidden,
+#voiceGameContent.is-hidden {
+    display: none !important;
+}
+.game-results-modal.is-hidden {
+    display: none !important;
+}
+.fillBlankGameWrapper {
+    margin-top: 36px;
+}
+.spellingGameWrapper {
+    margin-top: 36px;
+}
+.voiceGameWrapper {
+    margin-top: 36px;
+}
+.quiz-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.quiz-sentence {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    text-align: center;
+    color: #f8fafc;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.quiz-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 24px;
+}
+.quiz-feedback {
+    min-height: 24px;
+    text-align: center;
+    margin-top: 14px;
+    font-weight: 600;
+}
+.play-audio-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    color: #fff;
+    padding: 16px 28px;
+    border-radius: 50px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    transition: transform 0.2s ease;
+}
+.spelling-form {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    max-width: 460px;
+    margin: 0 auto;
+}
+.spelling-input {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(30, 41, 59, 0.8);
+    color: #fff;
+    font-size: 1.1rem;
+    text-align: center;
+}
+.spelling-check-btn {
+    background: #10b981;
+    border: none;
+    color: #fff;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.spelling-feedback {
+    margin-top: 16px;
+    font-weight: 600;
+    min-height: 24px;
+}
+.spellingResultsModal.is-hidden {
+    display: none !important;
+    text-align: center;
+    padding: 32px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 20px;
+}
+.voiceGameContent.is-hidden {
+    display: none !important;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 28px;
+    border-radius: 20px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.voiceStatusBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.voiceTargetWord {
+    font-size: 2.2rem;
+    color: #f8fafc;
+    margin-bottom: 8px;
+}
+.voiceTargetDef {
+    color: #94a3b8;
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+.voiceListenBtn {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid #3b82f6;
+    color: #60a5fa;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.voiceOutput {
+    min-height: 28px;
+    font-size: 1.1rem;
+    color: #cbd5e1;
+    margin-top: 12px;
+}
+.voiceFeedback {
+    min-height: 28px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+.voiceResultsModal.is-hidden {
+    display: none !important;
+    text-align: center;
+    padding: 32px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 20px;
+}
+.resultsActions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+.statBox {
+    background: rgba(30, 41, 59, 0.7);
+    padding: 12px 20px;
+    border-radius: 12px;
+}
+.noteModal.is-hidden {
+    display: none !important;
+}
+.noteModal .results-card {
+    max-width: 450px;
+    width: 90%;
+    text-align: left;
+    padding: 28px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 20px;
+}
+.noteModalWord {
+    color: #3b82f6;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+}
+.noteTextInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(30, 41, 59, 0.8);
+    color: #fff;
+    font-size: 1rem;
+    resize: vertical;
+    outline: none;
+    margin-bottom: 16px;
+}
+.noteActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.deleteNoteBtn {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+.saveNoteBtn {
+    padding: 10px 20px;
 }

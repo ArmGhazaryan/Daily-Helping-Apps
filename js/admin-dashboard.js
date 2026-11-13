@@ -166,12 +166,14 @@
         }).join('');
 
         tbody.querySelectorAll('button[data-action="toggle"]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
                 toggleAdminRole(btn.getAttribute('data-user-id'));
             });
         });
         tbody.querySelectorAll('button[data-action="delete"]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
                 deleteUser(btn.getAttribute('data-user-id'));
             });
         });

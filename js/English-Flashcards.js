@@ -592,7 +592,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const modal = document.getElementById('auth-modal');
         if (modal) {
             modal.classList.remove('is-hidden');
-            modal.classList.add('is-visible-flex');
+            modal.classList.add('is-visible');
         }
     }
 
@@ -605,7 +605,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session || !session.user) {
-            alert('Please sign in to save favorites or add custom words.');
             showAuthModal();
             return;
         }
@@ -653,13 +652,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const miniCard = document.createElement('div');
             miniCard.className = `mini-card ${index === currentIndex ? 'active' : ''}`;
             miniCard.textContent = data.word;
+            miniCard.dataset.index = index;
             if (data.id !== undefined && data.id !== null) miniCard.dataset.id = String(data.id);
-
-            miniCard.addEventListener('click', () => {
-                currentIndex = index;
-                loadCard(currentIndex);
-                renderCard(currentIndex);
-            });
 
             cardsGallery.appendChild(miniCard);
         });
@@ -728,7 +722,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (noteModalWord) noteModalWord.textContent = targetCard ? targetCard.word : String(wordKey);
         if (noteTextInput) noteTextInput.value = (window.dha_memory_notes[wordKey] || '').trim();
-        if (noteModal) noteModal.style.display = 'flex';
+        if (noteModal) {
+            noteModal.classList.remove('is-hidden');
+            noteModal.classList.add('is-visible');
+        }
     };
 
     function loadCard(index) {
@@ -877,7 +874,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. EVENTS
     if(card) {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Opening a memory note must not flip the card.
+            if (e.target.closest('.btn-view-note, .short-note-badge')) return;
             if (flashcardsData.length > 0) card.classList.toggle('is-flipped');
         });
     }
@@ -964,7 +964,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (noteTextInput) noteTextInput.value = window.dha_memory_notes[cardId] || '';
             if (noteModal) {
                 noteModal.classList.remove('is-hidden');
-                noteModal.classList.add('is-visible-flex');
+                noteModal.classList.add('is-visible');
             }
         });
     }
@@ -983,7 +983,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             loadCard(currentIndex);
             renderCard(currentIndex);
-            if (noteModal) noteModal.classList.add('is-hidden');
+            if (noteModal) {
+                noteModal.classList.add('is-hidden');
+                noteModal.classList.remove('is-visible', 'active');
+            }
         });
     }
 
@@ -996,23 +999,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             deleteNote(cardId);
             loadCard(currentIndex);
             renderCard(currentIndex);
-            if (noteModal) noteModal.classList.add('is-hidden');
+            if (noteModal) {
+                noteModal.classList.add('is-hidden');
+                noteModal.classList.remove('is-visible', 'active');
+            }
         });
     }
 
     // Close note modal
     if (closeNoteModalBtn) {
         closeNoteModalBtn.addEventListener('click', () => {
-            if (noteModal) noteModal.classList.add('is-hidden');
+            if (noteModal) {
+                noteModal.classList.add('is-hidden');
+                noteModal.classList.remove('is-visible', 'active');
+            }
         });
     }
 
     // Close note modal on backdrop click
     if (noteModal) {
         noteModal.addEventListener('click', (e) => {
-            if (e.target === noteModal) noteModal.classList.add('is-hidden');
+            if (e.target === noteModal) {
+                noteModal.classList.add('is-hidden');
+                noteModal.classList.remove('is-visible', 'active');
+            }
         });
     }
+
+    // Delegate clicks on dynamic note badges/buttons (rendered inside renderCard)
+    // to open the Personal Memory Note modal without flipping the card.
+    document.addEventListener('click', (e) => {
+        const noteBtn = e.target.closest('.btn-view-note, .short-note-badge');
+        if (!noteBtn) return;
+        e.stopPropagation();
+        openNoteModal(noteBtn.dataset.noteKey || '');
+    });
 
     // Hide speaker buttons if speechSynthesis is not supported
     if (!isSpeechSupported()) {
@@ -1023,6 +1044,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         favoriteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite();
+        });
+    }
+
+    // Delegated word-tab (mini-card) clicks: switch the active flashcard immediately.
+    if (cardsGallery) {
+        cardsGallery.addEventListener('click', (e) => {
+            const tab = e.target.closest('.mini-card');
+            if (!tab) return;
+            const idx = Number(tab.dataset.index);
+            if (!Number.isInteger(idx)) return;
+            currentIndex = idx;
+            loadCard(currentIndex);
+            renderCard(currentIndex);
         });
     }
 
@@ -1135,7 +1169,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const user = await getCurrentUser();
             if (!user) {
-                alert('Please sign in to add words to your library');
                 showAuthModal();
                 return;
             }
@@ -1253,13 +1286,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if(openModalBtn) openModalBtn.addEventListener('click', async () => {
         const user = await getCurrentUser();
         if (!user) {
-            alert('Please sign in to save favorites or add custom words.');
             showAuthModal();
             return;
         }
         if (modal) {
             modal.classList.remove('is-hidden');
-            modal.classList.add('is-visible-flex');
+            modal.classList.add('is-visible');
         }
         const admin = await isAdminUser(user);
         if (adminGlobalToggle) {
@@ -1269,7 +1301,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     function closeModal() {
-        if(modal) modal.classList.add('is-hidden');
+        if(modal) {
+            modal.classList.add('is-hidden');
+            modal.classList.remove('is-visible', 'is-visible-flex', 'active');
+        }
         document.getElementById('newWord').value = '';
         document.getElementById('newDefinition').value = '';
         document.getElementById('newExample').value = '';
@@ -1286,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+        if (e.key === 'Escape' && modal && !modal.classList.contains('is-hidden')) {
             closeModal();
         }
     });
@@ -1612,11 +1647,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             var acc = attempts > 0 ? Math.round((matchedPairs / attempts) * 100) : 100;
             resultAccuracy.textContent = 'Accuracy: ' + acc + '%';
             resultTitle.textContent = '🎉 Congratulations!';
-            modal.style.display = 'flex';
+            modal.classList.remove('is-hidden');
+            modal.classList.add('is-visible');
         }
 
         function hideCompletion() {
-            if (modal) modal.style.display = 'none';
+            if (modal) {
+                modal.classList.add('is-hidden');
+                modal.classList.remove('is-visible', 'is-visible-flex', 'active');
+            }
         }
 
         if (exitBtn) exitBtn.addEventListener('click', function () { hideCompletion(); showStartScreen(); });
@@ -1750,7 +1789,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (finalAccuracyEl) finalAccuracyEl.textContent = `${correctCount} / ${totalQuestions}`;
         if (resultsModal) {
             resultsModal.classList.remove('is-hidden');
-            resultsModal.classList.add('is-visible-flex');
+            resultsModal.classList.add('is-visible');
         }
     }
 
@@ -1903,7 +1942,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (finalScoreEl) finalScoreEl.textContent = spellingScoreVal;
             if (finalAccuracyEl) finalAccuracyEl.textContent = `${spellingCorrectCount} / 5`;
             if (resultsModal) resultsModal.classList.remove('is-hidden');
-            resultsModal.classList.add('is-visible-flex');
+            resultsModal.classList.add('is-visible');
             stopSpeech();
         }
 
@@ -1915,7 +1954,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             stopSpeech();
             if (gameContent) gameContent.classList.add('is-hidden');
             if (startScreen) startScreen.classList.remove('is-hidden');
-            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (resultsModal) {
+                resultsModal.classList.add('is-hidden');
+                resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+            }
             if (spellingFeedback) spellingFeedback.textContent = '';
         }
 
@@ -1927,17 +1969,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (spellingForm) spellingForm.addEventListener('submit', handleSpellingSubmit);
         if (retryBtn) retryBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (resultsModal) {
+                resultsModal.classList.add('is-hidden');
+                resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+            }
             startSpellingGame();
         });
         if (closeBtn) closeBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (resultsModal) {
+                resultsModal.classList.add('is-hidden');
+                resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+            }
             if (startScreen) startScreen.classList.remove('is-hidden');
             resetSpellingGame();
         });
         if (resultsModal) resultsModal.addEventListener('click', (e) => {
             if (e.target === resultsModal) {
-                if (resultsModal) resultsModal.classList.add('is-hidden');
+                if (resultsModal) {
+                    resultsModal.classList.add('is-hidden');
+                    resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+                }
                 if (startScreen) startScreen.classList.remove('is-hidden');
                 resetSpellingGame();
             }
@@ -2160,7 +2211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (finalScoreEl) finalScoreEl.textContent = voiceScoreVal;
             if (finalAccuracyEl) finalAccuracyEl.textContent = `${voiceCorrectCount} / 5`;
             if (resultsModal) resultsModal.classList.remove('is-hidden');
-            resultsModal.classList.add('is-visible-flex');
+            resultsModal.classList.add('is-visible');
             stopRecognition();
         }
 
@@ -2172,7 +2223,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             stopRecognition();
             if (gameContent) gameContent.classList.add('is-hidden');
             if (startScreen) startScreen.classList.remove('is-hidden');
-            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (resultsModal) {
+                resultsModal.classList.add('is-hidden');
+                resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+            }
             if (feedbackEl) feedbackEl.textContent = '';
             if (speechOutput) speechOutput.textContent = '';
         }
@@ -2185,17 +2239,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (micRecordBtn) micRecordBtn.addEventListener('click', startRecognition);
         if (retryBtn) retryBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (resultsModal) {
+                resultsModal.classList.add('is-hidden');
+                resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+            }
             startVoiceGame();
         });
         if (closeBtn) closeBtn.addEventListener('click', () => {
-            if (resultsModal) resultsModal.classList.add('is-hidden');
+            if (resultsModal) {
+                resultsModal.classList.add('is-hidden');
+                resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+            }
             if (startScreen) startScreen.classList.remove('is-hidden');
             resetVoiceGame();
         });
         if (resultsModal) resultsModal.addEventListener('click', (e) => {
             if (e.target === resultsModal) {
-                if (resultsModal) resultsModal.classList.add('is-hidden');
+                if (resultsModal) {
+                    resultsModal.classList.add('is-hidden');
+                    resultsModal.classList.remove('is-visible', 'is-visible-flex', 'active');
+                }
                 if (startScreen) startScreen.classList.remove('is-hidden');
                 resetVoiceGame();
             }

@@ -137,7 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
             config.totalBlack = parseInt(blackCountInput.value);
             config.totalRed = parseInt(redCountInput.value);
             const settingsModal = document.getElementById('settingsModal');
-            if(settingsModal) settingsModal.classList.add('is-hidden');
+            if(settingsModal) {
+                settingsModal.classList.add('is-hidden');
+                settingsModal.classList.remove('is-visible', 'active');
+            }
             generateGame();
         });
     }
@@ -201,7 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const gamePhaseCont = document.getElementById('gamePhaseContainer');
         
         if(startGameSec) startGameSec.classList.remove('is-hidden');
-        if(gamePhaseCont) gamePhaseCont.classList.add('is-hidden');
+        if(gamePhaseCont) {
+            gamePhaseCont.classList.add('is-hidden');
+            gamePhaseCont.classList.remove('is-visible', 'active');
+        }
         
         resetTimerLogic();
         
@@ -304,8 +310,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             isGameStarted = true;
             document.getElementById('startGameSection').classList.add('is-hidden');
-            document.getElementById('gamePhaseContainer').classList.remove('is-hidden');
-            document.getElementById('gamePhaseContainer').classList.add('is-visible-flex');
+            const gamePhase = document.getElementById('gamePhaseContainer');
+            if (gamePhase) {
+                gamePhase.classList.remove('is-hidden', 'hidden');
+                gamePhase.classList.add('is-visible');
+            }
             
             if(planN1) planN1.disabled = true; 
             if(planN2) planN2.disabled = true; 
@@ -588,7 +597,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        if(nightModal) nightModal.classList.add('is-hidden');
+        if(nightModal) {
+            nightModal.classList.add('is-hidden');
+            nightModal.classList.remove('is-visible', 'active');
+        }
         currentDay++;
         startDayPhase();
     }
@@ -675,9 +687,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if(rulesBtn && rulesModal) rulesBtn.addEventListener('click', () => {
         rulesModal.classList.remove('is-hidden');
-        rulesModal.classList.add('is-visible-flex');
+        rulesModal.classList.add('is-visible');
     });
-    if(closeRulesBtn && rulesModal) closeRulesBtn.addEventListener('click', () => rulesModal.classList.add('is-hidden'));
+    if(closeRulesBtn && rulesModal) closeRulesBtn.addEventListener('click', () => {
+        rulesModal.classList.add('is-hidden');
+        rulesModal.classList.remove('is-visible', 'active');
+    });
     
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
@@ -685,7 +700,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if(settingsBtn && settingsModal) settingsBtn.addEventListener('click', () => {
         settingsModal.classList.remove('is-hidden');
-        settingsModal.classList.add('is-visible-flex');
+        settingsModal.classList.add('is-visible');
     });
-    if(closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('is-hidden'));
+    if(closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => {
+        settingsModal.classList.add('is-hidden');
+        settingsModal.classList.remove('is-visible', 'active');
+    });
 });

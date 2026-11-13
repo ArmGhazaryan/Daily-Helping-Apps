@@ -1,23 +1,29 @@
 Task Goal:
-Perform a systematic, module-by-module QA audit across the project to detect and fix any functional bugs (especially post-refactoring regressions) and responsive design issues across Desktop, Tablet, and Mobile viewports.
+Unify and fix the Authentication UI ("Log In / Sign Up" button, logged-in user badge/Logout, and Auth Modal) across ALL 7 HTML pages in the workspace so it exists and works identically everywhere, and fix any remaining hidden-input regressions (like the exposed file input in `workout-tracker.html`).
 
 Execution Strategy (CRITICAL TO AVOID TIMEOUTS):
-- Audit and fix ONE page/module at a time sequentially (start with the main English Flashcards module, then proceed one by one through the remaining HTML/CSS/JS module pairs).
-- Apply ONLY targeted, surgical edits to the specific lines that need fixing. NEVER rewrite entire files from scratch.
+- Step 1: Create/update a single shared `css/global-auth.css` and `js/global-auth.js` for the header Auth controls, Auth Modal, and safe Supabase auth session storage.
+- Step 2: Update the 7 HTML files sequentially ONE BY ONE (`index.html`, `HTML-Files/English-Flashcards.html`, `HTML-Files/rubiks-timer.html`, `HTML-Files/workout-tracker.html`, `HTML-Files/code-snippets.html`, `HTML-Files/smart-tasks.html`, `HTML-Files/mafia-manager.html`) using targeted edits. NEVER rewrite entire files from scratch.
 - STRICT RULE: DO NOT use terminal commands. Edit files directly.
 
-AUDIT CHECKLIST FOR EACH MODULE:
+EXACT REQUIREMENTS:
 
-1. Post-Refactoring Functional & Bug Check (HTML <-> CSS <-> JS Sync):
-   - Verify that every button, modal trigger, form, and tab in the HTML has a valid, working `addEventListener` or event delegation handler in its corresponding `.js` file (check for broken selectors, typos in `id`/`class`/`data-*` attributes, or `null` DOM references).
-   - Verify that visibility utility classes (`.is-hidden`, `.is-visible`, `.is-active`, `.has-note`) exist in the CSS and toggle properly without conflicts (e.g., `display: flex` vs `display: none !important`).
-   - For English Flashcards specifically: confirm that card flipping, Next/Prev navigation, Favorites filtering, all 4 Practice Zone mini-games, and Supabase `user_notes` (load, save/upsert, delete, adaptive top-left badge/modal) work without errors.
+1. Create Unified Global Auth Module (`css/global-auth.css` & `js/global-auth.js`):
+   - **Header Auth Slot (`#globalAuthContainer`)**:
+     * When logged out: renders the styled `Log In / Sign Up` button (`#openAuthModalBtn`).
+     * When logged in: renders the user avatar/email badge and `Logout` button (`#globalLogoutBtn`).
+   - **Unified Auth Modal (`#globalAuthModal`)**:
+     * Centered glassmorphic modal overlay with a visible top-right close button (`×` / `#closeAuthModalBtn`), backdrop click close, and `Escape` key close (so users stay on the current page instead of having to click the DHA logo to escape, fixing `rubiks-timer.html`).
+     * Includes `Login` and `Sign Up` tabs, Email & Password inputs, submit button, and `Continue with Google` button wired to Supabase Auth.
+     * Always toggle visibility by explicitly removing `.is-hidden` and adding `.is-visible` on open, and adding `.is-hidden` / removing `.is-visible` on close.
+   - **Safe Storage Adapter**:
+     * Wrap Supabase auth storage in a `try/catch` fallback (`localStorage` -> `sessionStorage` -> memory) so Edge Tracking Prevention never breaks login persistence across pages.
 
-2. Responsive Design & Layout Check (Mobile 360px–480px & Tablet 768px):
-   - Check CSS media queries (`@media (max-width: 768px)` and `@media (max-width: 480px)`) for every page.
-   - Eliminate any horizontal overflow (`overflow-x`), clipped text, or overlapping elements on small screens.
-   - Ensure multi-column grids, filter sidebars, navigation bars, game cards, and modals stack cleanly (`flex-direction: column` or 1-column grid) with proper padding and touch-friendly button sizes on mobile.
-   - Ensure flashcard front/back faces fit cleanly within mobile viewports without awkward internal scrollbars.
+2. Standardize Header & Auth Modal Across All 7 HTML Files:
+   - Link `css/global-auth.css` and `js/global-auth.js` in all 7 HTML files (using proper relative paths: `css/...` for `index.html` and `../css/...` for `HTML-Files/*.html`).
+   - Ensure every single page's top navigation header has `<div id="globalAuthContainer" class="header-auth-slot"></div>` aligned on the top-right (adding it to `workout-tracker.html`, `mafia-manager.html`, `code-snippets.html`, and `smart-tasks.html` where it is currently missing, and unifying it in `index.html`, `English-Flashcards.html`, and `rubiks-timer.html`).
+   - Remove duplicate/broken old auth modals that failed to open on `index.html` and `English-Flashcards.html` so there are zero ID conflicts.
 
-3. Reporting:
-   - After auditing and fixing each module, briefly list the exact bugs or responsive issues found and fixed before moving to the next module.
+3. Fix Similar Refactoring Regressions Across All Pages:
+   - In `HTML-Files/workout-tracker.html`: add `.is-hidden` (`display: none !important`) to the raw `<input type="file" id="restoreFileInput">` next to the `Restore` button so the native `"Choose File | No file chosen"` control stays hidden until `Restore` is clicked.
+   - Audit all remaining pages (`code-snippets.html`, `smart-tasks.html`, `mafia-manager.html`, `workout-tracker.html`, `rubiks-timer.html`, `English-Flashcards.html`) for any similar exposed hidden inputs, broken modal close buttons, or un-bound header/action buttons and fix them surgically.

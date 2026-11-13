@@ -330,10 +330,10 @@
     function handlePressEnd() { releaseHold(); }
 
     if (timerArea) {
-      timerArea.addEventListener("touchstart", (e) => { e.preventDefault(); lastTouch = Date.now(); handlePressStart(); }, { passive: false });
-      timerArea.addEventListener("touchend", (e) => { e.preventDefault(); handlePressEnd(); }, { passive: false });
-      timerArea.addEventListener("mousedown", (e) => { if (Date.now() - lastTouch < 500) return; e.preventDefault(); handlePressStart(); });
-      timerArea.addEventListener("mouseup", (e) => { if (Date.now() - lastTouch < 500) return; e.preventDefault(); handlePressEnd(); });
+      timerArea.addEventListener("touchstart", (e) => { e.preventDefault(); lastTouch = Date.now(); handlePressStart(); e.stopPropagation(); }, { passive: false });
+      timerArea.addEventListener("touchend", (e) => { e.preventDefault(); handlePressEnd(); e.stopPropagation(); });
+      timerArea.addEventListener("mousedown", (e) => { if (Date.now() - lastTouch < 500) return; e.preventDefault(); handlePressStart(); e.stopPropagation(); });
+      timerArea.addEventListener("mouseup", (e) => { if (Date.now() - lastTouch < 500) return; e.preventDefault(); handlePressEnd(); e.stopPropagation(); });
     }
 
     document.addEventListener("keydown", (e) => {

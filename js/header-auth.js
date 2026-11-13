@@ -53,10 +53,10 @@ async function updateHeaderAuth() {
                 const isHidden = modal.classList.contains('is-hidden');
                 if (isHidden) {
                     modal.classList.remove('is-hidden');
-                    modal.classList.add('is-visible-flex');
+                    modal.classList.add('is-visible');
                 } else {
                     modal.classList.add('is-hidden');
-                    modal.classList.remove('is-visible-flex');
+                    modal.classList.remove('is-visible', 'active');
                 }
             } else {
                 window.location.href = authHref;

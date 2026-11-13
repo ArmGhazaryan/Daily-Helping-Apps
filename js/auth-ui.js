@@ -78,7 +78,10 @@ loginForm?.addEventListener('submit', async (e) => {
         authMessage.textContent = 'Welcome back! Redirecting...';
         
         const authModal = document.getElementById('auth-modal');
-        if (authModal) authModal.classList.add('is-hidden');
+        if (authModal) {
+            authModal.classList.add('is-hidden');
+            authModal.classList.remove('is-visible', 'active');
+        }
         
         setTimeout(() => {
             const inHtmlFiles = window.location.pathname.includes('/HTML-Files/');
@@ -92,7 +95,10 @@ const authModal = document.getElementById('auth-modal');
 const authModalCloseBtn = document.getElementById('auth-modal-close');
 
 function closeAuthModal() {
-    if (authModal) authModal.classList.add('is-hidden');
+    if (authModal) {
+        authModal.classList.add('is-hidden');
+        authModal.classList.remove('is-visible', 'active');
+    }
 }
 
 authModalCloseBtn?.addEventListener('click', closeAuthModal);

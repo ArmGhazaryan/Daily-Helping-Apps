@@ -761,12 +761,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function initWaterTracker() {
         if (!waterSettings || !waterMain) return;
         if (waterGoal > 0) {
-            waterSettings.classList.add('is-hidden');
-            waterMain.classList.remove('is-hidden');
+            waterSettings.style.display = 'none';
+            waterMain.style.display = 'block';
             updateWaterDisplay();
         } else {
-            waterSettings.classList.remove('is-hidden');
-            waterMain.classList.add('is-hidden');
+            waterSettings.style.display = 'block';
+            waterMain.style.display = 'none';
         }
         updateCollapseUI();
     }

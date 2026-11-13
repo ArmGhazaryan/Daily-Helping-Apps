@@ -226,7 +226,6 @@
         if (!session) session = await getSession(client);
         const user = session?.user;
         if (!user) {
-            try { alert("Please sign in to add words to your library"); } catch (e) {}
             try {
                 const m = document.getElementById("auth-modal");
                 if (m) {

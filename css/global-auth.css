@@ -1,0 +1,41 @@
+/* ==========================================
+   Global Auth CSS - Bulletproof auth container
+   Ensures Log In / Sign Up button is always visible and clickable
+   ========================================== */
+.auth-header-container {
+    position: relative !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.auth-btn {
+    position: relative !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    display: inline-flex !important;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    padding: 0;
+    min-width: auto;
+}
+
+/* Ensure no page-specific CSS can hide the auth container */
+.auth-header-container .is-hidden {
+    display: inline-flex !important;
+}
+
+.auth-header-container .is-visible {
+    display: inline-flex !important;
+}
+
+/* Overlay that might block clicks */
+.auth-header-container * {
+    pointer-events: auto !important;
+    z-index: 9999 !important;
+}

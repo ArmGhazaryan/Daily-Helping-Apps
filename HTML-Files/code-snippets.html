@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Snippets</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" type="image/png" href="../Img/logo.png">
+    <link rel="stylesheet" href="../css/code-snippets.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/global-auth.css">
+</head>
+<body>
+    <header>
+        <!-- 🟢 DHA Brand Logo (Հղումների տանում է դեպի index.html) -->
+        <a href="../index.html" class="dha-brand" title="Daily Helping Apps">
+            <span class="letter">D</span><span class="expand">aily</span>
+            <span class="letter">H</span><span class="expand">elping</span>
+            <span class="letter">A</span><span class="expand">pps</span>
+        </a>
+        <div class="header-right">
+            <div id="auth-header-container"></div>
+        </div>
+    </header>
+
+    <main class="code-snippets-container">
+        <!-- Code snippets content would go here -->
+        <div class="empty-state is-hidden" id="emptyState">No code snippets added yet.</div>
+    </main>
+
+    <!-- 🟢 1. Supabase CDN SDK Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 🟢 2. Supabase Configuration ֆայլը -->
+    <script src="../js/supabase.js"></script>
+    <script src="../js/auth-ui.js"></script>
+    <script src="../js/header-auth.js"></script>
+
+    <!-- 🟢 3. Code Snippets-ի JS ֆայլը -->
+    <script src="../js/code-snippets.js"></script>
+    <script src="../js/admin.js"></script>
+
+    <script src="../js/global-auth.js" defer></script>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/js/sw.js')
+            .catch(err => console.error('SW Registration Failed:', err));
+        });
+      }
+    </script>
+</body>
+</html>

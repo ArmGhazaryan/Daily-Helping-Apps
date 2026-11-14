@@ -1,29 +1,34 @@
 Task Goal:
-Unify and fix the Authentication UI ("Log In / Sign Up" button, logged-in user badge/Logout, and Auth Modal) across ALL 7 HTML pages in the workspace so it exists and works identically everywhere, and fix any remaining hidden-input regressions (like the exposed file input in `workout-tracker.html`).
+Fix the broken "Log In / Sign Up" button visibility, dead clicks, and post-login redirect across ALL 7 pages by inspecting and fixing the underlying JavaScript and CSS files (not just HTML).
 
 Execution Strategy (CRITICAL TO AVOID TIMEOUTS):
-- Step 1: Create/update a single shared `css/global-auth.css` and `js/global-auth.js` for the header Auth controls, Auth Modal, and safe Supabase auth session storage.
-- Step 2: Update the 7 HTML files sequentially ONE BY ONE (`index.html`, `HTML-Files/English-Flashcards.html`, `HTML-Files/rubiks-timer.html`, `HTML-Files/workout-tracker.html`, `HTML-Files/code-snippets.html`, `HTML-Files/smart-tasks.html`, `HTML-Files/mafia-manager.html`) using targeted edits. NEVER rewrite entire files from scratch.
+- Phase A (Inspect JS & CSS First): Read `HTML-Files/rubiks-timer.html`, `js/rubiks-timer.js`, the dedicated Auth HTML + Auth JS file, `js/global-auth.js`, `css/global-auth.css`, `index.html`, and `js/index.js` to see the exact JS/CSS differences between the working Rubiks-Timer page and the broken pages.
+- Phase B (Fix Auth JS & Global Auth JS/CSS): Update the Auth page's JS and `js/global-auth.js` + `css/global-auth.css`.
+- Phase C (Clean Page-Specific JS/CSS Conflicts): Remove conflicting old auth handlers from `js/index.js`, `js/English-Flashcards.js`, and other page JS/CSS files, and ensure all 7 HTML files load `global-auth.css` and `global-auth.js` with valid relative paths.
+- Make ONLY targeted, surgical edits. NEVER rewrite entire files from scratch.
 - STRICT RULE: DO NOT use terminal commands. Edit files directly.
 
-EXACT REQUIREMENTS:
+EXACT JS & CSS FIXES REQUIRED:
 
-1. Create Unified Global Auth Module (`css/global-auth.css` & `js/global-auth.js`):
-   - **Header Auth Slot (`#globalAuthContainer`)**:
-     * When logged out: renders the styled `Log In / Sign Up` button (`#openAuthModalBtn`).
-     * When logged in: renders the user avatar/email badge and `Logout` button (`#globalLogoutBtn`).
-   - **Unified Auth Modal (`#globalAuthModal`)**:
-     * Centered glassmorphic modal overlay with a visible top-right close button (`×` / `#closeAuthModalBtn`), backdrop click close, and `Escape` key close (so users stay on the current page instead of having to click the DHA logo to escape, fixing `rubiks-timer.html`).
-     * Includes `Login` and `Sign Up` tabs, Email & Password inputs, submit button, and `Continue with Google` button wired to Supabase Auth.
-     * Always toggle visibility by explicitly removing `.is-hidden` and adding `.is-visible` on open, and adding `.is-hidden` / removing `.is-visible` on close.
-   - **Safe Storage Adapter**:
-     * Wrap Supabase auth storage in a `try/catch` fallback (`localStorage` -> `sessionStorage` -> memory) so Edge Tracking Prevention never breaks login persistence across pages.
+1. Inspect & Fix the Dedicated Auth Page's `.js` File (Post-Login & OAuth Redirect):
+   - Open the Auth page's `.js` file (the page that `rubiks-timer.html` navigates to for login).
+   - Remove any hardcoded redirect (such as `window.location.href = '../index.html'`).
+   - On Auth page load, read `?redirect=` from `window.location.search` and store it in both `sessionStorage.setItem('dha_return_url', ...)` and `localStorage.setItem('dha_return_url', ...)` so it survives full-page Google OAuth redirects.
+   - For Google OAuth (`supabase.auth.signInWithOAuth`), ensure `options.redirectTo` points back to the Auth page URL (or preserves the return URL) so `onAuthStateChange` (`SIGNED_IN`) executes our redirect logic instead of dumping the user on `index.html`.
+   - After successful Email/Password login/signup OR Google `SIGNED_IN`, redirect to:
+     `const target = sessionStorage.getItem('dha_return_url') || localStorage.getItem('dha_return_url') || '../index.html';`
+     (clear stored return URL and run `window.location.replace(target)`).
 
-2. Standardize Header & Auth Modal Across All 7 HTML Files:
-   - Link `css/global-auth.css` and `js/global-auth.js` in all 7 HTML files (using proper relative paths: `css/...` for `index.html` and `../css/...` for `HTML-Files/*.html`).
-   - Ensure every single page's top navigation header has `<div id="globalAuthContainer" class="header-auth-slot"></div>` aligned on the top-right (adding it to `workout-tracker.html`, `mafia-manager.html`, `code-snippets.html`, and `smart-tasks.html` where it is currently missing, and unifying it in `index.html`, `English-Flashcards.html`, and `rubiks-timer.html`).
-   - Remove duplicate/broken old auth modals that failed to open on `index.html` and `English-Flashcards.html` so there are zero ID conflicts.
+2. Make `js/global-auth.js` & `css/global-auth.css` Self-Contained and Bulletproof:
+   - In `js/global-auth.js`, auto-detect whether the current page is in root (`index.html`) or inside `HTML-Files/` using `window.location.pathname.includes('/HTML-Files/')`.
+   - Dynamically find the page's top `<header>` or `.navbar` / `.top-bar` on ALL 7 pages—even if a page (`workout-tracker.html`, `mafia-manager.html`, `code-snippets.html`, `smart-tasks.html`) is missing an auth slot in its HTML, `js/global-auth.js` MUST automatically inject the right-aligned auth container (`Log In / Sign Up` button when logged out; user badge + `Logout` button when logged in).
+   - Bind click listeners directly inside `js/global-auth.js` using `e.preventDefault(); e.stopPropagation();`, saving `window.location.href` to `sessionStorage` and `localStorage` (`dha_return_url`), and navigating to the exact relative Auth page path with `?redirect=...`.
+   - In `css/global-auth.css`, give the header auth container and button `position: relative; z-index: 9999; pointer-events: auto; display: inline-flex !important;` so NO page-specific CSS (`overlay`, `header`, `.is-hidden`) can hide it or block clicks.
 
-3. Fix Similar Refactoring Regressions Across All Pages:
-   - In `HTML-Files/workout-tracker.html`: add `.is-hidden` (`display: none !important`) to the raw `<input type="file" id="restoreFileInput">` next to the `Restore` button so the native `"Choose File | No file chosen"` control stays hidden until `Restore` is clicked.
-   - Audit all remaining pages (`code-snippets.html`, `smart-tasks.html`, `mafia-manager.html`, `workout-tracker.html`, `rubiks-timer.html`, `English-Flashcards.html`) for any similar exposed hidden inputs, broken modal close buttons, or un-bound header/action buttons and fix them surgically.
+3. Remove Conflicting Auth Code in Page-Specific JS & CSS Files:
+   - Inspect `js/index.js`, `js/English-Flashcards.js`, `js/workout-tracker.js`, `js/mafia-manager.js`, `js/code-snippets.js`, and `js/smart-tasks.js`.
+   - Remove or disable any duplicate/broken `Log In / Sign Up` click handlers or header `innerHTML` overwrites that conflict with `js/global-auth.js`.
+   - Verify all 7 HTML files include `<link rel="stylesheet" href="...">` for `global-auth.css` and `<script src="...">` for `global-auth.js` with the exact right relative path (`css/...` for `index.html`, `../css/...` for `HTML-Files/*.html`).
+
+4. Verification Report:
+   - State specifically which JS and CSS bugs were found and fixed in each file.

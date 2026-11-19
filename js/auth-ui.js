@@ -52,6 +52,15 @@ if (isAuthPage) {
         }
     }, true);
 
+    // Leave the auth page without logging in: back to the page the user came from
+    document.getElementById('auth-back-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        redirectToReturnUrl();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !e.target.closest('input, textarea')) redirectToReturnUrl();
+    });
+
     // Google OAuth returns to this page (supabase.js redirectTo = current page URL)
     let redirecting = false;
     supabaseClient.auth.onAuthStateChange((event, session) => {

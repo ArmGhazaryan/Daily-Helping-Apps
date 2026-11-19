@@ -1,5 +1,5 @@
 // Service Worker for Daily Productivity & Fitness PWA
-const CACHE_NAME = 'daily-app-v16';
+const CACHE_NAME = 'daily-app-v17';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const APP_SHELL = [
   '/Img/logo.png',
   '/css/main.css',
   '/css/auth.css',
+  '/css/global-auth.css',
   '/css/admin-dashboard.css',
   '/css/admin.css',
   '/css/admin.css',
@@ -22,6 +23,7 @@ const APP_SHELL = [
   '/js/supabase.js',
   '/js/header-auth.js',
   '/js/auth-ui.js',
+  '/js/global-auth.js',
   '/js/admin-dashboard.js',
   '/js/English-Flashcards.js',
   '/js/flashcards.js',

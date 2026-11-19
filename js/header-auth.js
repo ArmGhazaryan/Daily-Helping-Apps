@@ -1,69 +1,17 @@
-// 🟢 Header-ի Auth UI-ի թարմացման ֆունկցիա
+// 🟢 Admin card sync. The header auth UI (#auth-header-container: Log In / Sign Up,
+// user badge, Logout) is owned by js/global-auth.js; this file must not overwrite it.
 async function updateHeaderAuth() {
-    const authContainer = document.getElementById('auth-header-container');
-    if (!authContainer) return;
-
-    // Ստուգում ենք ընթացիկ Session-ը
     const { data: { session } } = await supabaseClient.auth.getSession();
-
-    if (session && session.user) {
-        const userId = session.user.id;
-
-        // Վերցնում ենք profiles աղյուսակից username-ն ու is_admin-ը
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('username, is_admin')
-            .eq('id', userId)
-            .single();
-
-        const username = profile?.username || session.user.email.split('@')[0];
-        const isAdmin = profile?.is_admin === true;
-        const initial = username.charAt(0).toUpperCase();
-
-        // Տեղադրում ենք Profile Badge-ը Header-ում
-        authContainer.innerHTML = `
-            <div class="user-profile-badge">
-                <div class="user-avatar">${initial}</div>
-                <span class="username-text">${username}</span>
-                ${isAdmin ? '<span class="admin-tag">Admin</span>' : ''}
-                <button id="logout-btn" class="logout-btn" title="Log Out">Logout</button>
-            </div>
-        `;
-
-        // 🟢 Admin Panel քարտի դինամիկ ներդրում (միայն admin-ների համար)
-        toggleAdminCard(isAdmin);
-
-        // 🟢 Logout Կոճակի տրամաբանությունը
-        document.getElementById('logout-btn')?.addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            window.location.reload(); // Թարմացնում ենք էջը դուրս գալուց հետո
-        });
-
-    } else {
-        // Եթե մուտք չի գործել (Guest), ցույց ենք տալիս Log In / Sign Up կոճակը
-        const inHtmlFiles = window.location.pathname.includes('/HTML-Files/');
-        const authHref = inHtmlFiles ? 'auth.html' : 'HTML-Files/auth.html';
-        authContainer.innerHTML = `
-            <button type="button" class="auth-btn" id="nav-auth-btn">Log In / Sign Up</button>
-        `;
-        const navAuthBtn = document.getElementById('nav-auth-btn');
-        navAuthBtn?.addEventListener('click', () => {
-            const modal = document.getElementById('auth-modal');
-            if (modal) {
-                const isHidden = modal.classList.contains('is-hidden');
-                if (isHidden) {
-                    modal.classList.remove('is-hidden');
-                    modal.classList.add('is-visible');
-                } else {
-                    modal.classList.add('is-hidden');
-                    modal.classList.remove('is-visible', 'active');
-                }
-            } else {
-                window.location.href = authHref;
-            }
-        });
+    if (!session || !session.user) {
         toggleAdminCard(false);
+        return;
     }
+    const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', session.user.id)
+        .maybeSingle();
+    toggleAdminCard(profile?.is_admin === true);
 }
 
 // 🟢 Admin Panel քարտի ավելացում/հեռացում գլխավոր էջի grid-ում

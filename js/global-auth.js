@@ -1,110 +1,158 @@
 // ==========================================
 // js/global-auth.js - Self-contained Auth UI
-// Dynamically manages Log In / Sign Up button across ALL 7 pages
-// Ensures post-login redirect preserves return URL
+// Owns the header "Log In / Sign Up" / user badge on ALL pages
+// and preserves the return URL for the post-login redirect.
 // ==========================================
 
 (function () {
     "use strict";
 
-    const AUTH_PAGE = "HTML-Files/auth.html";
-    const ROOT_AUTH_PAGE = "auth.html";
     const RETURN_URL_KEY = "dha_return_url";
+    const OAUTH_PENDING_KEY = "dha_oauth_pending";
 
     function isInHtmlFiles() {
         return window.location.pathname.includes("/HTML-Files/");
     }
 
     function getAuthPagePath() {
-        return isInHtmlFiles() ? AUTH_PAGE : ROOT_AUTH_PAGE;
+        const base = isInHtmlFiles() ? "auth.html" : "HTML-Files/auth.html";
+        return base + "?redirect=" + encodeURIComponent(window.location.href);
     }
 
     function saveReturnUrl() {
         const url = window.location.href;
-        sessionStorage.setItem(RETURN_URL_KEY, url);
-        localStorage.setItem(RETURN_URL_KEY, url);
+        try {
+            sessionStorage.setItem(RETURN_URL_KEY, url);
+            localStorage.setItem(RETURN_URL_KEY, url);
+        } catch (e) { /* storage unavailable */ }
     }
 
-    function createAuthHTML(isLoggedIn, user) {
-        if (isLoggedIn && user) {
-            const username = user.username || user.email.split("@")[0];
-            const initial = username.charAt(0).toUpperCase();
-            return `<div class="user-profile-badge" style="display:inline-flex;align-items:center;gap:0.5rem;">
-                        <div class="user-avatar" style="width:24px;height:24px;background:#3b82f6;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.875rem;">${initial}</div>
-                        <span class="username-text" style="color:#e2e8f0;">${username}</span>
-                        <button id="logout-btn" class="logout-btn" style="background:none;border:none;color:#f87171;cursor:pointer;font:inherit;padding:0;">Logout</button>
-                      </div>`;
-        }
-        return `<button type="button" class="auth-btn" style="background:none;border:none;color:#e2e8f0;cursor:pointer;font:inherit;">Log In / Sign Up</button>`;
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, (c) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+        }[c]));
     }
 
-    function init() {
-        const authContainer = document.getElementById("auth-header-container");
-        if (authContainer) {
-            const supabaseClient = window.supabaseClient;
-            if (supabaseClient) {
-                supabaseClient.auth.getSession().then(({ data: { session } }) => {
-                    const isLoggedIn = session && session.user;
-                    const user = isLoggedIn ? session.user : null;
-                    authContainer.innerHTML = createAuthHTML(isLoggedIn, user);
-                    if (isLoggedIn) {
-                        const logoutBtn = document.getElementById("logout-btn");
-                        if (logoutBtn) {
-                            logoutBtn.addEventListener("click", async (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                saveReturnUrl();
-                                await supabaseClient.auth.signOut();
-                                sessionStorage.removeItem(RETURN_URL_KEY);
-                                localStorage.removeItem(RETURN_URL_KEY);
-                                window.location.href = getAuthPagePath();
-                            });
-                        }
-                    }
-                });
-            } else {
-                authContainer.innerHTML = createAuthHTML(false);
+    function getClient() {
+        if (window.supabaseClient) return window.supabaseClient;
+        if (typeof supabaseClient !== "undefined") return supabaseClient;
+        return null;
+    }
+
+    // Finds (or injects) the right-aligned auth container in the page's top header.
+    function ensureAuthContainer() {
+        let container = document.getElementById("auth-header-container");
+        if (!container) {
+            const header = document.querySelector("header, .navbar, .top-bar");
+            if (!header) return null;
+            let right = header.querySelector(".header-right");
+            if (!right) {
+                right = document.createElement("div");
+                right.className = "header-right";
+                header.appendChild(right);
             }
-            bindAuthButtonClick();
-        } else {
-            // No auth-container in HTML - try to inject into header
-            const header = document.querySelector("header") || document.querySelector(".navbar") || document.querySelector(".top-bar");
-            if (header) {
-                const isHtmlFiles = isInHtmlFiles();
-                const authHref = isHtmlFiles ? "HTML-Files/auth.html" : "auth.html";
-                const authBtn = document.createElement("button");
-                authBtn.type = "button";
-                authBtn.className = "auth-btn";
-                authBtn.style.cssText = "position:relative;z-index:9999;pointer-events:auto;display:inline-flex;background:none;border:none;color:#e2e8f0;cursor:pointer;font:inherit;";
-                authBtn.textContent = "Log In / Sign Up";
-                authBtn.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    saveReturnUrl();
-                    window.location.href = authHref;
-                });
-                const existing = header.querySelector(".header-right") || header.querySelector(".auth-header-container");
-                if (existing) {
-                    existing.appendChild(authBtn);
-                } else {
-                    const rightDiv = document.createElement("div");
-                    rightDiv.className = "header-right";
-                    rightDiv.style.cssText = "display:flex;align-items:center;gap:1rem;";
-                    rightDiv.appendChild(authBtn);
-                    header.appendChild(rightDiv);
-                }
-            }
+            container = document.createElement("div");
+            container.id = "auth-header-container";
+            right.appendChild(container);
         }
+        container.classList.add("auth-header-container");
+        if (container.parentElement) container.parentElement.classList.add("dha-auth-host");
+        return container;
     }
 
-    function bindAuthButtonClick() {
-        const authBtn = document.querySelector(".auth-btn");
-        if (!authBtn) return;
-        authBtn.addEventListener("click", (e) => {
+    function renderLoggedOut(container) {
+        container.innerHTML = `<button type="button" class="auth-btn" id="nav-auth-btn">Log In / Sign Up</button>`;
+        container.querySelector(".auth-btn").addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
             saveReturnUrl();
             window.location.href = getAuthPagePath();
+        });
+    }
+
+    function renderLoggedIn(container, username, isAdmin) {
+        const safeName = escapeHtml(username);
+        container.innerHTML = `<div class="user-profile-badge">
+                <div class="user-avatar">${escapeHtml(username.charAt(0).toUpperCase())}</div>
+                <span class="username-text">${safeName}</span>
+                ${isAdmin ? '<span class="admin-tag">Admin</span>' : ""}
+                <button type="button" id="logout-btn" class="logout-btn" title="Log Out">Logout</button>
+            </div>`;
+        container.querySelector(".logout-btn").addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const client = getClient();
+            if (client) await client.auth.signOut();
+            window.location.reload();
+        });
+    }
+
+    let renderSeq = 0;
+    async function render(container, session) {
+        const seq = ++renderSeq;
+        if (!session || !session.user) {
+            renderLoggedOut(container);
+            return;
+        }
+        const user = session.user;
+        let username = user.user_metadata?.username || user.user_metadata?.full_name ||
+            (user.email ? user.email.split("@")[0] : "User");
+        let isAdmin = false;
+        const client = getClient();
+        if (client) {
+            try {
+                const { data: profile } = await client
+                    .from("profiles")
+                    .select("username, is_admin")
+                    .eq("id", user.id)
+                    .maybeSingle();
+                if (profile?.username) username = profile.username;
+                isAdmin = profile?.is_admin === true;
+            } catch (e) { /* keep fallback username */ }
+        }
+        if (seq !== renderSeq) return;
+        renderLoggedIn(container, username, isAdmin);
+    }
+
+    // Fallback: if Google OAuth returned to a page other than the auth page
+    // (e.g. Supabase Site URL), still send the user back to where they started.
+    function consumePendingOAuthRedirect(session) {
+        if (!session || !session.user) return false;
+        let pending = null, target = null;
+        try {
+            pending = localStorage.getItem(OAUTH_PENDING_KEY);
+            if (!pending) return false;
+            localStorage.removeItem(OAUTH_PENDING_KEY);
+            target = sessionStorage.getItem(RETURN_URL_KEY) || localStorage.getItem(RETURN_URL_KEY);
+            sessionStorage.removeItem(RETURN_URL_KEY);
+            localStorage.removeItem(RETURN_URL_KEY);
+        } catch (e) { return false; }
+        if (!target) return false;
+        try {
+            const url = new URL(target, window.location.href);
+            if (url.origin !== window.location.origin || url.href === window.location.href) return false;
+            window.location.replace(url.href);
+            return true;
+        } catch (e) { return false; }
+    }
+
+    function init() {
+        const container = ensureAuthContainer();
+        if (!container) return;
+
+        // Show the button immediately so it is never missing, even without Supabase.
+        renderLoggedOut(container);
+
+        const client = getClient();
+        if (!client) return;
+
+        client.auth.getSession().then(({ data: { session } }) => {
+            if (consumePendingOAuthRedirect(session)) return;
+            render(container, session);
+        }).catch(() => { /* keep logged-out UI */ });
+
+        client.auth.onAuthStateChange((_event, session) => {
+            render(container, session);
         });
     }
 

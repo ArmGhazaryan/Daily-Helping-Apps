@@ -50,6 +50,25 @@
     padding: 24px 40px;
 }
 
+.auth-back-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 10px;
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.auth-back-btn:hover {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
 .auth-container {
     min-height: 75vh;
     display: flex;

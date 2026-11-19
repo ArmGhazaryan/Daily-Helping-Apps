@@ -1,10 +1,8 @@
 // js/index.js — Daily Helping Apps: main initializer for index.html
 //
-// NOTE: The header "Log In / Sign Up" button (#nav-auth-btn) and its auth-modal
-// open/close toggle are owned by js/header-auth.js (single click handler).
-// index.js intentionally does NOT bind #nav-auth-btn here: a second delegated
-// toggle conflicted with header-auth.js (on close, header-auth closed the modal
-// then index.js immediately re-opened it, so the modal would not stay closed).
+// NOTE: The header "Log In / Sign Up" button (#nav-auth-btn) is rendered and bound
+// only by js/global-auth.js (navigates to HTML-Files/auth.html?redirect=...).
+// index.js must NOT bind #nav-auth-btn or overwrite #auth-header-container.
 (function () {
     'use strict';
 

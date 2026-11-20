@@ -6,7 +6,6 @@
     <title>Code Snippets</title>
     <meta name="theme-color" content="#0f172a">
     <link rel="icon" type="image/png" href="../Img/logo.png">
-    <link rel="stylesheet" href="../css/code-snippets.css">
     <link rel="stylesheet" href="../css/auth.css">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/admin.css">
@@ -38,16 +37,14 @@
     <script src="../js/auth-ui.js"></script>
     <script src="../js/header-auth.js"></script>
 
-    <!-- 🟢 3. Code Snippets-ի JS ֆայլը -->
-    <script src="../js/code-snippets.js"></script>
     <script src="../js/admin.js"></script>
 
     <script src="../js/global-auth.js" defer></script>
 
     <script>
-      if ('serviceWorker' in navigator) {
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/js/sw.js')
+          navigator.serviceWorker.register('../js/sw.js')
             .catch(err => console.error('SW Registration Failed:', err));
         });
       }

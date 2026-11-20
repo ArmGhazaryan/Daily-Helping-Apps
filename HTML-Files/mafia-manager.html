@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="hy">
+<html lang="hy" translate="no" class="notranslate">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
     <title>Mafia Manager - Կարմիր թե Սև</title>
     <link rel="icon" type="image/png" href="../Img/logo.png">
     <link rel="stylesheet" href="../css/mafia-manager.css">
@@ -18,6 +19,9 @@
             <span class="letter">H</span><span class="expand">elping</span>
             <span class="letter">A</span><span class="expand">pps</span>
         </a>
+        <div class="header-right">
+            <div id="auth-header-container"></div>
+        </div>
     </header>
 
 
@@ -214,8 +218,10 @@
     </div>
 
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="../js/global-auth.js"></script>
     <script src="../js/mafia-manager.js"></script>
-    <script src="../js/global-auth.js" defer></script>
 </body>
 
 </html>

@@ -97,33 +97,6 @@ body {
     margin: 0;
 }
 
-/* Header Controls (Backup/Restore) */
-.header-controls {
-    display: flex;
-    gap: 10px;
-}
-
-.utility-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #cbd5e1;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
-}
-
-.utility-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    border-color: #38bdf8;
-}
-
-.utility-btn:active {
-    transform: scale(0.95);
-}
 
 /* Glass Panel */
 .glass-panel {
@@ -856,6 +829,13 @@ select.custom-input option {
     margin-right: 6px;
     color: #f8fafc;
 }
+
+/* State utility classes used by the page JS (this page does not load main.css) */
+.is-hidden { display: none !important; }
+.is-visible { display: block !important; }
+.is-visible-flex { display: flex !important; }
+.is-visible-inline-block { display: inline-block !important; }
+.hidden { display: none !important; }
 
 /* State classes for collapsible water widget sections (replaces inline style.display set in JS) */
 .water-collapsed { display: none; }

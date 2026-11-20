@@ -16,11 +16,15 @@ if (typeof window !== 'undefined') { window.supabaseClient = supabaseClient; }
 
 // 🟢 Google OAuth trigger
 async function signInWithGoogle() {
-  const currentOrigin = window.location.origin + window.location.pathname;
+  const isHtmlFiles = window.location.pathname.includes('/HTML-Files/');
+  const authPageUrl = new URL(
+    isHtmlFiles ? 'auth.html' : 'HTML-Files/auth.html',
+    window.location.href
+  ).href;
   const { data, error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: currentOrigin
+      redirectTo: authPageUrl
     }
   });
   if (error) console.error('Google Sign-In Error:', error.message);

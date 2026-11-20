@@ -266,7 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateProductivityStats(selectedDate);
     }
 
-    if (dateInput) dateInput.addEventListener('change', renderTasks);
+    if (dateInput) dateInput.addEventListener('change', async () => {
+        renderTasks();
+        await loadWaterLog(dateInput.value);
+    });
 
     // Add new task & sync with Supabase daily_tasks (or LocalStorage for guests)
     if (addBtn) {
@@ -715,24 +718,87 @@ document.addEventListener('DOMContentLoaded', () => {
     const expandWaterBtn = document.getElementById('expandWaterBtn');
     const collapsedWaterText = document.getElementById('collapsedWaterText');
 
-    let waterGoal = parseFloat(localStorage.getItem('waterGoal')) || 0;
-    let currentWater = parseFloat(localStorage.getItem('currentWater')) || 0;
-    let lastWaterDate = localStorage.getItem('lastWaterDate');
+    let waterGoal = 0;
+    let currentWater = 0;
+    let isGuest = false;
     let isWaterCollapsed = localStorage.getItem('isWaterCollapsed') === 'true';
 
-    if (lastWaterDate !== today) {
-        currentWater = 0;
-        localStorage.setItem('currentWater', currentWater);
-        localStorage.setItem('lastWaterDate', today);
+    // Logged-in users: water intake/goal are loaded from Supabase in loadWaterLog()
+    // (never read from localStorage here). Guest-only localStorage restore runs
+    // inside initApp() once the auth state is resolved.
+
+    // ==========================================
+    // 💧 WATER LOG SUPABASE SYNC
+    // ==========================================
+    async function loadWaterLog(dateStr) {
+        const user = await getCurrentUser();
+        const userId = user?.id;
+        if (!userId) return; // Guest mode: keep localStorage values
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('water_logs')
+                .select('intake_liters, goal_liters')
+                .eq('user_id', userId)
+                .eq('log_date', dateStr)
+                .maybeSingle();
+
+            if (error) {
+                console.error('Water Tracker Supabase error:', error);
+                return;
+            }
+
+            if (data) {
+                currentWater = data.intake_liters ?? 0;
+                waterGoal = data.goal_liters ?? 0;
+                waterHistory[dateStr] = { goal: waterGoal, current: currentWater };
+            } else {
+                // No row for this date: keep intake at 0, preserve latest goal
+                currentWater = 0;
+            }
+
+            updateWaterDisplay();
+        } catch (e) {
+            console.error('Water Tracker Supabase error:', e);
+        }
+    }
+
+    async function saveWaterLog() {
+        const user = await getCurrentUser();
+        const userId = user?.id;
+        const logDate = (dateInput && dateInput.value) ? dateInput.value : today;
+
+        if (userId) {
+            try {
+                await supabaseClient
+                    .from('water_logs')
+                    .upsert({
+                        user_id: userId,
+                        log_date: logDate,
+                        intake_liters: Number(currentWater.toFixed(2)),
+                        goal_liters: Number(waterGoal.toFixed(2)),
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id, log_date' });
+            } catch (e) {
+                console.error('Water Tracker Supabase error:', e);
+            }
+        } else {
+            // Guest mode: localStorage fallback
+            localStorage.setItem('currentWater', currentWater.toFixed(2));
+            localStorage.setItem('waterGoal', waterGoal);
+            localStorage.setItem('lastWaterDate', today);
+        }
     }
 
     function updateCollapseUI() {
         if (!waterCollapsed || !waterExpandedContent) return;
         if (isWaterCollapsed) {
             waterCollapsed.classList.remove('is-hidden');
+            waterCollapsed.classList.add('is-visible');
             waterExpandedContent.classList.add('is-hidden');
         } else {
             waterCollapsed.classList.add('is-hidden');
+            waterCollapsed.classList.remove('is-visible');
             waterExpandedContent.classList.remove('is-hidden');
         }
 
@@ -789,13 +855,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         waterHistory[today] = { goal: waterGoal, current: currentWater };
-        localStorage.setItem('waterHistory', JSON.stringify(waterHistory));
+        if (isGuest) {
+            localStorage.setItem('waterHistory', JSON.stringify(waterHistory));
+        }
 
         if (dateInput) calculateProductivityStats(dateInput.value);
         updateCollapseUI();
     }
 
-    calcWaterBtn?.addEventListener('click', () => {
+    calcWaterBtn?.addEventListener('click', async () => {
         const weight = parseFloat(document.getElementById('weightInput')?.value);
         const activity = document.getElementById('activityInput')?.value;
         if (!weight || !activity) return showNotification('Please enter weight and activity.', true);
@@ -805,13 +873,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activity === 'high') baseMl += 1000;
 
         waterGoal = parseFloat((baseMl / 1000).toFixed(1));
-        localStorage.setItem('waterGoal', waterGoal);
         localStorage.setItem('waterSettings', JSON.stringify({
             weight: weight, height: document.getElementById('heightInput')?.value,
             gender: document.getElementById('genderInput')?.value, activity: activity
         }));
 
         initWaterTracker();
+        await saveWaterLog();
     });
 
     document.getElementById('editWaterBtn')?.addEventListener('click', () => {
@@ -827,17 +895,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelectorAll('.add-water-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             currentWater += parseFloat(e.target.getAttribute('data-amount'));
-            localStorage.setItem('currentWater', currentWater.toFixed(2));
             updateWaterDisplay();
+            await saveWaterLog();
         });
     });
 
-    document.getElementById('resetWaterBtn')?.addEventListener('click', () => {
+    document.getElementById('resetWaterBtn')?.addEventListener('click', async () => {
         currentWater = 0;
-        localStorage.setItem('currentWater', 0);
         updateWaterDisplay();
+        await saveWaterLog();
     });
 
     // ==========================================
@@ -965,84 +1033,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ==========================================
-    // --- DATA EXPORT / IMPORT (BACKUP) ---
-    // ==========================================
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const importFile = document.getElementById('importFile');
-
-    exportBtn?.addEventListener('click', () => {
-        const backupData = {
-            workoutTasks: localStorage.getItem('workoutTasks'),
-            savedRoutines: localStorage.getItem('savedRoutines'),
-            waterSettings: localStorage.getItem('waterSettings'),
-            waterGoal: localStorage.getItem('waterGoal'),
-            currentWater: localStorage.getItem('currentWater'),
-            lastWaterDate: localStorage.getItem('lastWaterDate'),
-            waterHistory: localStorage.getItem('waterHistory')
-        };
-
-        const dataStr = JSON.stringify(backupData, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Workout_Backup_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        showNotification("Data backed up successfully!");
-    });
-
-    importBtn?.addEventListener('click', () => {
-        if (importFile) importFile.click();
-    });
-
-    importFile?.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            try {
-                const importedData = JSON.parse(e.target.result);
-                if (importedData.workoutTasks !== undefined) {
-                    for (const key in importedData) {
-                        if (importedData[key] !== null && importedData[key] !== undefined) {
-                            localStorage.setItem(key, importedData[key]);
-                        }
-                    }
-                    showNotification("Data restored successfully! Refreshing...");
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showNotification("Error: Invalid backup file format.", true);
-                }
-            } catch (error) {
-                showNotification("Error reading the backup file.", true);
-            }
-        };
-
-        reader.readAsText(file);
-        importFile.value = '';
-    });
-
     // Initial renders & automatic sync
     async function initApp() {
         const user = await getCurrentUser();
+        isGuest = !user;
         if (user) {
             await syncLocalTasksToSupabase();
             await syncLocalRoutinesToSupabase();
         }
         tasks = await loadAllTasks();
         renderTasks();
+        await loadWaterLog(today);
+        if (!user) {
+            // Guest mode: restore water intake/goal from localStorage
+            waterGoal = parseFloat(localStorage.getItem('waterGoal')) || 0;
+            const storedLastDate = localStorage.getItem('lastWaterDate');
+            currentWater = (storedLastDate !== today)
+                ? 0
+                : (parseFloat(localStorage.getItem('currentWater')) || 0);
+            updateWaterDisplay();
+        }
         initWaterTracker();
         await updateRoutineSelect();
     }
+
+    // Reload water log on auth state changes (login / logout)
+    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+        const userId = session?.user?.id;
+        isGuest = !userId;
+        if (!userId) {
+            // Guest mode: restore from localStorage
+            waterGoal = parseFloat(localStorage.getItem('waterGoal')) || 0;
+            const storedLastDate = localStorage.getItem('lastWaterDate');
+            currentWater = (storedLastDate !== today)
+                ? 0
+                : (parseFloat(localStorage.getItem('currentWater')) || 0);
+            updateWaterDisplay();
+        } else {
+            await loadWaterLog(today);
+        }
+    });
 
     initApp();
 });

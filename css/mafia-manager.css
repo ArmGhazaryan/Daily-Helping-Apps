@@ -454,11 +454,18 @@ body {
     background: #475569;
 }
 
+/* State utility classes used by the page JS (this page does not load main.css) */
+.is-hidden { display: none !important; }
+.is-visible { display: block !important; }
+.is-visible-flex { display: flex !important; }
+.is-visible-inline-block { display: inline-block !important; }
+.hidden { display: none !important; }
+
 /* Modal Styles */
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 10001; /* above #floatingControlsPanel (9999) and the auth header (10000) */
     left: 0;
     top: 0;
     width: 100%;

@@ -2,40 +2,119 @@
    Global Auth CSS - Bulletproof auth container
    Ensures Log In / Sign Up button is always visible and clickable
    ========================================== */
+.dha-auth-host {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: auto;
+    position: relative;
+    z-index: 10000; /* above page floating panels (e.g. mafia #floatingControlsPanel: 9999) */
+    pointer-events: auto;
+}
+
+#auth-header-container,
 .auth-header-container {
     position: relative !important;
     z-index: 9999 !important;
     pointer-events: auto !important;
     display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     align-items: center;
     gap: 0.5rem;
 }
 
-.auth-btn {
+.auth-header-container .auth-btn {
     position: relative !important;
     z-index: 9999 !important;
     pointer-events: auto !important;
     display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center;
+    padding: 8px 16px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 10px;
+    color: #3b82f6;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.auth-header-container .auth-btn:hover {
+    background: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+/* Self-contained badge styles (pages that don't load main.css) */
+.auth-header-container .user-profile-badge {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 10px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 6px 14px;
+    border-radius: 12px;
+}
+
+.auth-header-container .user-avatar {
+    width: 32px;
+    height: 32px;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.auth-header-container .username-text {
+    color: #f8fafc;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.auth-header-container .admin-tag {
+    background: #059669;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.auth-header-container .logout-btn {
+    display: inline-flex !important;
     background: none;
     border: none;
+    color: #f8fafc;
     cursor: pointer;
-    font: inherit;
-    color: inherit;
-    padding: 0;
-    min-width: auto;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
-/* Ensure no page-specific CSS can hide the auth container */
-.auth-header-container .is-hidden {
+.auth-header-container .logout-btn:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* No page-specific class (.is-hidden, overlays) can hide or block the auth UI */
+.auth-header-container .is-hidden,
+.auth-header-container.is-hidden {
     display: inline-flex !important;
 }
 
-.auth-header-container .is-visible {
-    display: inline-flex !important;
-}
-
-/* Overlay that might block clicks */
 .auth-header-container * {
     pointer-events: auto !important;
-    z-index: 9999 !important;
 }

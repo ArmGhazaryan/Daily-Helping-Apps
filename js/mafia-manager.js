@@ -477,7 +477,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const nightModal = document.getElementById('nightModal');
     
     window.goToNightStep = function(stepNum) {
-        document.querySelectorAll('.night-step').forEach(el => el.classList.add('is-hidden'));
+        document.querySelectorAll('.night-step').forEach(el => {
+            el.classList.add('is-hidden');
+            el.classList.remove('is-visible');
+        });
         const stepEl = document.getElementById(`nightStep${stepNum}`);
         if(stepEl) stepEl.classList.remove('is-hidden');
         if(stepEl) stepEl.classList.add('is-visible');
@@ -702,6 +705,19 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsModal.classList.remove('is-hidden');
         settingsModal.classList.add('is-visible');
     });
+    // Close settings/rules with Escape or a click on the dark backdrop
+    const closeModal = (m) => {
+        m.classList.add('is-hidden');
+        m.classList.remove('is-visible', 'active');
+    };
+    [settingsModal, rulesModal].forEach(m => {
+        m?.addEventListener('click', (e) => { if (e.target === m) closeModal(m); });
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        [settingsModal, rulesModal].forEach(m => { if (m?.classList.contains('is-visible')) closeModal(m); });
+    });
+
     if(closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => {
         settingsModal.classList.add('is-hidden');
         settingsModal.classList.remove('is-visible', 'active');

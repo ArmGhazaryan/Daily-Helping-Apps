@@ -1,34 +1,24 @@
 Task Goal:
-Fix the broken "Log In / Sign Up" button visibility, dead clicks, and post-login redirect across ALL 7 pages by inspecting and fixing the underlying JavaScript and CSS files (not just HTML).
+Fix two specific issues on `HTML-Files/mafia-manager.html`:
+1. Make the logged-in user badge (`Arm_Ghazaryan`, role badge, `Logout` button) render properly in the top-right header just like on `index.html` and `HTML-Files/English-Flashcards.html`.
+2. Prevent browsers (Microsoft Edge / Chrome) from showing the automatic "Translate page from Armenian?" popup every time `mafia-manager.html` is opened.
 
-Execution Strategy (CRITICAL TO AVOID TIMEOUTS):
-- Phase A (Inspect JS & CSS First): Read `HTML-Files/rubiks-timer.html`, `js/rubiks-timer.js`, the dedicated Auth HTML + Auth JS file, `js/global-auth.js`, `css/global-auth.css`, `index.html`, and `js/index.js` to see the exact JS/CSS differences between the working Rubiks-Timer page and the broken pages.
-- Phase B (Fix Auth JS & Global Auth JS/CSS): Update the Auth page's JS and `js/global-auth.js` + `css/global-auth.css`.
-- Phase C (Clean Page-Specific JS/CSS Conflicts): Remove conflicting old auth handlers from `js/index.js`, `js/English-Flashcards.js`, and other page JS/CSS files, and ensure all 7 HTML files load `global-auth.css` and `global-auth.js` with valid relative paths.
-- Make ONLY targeted, surgical edits. NEVER rewrite entire files from scratch.
-- STRICT RULE: DO NOT use terminal commands. Edit files directly.
+File Scope (STRICT):
+- Read & Edit: `HTML-Files/mafia-manager.html` (and `js/mafia-manager.js` ONLY if it interferes with `#auth-header-container`)
+- Read-Only Reference: `HTML-Files/English-Flashcards.html` and `js/global-auth.js`
 
-EXACT JS & CSS FIXES REQUIRED:
+EXACT FIXES REQUIRED:
 
-1. Inspect & Fix the Dedicated Auth Page's `.js` File (Post-Login & OAuth Redirect):
-   - Open the Auth page's `.js` file (the page that `rubiks-timer.html` navigates to for login).
-   - Remove any hardcoded redirect (such as `window.location.href = '../index.html'`).
-   - On Auth page load, read `?redirect=` from `window.location.search` and store it in both `sessionStorage.setItem('dha_return_url', ...)` and `localStorage.setItem('dha_return_url', ...)` so it survives full-page Google OAuth redirects.
-   - For Google OAuth (`supabase.auth.signInWithOAuth`), ensure `options.redirectTo` points back to the Auth page URL (or preserves the return URL) so `onAuthStateChange` (`SIGNED_IN`) executes our redirect logic instead of dumping the user on `index.html`.
-   - After successful Email/Password login/signup OR Google `SIGNED_IN`, redirect to:
-     `const target = sessionStorage.getItem('dha_return_url') || localStorage.getItem('dha_return_url') || '../index.html';`
-     (clear stored return URL and run `window.location.replace(target)`).
+1. Fix Auth Session & Header User Display (`HTML-Files/mafia-manager.html`):
+   - Compare the `<head>` and bottom `<script>` tags of `HTML-Files/mafia-manager.html` directly against `HTML-Files/English-Flashcards.html`.
+   - Ensure `HTML-Files/mafia-manager.html` loads:
+     * `../css/global-auth.css` in `<head>`
+     * The Supabase JS CDN script (`https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2`), followed by `../js/supabase.js`, followed by `../js/global-auth.js` in the exact same order as `English-Flashcards.html` BEFORE `../js/mafia-manager.js`.
+   - Ensure `<div id="auth-header-container"></div>` is explicitly present inside the top-right header area and that no code in `js/mafia-manager.js` overwrites or clears the header container.
 
-2. Make `js/global-auth.js` & `css/global-auth.css` Self-Contained and Bulletproof:
-   - In `js/global-auth.js`, auto-detect whether the current page is in root (`index.html`) or inside `HTML-Files/` using `window.location.pathname.includes('/HTML-Files/')`.
-   - Dynamically find the page's top `<header>` or `.navbar` / `.top-bar` on ALL 7 pages—even if a page (`workout-tracker.html`, `mafia-manager.html`, `code-snippets.html`, `smart-tasks.html`) is missing an auth slot in its HTML, `js/global-auth.js` MUST automatically inject the right-aligned auth container (`Log In / Sign Up` button when logged out; user badge + `Logout` button when logged in).
-   - Bind click listeners directly inside `js/global-auth.js` using `e.preventDefault(); e.stopPropagation();`, saving `window.location.href` to `sessionStorage` and `localStorage` (`dha_return_url`), and navigating to the exact relative Auth page path with `?redirect=...`.
-   - In `css/global-auth.css`, give the header auth container and button `position: relative; z-index: 9999; pointer-events: auto; display: inline-flex !important;` so NO page-specific CSS (`overlay`, `header`, `.is-hidden`) can hide it or block clicks.
-
-3. Remove Conflicting Auth Code in Page-Specific JS & CSS Files:
-   - Inspect `js/index.js`, `js/English-Flashcards.js`, `js/workout-tracker.js`, `js/mafia-manager.js`, `js/code-snippets.js`, and `js/smart-tasks.js`.
-   - Remove or disable any duplicate/broken `Log In / Sign Up` click handlers or header `innerHTML` overwrites that conflict with `js/global-auth.js`.
-   - Verify all 7 HTML files include `<link rel="stylesheet" href="...">` for `global-auth.css` and `<script src="...">` for `global-auth.js` with the exact right relative path (`css/...` for `index.html`, `../css/...` for `HTML-Files/*.html`).
-
-4. Verification Report:
-   - State specifically which JS and CSS bugs were found and fixed in each file.
+2. Disable Automatic Browser Translation Popup (`HTML-Files/mafia-manager.html`):
+   - Update the root `<html>` tag in `HTML-Files/mafia-manager.html` to include `translate="no"` and `class="notranslate"`:
+     `<html lang="hy" translate="no" class="notranslate">`
+   - Add `<meta name="google" content="notranslate">` inside `<head>` so Edge and Chrome never trigger the "Translate page from Armenian?" prompt on load.
+   - Make ONLY targeted, surgical edits. NEVER rewrite entire files from scratch.
+   - STRICT RULE: DO NOT use terminal commands. Edit files directly.

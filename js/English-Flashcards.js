@@ -589,6 +589,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function showAuthModal() {
+        if (typeof window.dhaGoToAuth === 'function') {
+            window.dhaGoToAuth();
+            return;
+        }
         const modal = document.getElementById('auth-modal');
         if (modal) {
             modal.classList.remove('is-hidden');

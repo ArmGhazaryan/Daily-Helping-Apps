@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <title>Settings | DHA</title>
+    <link rel="icon" type="image/png" href="../Img/logo.png">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/global-auth.css">
+    <link rel="stylesheet" href="../css/settings.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <header>
+        <a href="../index.html" class="dha-brand" title="Daily Helping Apps">
+            <span class="letter">D</span><span class="expand">aily</span>
+            <span class="letter">H</span><span class="expand">elping</span>
+            <span class="letter">A</span><span class="expand">pps</span>
+        </a>
+        <a href="../index.html" class="back-btn">← Back to Dashboard</a>
+        <div id="auth-header-container"></div>
+    </header>
+
+    <div class="settings-page">
+        <aside class="settings-sidebar">
+            <div class="settings-brand">⚙️ Settings</div>
+            <nav class="settings-tabs">
+                <button type="button" class="settings-tab active" data-tab="profile">Public Profile</button>
+                <button type="button" class="settings-tab" data-tab="security">Account & Security</button>
+            </nav>
+        </aside>
+
+        <section class="settings-content">
+            <div class="settings-panel active" id="panel-profile">
+                <div class="settings-panel-header">
+                    <h2>Public Profile</h2>
+                    <p>Manage your public profile information.</p>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-form">
+                        <div class="input-group">
+                            <label for="settings-display-name">Display Name</label>
+                            <input type="text" id="settings-display-name" placeholder="Your display name">
+                            <p class="input-note">Your name appears across all Daily Helping Apps pages.</p>
+                        </div>
+                        <div class="input-group">
+                            <label for="settings-email">Email</label>
+                            <input type="email" id="settings-email" readonly placeholder="Email">
+                        </div>
+                        <div class="input-group">
+                            <label for="settings-bio">Bio</label>
+                            <textarea id="settings-bio" placeholder="Tell a little bit about yourself"></textarea>
+                        </div>
+                        <button type="button" class="btn-primary" id="settings-update-btn">Update Profile</button>
+                        <p id="settings-toast" class="settings-toast"></p>
+                    </div>
+                    <div class="profile-avatar-card">
+                        <div class="avatar-wrapper">
+                            <div class="avatar-preview" id="settings-avatar-preview">A</div>
+                            <button type="button" class="avatar-edit-btn" id="settings-avatar-edit" title="Edit avatar theme">Edit</button>
+                        </div>
+                        <div class="avatar-note">Choose your avatar gradient theme</div>
+                        <div class="theme-popover" id="settings-theme-popover">
+                            <div class="theme-popover-header">
+                                <span>Avatar Theme</span>
+                                <button type="button" class="theme-close" id="settings-theme-close">×</button>
+                            </div>
+                            <div class="theme-grid" id="settings-theme-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-panel" id="panel-security">
+                <div class="settings-panel-header">
+                    <h2>Account & Security</h2>
+                    <p>Manage your sign-in methods and password.</p>
+                </div>
+                <div class="security-info">
+                    <div class="info-row">
+                        <span class="info-label">Sign-in method</span>
+                        <span class="info-value" id="security-signin-method">—</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Account role</span>
+                        <span class="info-value" id="security-role">User</span>
+                    </div>
+                </div>
+                <div class="security-form-card">
+                    <h3>Change Password</h3>
+                    <form id="settings-password-form">
+                        <div class="input-group">
+                            <label for="settings-new-password">New Password</label>
+                            <input type="password" id="settings-new-password" placeholder="••••••••" minlength="6">
+                        </div>
+                        <div class="input-group">
+                            <label for="settings-confirm-password">Confirm Password</label>
+                            <input type="password" id="settings-confirm-password" placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn-primary">Update Password</button>
+                    </form>
+                    <p class="security-note">Password changes apply to email/password accounts only.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/supabase.js"></script>
+    <script src="../js/global-auth.js"></script>
+    <script src="../js/settings.js"></script>
+</body>
+</html>

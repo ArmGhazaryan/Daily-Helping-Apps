@@ -4,6 +4,9 @@ const tabSignup = document.getElementById('tab-signup');
 const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
 const authMessage = document.getElementById('auth-message');
+const forgotPasswordLink = document.getElementById('forgot-password-link');
+const resetPasswordForm = document.getElementById('reset-password-form');
+const backToLoginLink = document.getElementById('back-to-login-link');
 
 // 🟢 Post-login return URL handling (dedicated auth page only)
 const RETURN_URL_KEY = 'dha_return_url';
@@ -64,6 +67,12 @@ if (isAuthPage) {
     // Google OAuth returns to this page (supabase.js redirectTo = current page URL)
     let redirecting = false;
     supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+            authMessage.classList.add('auth-msg-info');
+            authMessage.classList.remove('auth-msg-error', 'auth-msg-success');
+            authMessage.textContent = 'Password reset link sent. Check your email to set a new password.';
+            return;
+        }
         if (redirecting || !session?.user) return;
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
             redirecting = true;
@@ -78,6 +87,7 @@ tabLogin?.addEventListener('click', () => {
     tabSignup.classList.remove('active');
     loginForm.classList.remove('hidden');
     signupForm.classList.add('hidden');
+    resetPasswordForm.classList.add('hidden');
     authMessage.textContent = '';
 });
 
@@ -86,6 +96,7 @@ tabSignup?.addEventListener('click', () => {
     tabLogin.classList.remove('active');
     signupForm.classList.remove('hidden');
     loginForm.classList.add('hidden');
+    resetPasswordForm.classList.add('hidden');
     authMessage.textContent = '';
 });
 
@@ -158,6 +169,52 @@ loginForm?.addEventListener('submit', async (e) => {
         
         if (isAuthPage) redirectToReturnUrl();
         else window.location.reload();
+    }
+});
+
+// 🟢 Forgot Password → Reset flow
+forgotPasswordLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.classList.add('hidden');
+    signupForm.classList.add('hidden');
+    resetPasswordForm.classList.remove('hidden');
+    tabLogin.classList.remove('active');
+    tabSignup.classList.remove('active');
+    authMessage.textContent = '';
+});
+
+backToLoginLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    resetPasswordForm.classList.add('hidden');
+    loginForm.classList.remove('hidden');
+    tabLogin.classList.add('active');
+    authMessage.textContent = '';
+});
+
+resetPasswordForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('reset-email').value.trim();
+
+    authMessage.classList.add('auth-msg-info');
+    authMessage.classList.remove('auth-msg-error', 'auth-msg-success');
+    authMessage.textContent = 'Sending reset link...';
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(
+      email,
+      window.location.protocol === 'http:' || window.location.protocol === 'https:'
+        ? { redirectTo: new URL('auth.html', window.location.href).href }
+        : undefined
+    );
+
+    if (error) {
+        authMessage.classList.add('auth-msg-error');
+        authMessage.classList.remove('auth-msg-info', 'auth-msg-success');
+        authMessage.textContent = error.message;
+    } else {
+        authMessage.classList.add('auth-msg-success');
+        authMessage.classList.remove('auth-msg-info', 'auth-msg-error');
+        authMessage.textContent = 'Password reset link sent! Check your email.';
+        document.getElementById('reset-email').value = '';
     }
 });
 

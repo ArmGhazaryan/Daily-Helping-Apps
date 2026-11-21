@@ -1,5 +1,5 @@
 // Service Worker for Daily Productivity & Fitness PWA
-const CACHE_NAME = 'daily-app-v18';
+const CACHE_NAME = 'daily-app-v19';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const APP_SHELL = [
   './css/main.css',
   './css/auth.css',
   './css/global-auth.css',
+  './css/settings.css',
   './css/admin-dashboard.css',
   './css/admin.css',
   './css/English-Flashcards.css',
@@ -18,11 +19,13 @@ const APP_SHELL = [
   './HTML-Files/English-Flashcards.html',
   './HTML-Files/mafia-manager.html',
   './HTML-Files/rubiks-timer.html',
+  './HTML-Files/settings.html',
   './HTML-Files/workout-tracker.html',
   './js/supabase.js',
   './js/header-auth.js',
   './js/auth-ui.js',
   './js/global-auth.js',
+  './js/settings.js',
   './js/admin-dashboard.js',
   './js/English-Flashcards.js',
   './js/flashcards.js',

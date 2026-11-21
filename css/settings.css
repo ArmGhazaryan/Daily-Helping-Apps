@@ -1,0 +1,409 @@
+/* ==========================================
+   DHA Settings Page - dark glassmorphic
+   ========================================== */
+.settings-page {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.settings-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(94, 114, 148, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.settings-brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #f8fafc;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(94, 114, 148, 0.25);
+    border-radius: 10px;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.settings-tab:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #f8fafc;
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.settings-tab.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #3b82f6;
+}
+
+.settings-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- Public Profile --- */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+    align-items: start;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.input-group input,
+.input-group textarea {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(94, 114, 148, 0.35);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group input::placeholder,
+.input-group textarea::placeholder {
+    color: #64748b;
+}
+
+.input-group input:focus,
+.input-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.input-group input[readonly] {
+    background: rgba(15, 23, 42, 0.3);
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.input-note {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.input-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.btn-primary {
+    width: fit-content;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    align-self: flex-start;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+.btn-primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.settings-toast {
+    margin-top: 8px;
+    font-size: 0.88rem;
+    color: #34d399;
+    font-weight: 600;
+    min-height: 1.2em;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.settings-toast.show {
+    opacity: 1;
+}
+
+/* --- Avatar card --- */
+.profile-avatar-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(94, 114, 148, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    backdrop-filter: blur(10px);
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: fit-content;
+    margin: 0 auto 12px auto;
+}
+
+.avatar-preview {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 2.2rem;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.avatar-edit-btn {
+    position: absolute;
+    bottom: -6px;
+    left: -6px;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: background 0.2s;
+}
+
+.avatar-edit-btn:hover {
+    background: #2563eb;
+}
+
+.avatar-note {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 14px;
+}
+
+/* --- Theme popover --- */
+.theme-popover {
+    position: absolute;
+    top: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(94, 114, 148, 0.4);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.theme-popover.open {
+    display: flex;
+}
+
+.theme-popover-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(94, 114, 148, 0.25);
+    margin-bottom: 8px;
+}
+
+.theme-popover-header span {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #f8fafc;
+}
+
+.theme-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.theme-close:hover {
+    color: #f8fafc;
+}
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.theme-option {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.theme-option:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.theme-option.active {
+    border-color: #fff;
+    transform: scale(1.1);
+}
+
+/* --- Account & Security --- */
+.security-info {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(94, 114, 148, 0.25);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(94, 114, 148, 0.15);
+    color: #e2e8f0;
+    font-size: 0.95rem;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #94a3b8;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+.security-form-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(94, 114, 148, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.security-form-card h3 {
+    font-size: 1.1rem;
+    color: #f8fafc;
+    margin: 0 0 16px 0;
+}
+
+.security-note {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 12px;
+}
+
+.security-form-card .btn-primary {
+    margin-top: 8px;
+}
+
+/* --- Back button (page-specific) --- */
+.back-btn {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #f8fafc;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .settings-page {
+        flex-direction: column;
+        padding: 16px;
+    }
+    .settings-sidebar {
+        width: 100%;
+    }
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+    .profile-avatar-card {
+        order: -1;
+    }
+}

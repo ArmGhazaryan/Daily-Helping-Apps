@@ -1,24 +1,16 @@
 Task Goal:
-Fix two specific issues on `HTML-Files/mafia-manager.html`:
-1. Make the logged-in user badge (`Arm_Ghazaryan`, role badge, `Logout` button) render properly in the top-right header just like on `index.html` and `HTML-Files/English-Flashcards.html`.
-2. Prevent browsers (Microsoft Edge / Chrome) from showing the automatic "Translate page from Armenian?" popup every time `mafia-manager.html` is opened.
+Fix the Supabase `resetPasswordForEmail` argument type error (`cannot unmarshal object into Go struct field RecoverParams.email of type string`) so password reset emails send properly, and improve the contrast of the `← Back to login` link.
 
 File Scope (STRICT):
-- Read & Edit: `HTML-Files/mafia-manager.html` (and `js/mafia-manager.js` ONLY if it interferes with `#auth-header-container`)
-- Read-Only Reference: `HTML-Files/English-Flashcards.html` and `js/global-auth.js`
+- Read & Edit: `js/auth-ui.js`, `js/supabase.js` (if a helper wrapper exists there), and `css/auth.css`
+- STRICT RULE: DO NOT use terminal commands. Edit files directly.
 
 EXACT FIXES REQUIRED:
 
-1. Fix Auth Session & Header User Display (`HTML-Files/mafia-manager.html`):
-   - Compare the `<head>` and bottom `<script>` tags of `HTML-Files/mafia-manager.html` directly against `HTML-Files/English-Flashcards.html`.
-   - Ensure `HTML-Files/mafia-manager.html` loads:
-     * `../css/global-auth.css` in `<head>`
-     * The Supabase JS CDN script (`https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2`), followed by `../js/supabase.js`, followed by `../js/global-auth.js` in the exact same order as `English-Flashcards.html` BEFORE `../js/mafia-manager.js`.
-   - Ensure `<div id="auth-header-container"></div>` is explicitly present inside the top-right header area and that no code in `js/mafia-manager.js` overwrites or clears the header container.
+1. Fix `resetPasswordForEmail` Argument Signature (`js/auth-ui.js` & `js/supabase.js`):
+   - Locate where `resetPasswordForEmail` is called.
+   - Ensure the FIRST argument passed to `supabaseClient.auth.resetPasswordForEmail(email, options)` is a plain trimmed `string` (e.g., `email.trim()`), NOT an object like `{ email }`.
+   - Pass `{ redirectTo: new URL('auth.html', window.location.href).href }` as the SECOND argument (when on `http:` or `https:`), so clicking the email recovery link returns the user directly to `auth.html` where the `PASSWORD_RECOVERY` listener renders the new-password form.
 
-2. Disable Automatic Browser Translation Popup (`HTML-Files/mafia-manager.html`):
-   - Update the root `<html>` tag in `HTML-Files/mafia-manager.html` to include `translate="no"` and `class="notranslate"`:
-     `<html lang="hy" translate="no" class="notranslate">`
-   - Add `<meta name="google" content="notranslate">` inside `<head>` so Edge and Chrome never trigger the "Translate page from Armenian?" prompt on load.
-   - Make ONLY targeted, surgical edits. NEVER rewrite entire files from scratch.
-   - STRICT RULE: DO NOT use terminal commands. Edit files directly.
+2. Fix `← Back to login` Link Visibility (`css/auth.css`):
+   - Style the `← Back to login` link inside the auth card with `#60a5fa` (hover `#93c5fd`) and `text-decoration: none` so it is clearly readable against the dark card background.

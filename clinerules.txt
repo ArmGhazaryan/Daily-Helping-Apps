@@ -22,3 +22,10 @@
   - STRICT BOUNDARY: You are restricted to the current VS Code workspace folder.
 - DO NOT touch, read, or modify any files on the Desktop or outside this project.
 - DO NOT use terminal commands to delete files. Use file system tools instead.
+
+# Zero-Regression & Overlay Safety Rule
+- Whenever adding modals, drawers, backdrops, or any `position: fixed` overlay:
+  * The **closed/hidden state** MUST enforce `pointer-events: none` AND `visibility: hidden` (or `display: none`) so invisible overlays never block page clicks, hovers, or focus.
+  * The **open/visible state** MUST set `pointer-events: auto` AND `visibility: visible` on the overlay, and any inner interactive container (e.g. a drawer panel) MUST have a higher `z-index` than its backdrop so inner buttons/links remain clickable.
+  * CSS open/close class names MUST exactly match the classes toggled by JavaScript (e.g. if JS adds `.open`, CSS must style `.open`).
+- Before finishing any task, verify that existing navigation links, dashboard cards, auth controls, and database operations remain 100% functional.

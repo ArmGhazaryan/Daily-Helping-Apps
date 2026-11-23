@@ -152,6 +152,7 @@ header {
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     overflow: visible !important;
+    pointer-events: auto;
     transform: rotateY(0deg) !important;
 }
 
@@ -166,6 +167,7 @@ header {
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
     overflow: hidden !important;
+    pointer-events: none;
     transform: rotateY(180deg) !important;
     display: flex !important;
     flex-direction: column !important;
@@ -189,12 +191,21 @@ header {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
+.flashcard-back .level-badge {
+    position: static;
+    top: auto;
+    right: auto;
+    margin-left: auto;
+}
+
 /* Տեքստային ոճեր */
 .word {
-    font-size: 2.2rem;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
     font-weight: 700;
     color: #38bdf8;
     margin-bottom: 10px;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 
 .hint {
@@ -317,8 +328,23 @@ header {
     -webkit-backdrop-filter: blur(5px);
 }
 
+/* Closed overlay: no pointer events, invisible, never blocks underlying clicks */
+.modal-overlay.is-hidden {
+    display: none !important;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* Open overlay: pointer events restored, visible, flex-centered content */
+.modal-overlay.is-visible {
+    display: flex !important;
+    pointer-events: auto;
+    visibility: visible;
+}
+
 /* Modal-ի բուն պատուհանը */
 .modal-content {
+    position: relative;
     background: #1e293b;
     padding: 30px;
     border-radius: 16px;
@@ -1783,8 +1809,10 @@ header {
    📝 Flashcard Back — Content Sizing & Spacing
    ========================================== */
 .flashcard-back .word {
-    font-size: 1.8rem !important;
+    font-size: clamp(1.5rem, 3vw, 2.25rem) !important;
     margin-bottom: 6px !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
 }
 
 .flashcard-back .definition {
@@ -1823,9 +1851,7 @@ header {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    position: absolute;
-    top: 16px;
-    left: 0;
+    margin-bottom: 12px;
     padding: 0 20px;
     box-sizing: border-box;
 }
@@ -2017,6 +2043,17 @@ header {
 }
 .noteModal.is-hidden {
     display: none !important;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* Open note modal — both .noteModal.is-visible AND .game-results-modal.is-visible
+   must be visible so that removing only 'is-hidden' and adding 'is-visible' works */
+.noteModal.is-visible,
+.game-results-modal.is-visible {
+    display: flex !important;
+    pointer-events: auto;
+    visibility: visible;
 }
 .noteModal .results-card {
     max-width: 450px;

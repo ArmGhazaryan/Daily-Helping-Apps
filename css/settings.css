@@ -73,6 +73,10 @@
     gap: 20px;
 }
 
+.settings-panel.is-hidden {
+    display: none !important;
+}
+
 /* --- Public Profile --- */
 .profile-grid {
     display: grid;

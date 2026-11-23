@@ -1,16 +1,23 @@
 Task Goal:
-Fix the Supabase `resetPasswordForEmail` argument type error (`cannot unmarshal object into Go struct field RecoverParams.email of type string`) so password reset emails send properly, and improve the contrast of the `← Back to login` link.
+Fix the `Account role` field inside `HTML-Files/settings.html` (`Account & Security` panel) so it accurately displays `Admin` (matching the top-right header badge) instead of staying stuck on `User`.
 
 File Scope (STRICT):
-- Read & Edit: `js/auth-ui.js`, `js/supabase.js` (if a helper wrapper exists there), and `css/auth.css`
-- STRICT RULE: DO NOT use terminal commands. Edit files directly.
+- Read-Only Reference: `js/global-auth.js` and `HTML-Files/settings.html`
+- Read & Edit: `js/settings.js` (and `HTML-Files/settings.html` ONLY if the role element lacks a clean ID/selector), plus bump `js/sw.js` cache version per `clinerules.txt`.
+- STRICT RULE: DO NOT use terminal commands. Make ONLY targeted, surgical edits. NEVER rewrite entire files from scratch.
 
-EXACT FIXES REQUIRED:
+EXACT FIX STEPS:
 
-1. Fix `resetPasswordForEmail` Argument Signature (`js/auth-ui.js` & `js/supabase.js`):
-   - Locate where `resetPasswordForEmail` is called.
-   - Ensure the FIRST argument passed to `supabaseClient.auth.resetPasswordForEmail(email, options)` is a plain trimmed `string` (e.g., `email.trim()`), NOT an object like `{ email }`.
-   - Pass `{ redirectTo: new URL('auth.html', window.location.href).href }` as the SECOND argument (when on `http:` or `https:`), so clicking the email recovery link returns the user directly to `auth.html` where the `PASSWORD_RECOVERY` listener renders the new-password form.
+1. Copy the Exact Working Role Check from `js/global-auth.js`:
+   - Inspect `js/global-auth.js` to see the exact Supabase `profiles` table query, column name (e.g., `role`, `is_admin`, etc.), and condition that determines whether the user is an `Admin`.
 
-2. Fix `← Back to login` Link Visibility (`css/auth.css`):
-   - Style the `← Back to login` link inside the auth card with `#60a5fa` (hover `#93c5fd`) and `text-decoration: none` so it is clearly readable against the dark card background.
+2. Locate the Exact Target Element in `HTML-Files/settings.html`:
+   - Find the exact HTML element inside the `Account & Security` section that currently renders the `Account role` value (`User`).
+
+3. Update `js/settings.js` to Render the Real Role:
+   - Query `profiles` for the logged-in `user.id` using that exact same column and condition from `js/global-auth.js`.
+   - Set the target element's `textContent` to `'Admin'` when the user has admin privileges (or `'User'` otherwise), removing any hardcoded `'User'` overwrite.
+   - Log any query error with `console.error('Settings role load error:', error)` if something fails.
+
+4. Cache Busting (`js/sw.js`):
+   - Bump the service worker cache version in `js/sw.js` so the updated `settings.js` loads immediately.

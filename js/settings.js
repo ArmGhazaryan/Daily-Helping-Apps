@@ -42,9 +42,20 @@
     document.querySelectorAll(".settings-tab").forEach((tab) => {
         tab.addEventListener("click", () => {
             document.querySelectorAll(".settings-tab").forEach((t) => t.classList.remove("active"));
-            document.querySelectorAll(".settings-panel").forEach((p) => p.classList.remove("active"));
             tab.classList.add("active");
-            document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+
+            document.querySelectorAll(".settings-panel").forEach((p) => {
+                p.classList.add("is-hidden");
+                p.classList.remove("active");
+            });
+
+            if (tab.dataset.tab === "profile") {
+                document.getElementById("panel-profile").classList.remove("is-hidden");
+                document.getElementById("panel-profile").classList.add("active");
+            } else if (tab.dataset.tab === "security") {
+                document.getElementById("panel-security").classList.remove("is-hidden");
+                document.getElementById("panel-security").classList.add("active");
+            }
         });
     });
 
@@ -56,10 +67,36 @@
             btn.className = "theme-option" + (t.key === selectedThemeKey ? " active" : "");
             btn.style.background = t.gradient;
             btn.title = t.label;
-            btn.addEventListener("click", () => {
+            btn.addEventListener("click", async () => {
                 selectedThemeKey = t.key;
                 renderThemeGrid();
                 avatarPreview.style.background = t.gradient;
+
+                // Persist avatar_theme to Supabase Auth immediately
+                const { error } = await supabaseClient.auth.updateUser({
+                    data: {
+                        ...(currentUser?.user_metadata || {}),
+                        avatar_theme: selectedThemeKey
+                    }
+                });
+
+                if (error) {
+                    console.error("Error saving avatar theme:", error);
+                }
+
+                // Update drawer and top-right header pill avatar immediately
+                if (currentUser && window.dhaUpdateDrawerInfo) {
+                    window.dhaUpdateDrawerInfo(currentUser);
+                }
+
+                // Update the top-right header pill avatar gradient
+                const headerPill = document.querySelector('#user-pill .pill-avatar');
+                if (headerPill) {
+                    headerPill.style.background = t.gradient;
+                }
+
+                // Show toast confirmation
+                showToast("Avatar theme saved");
             });
             themeGrid.appendChild(btn);
         });
@@ -68,6 +105,27 @@
     async function loadProfile(user) {
         currentUser = user;
         const metadata = user.user_metadata || {};
+
+        const client = window.supabaseClient;
+        if (client) {
+            try {
+                const { data: profile } = await client
+                    .from("profiles")
+                    .select("is_admin")
+                    .eq("id", user.id)
+                    .maybeSingle();
+                if (profile?.is_admin === true) {
+                    roleEl.textContent = "Admin";
+                } else {
+                    roleEl.textContent = "User";
+                }
+            } catch (e) {
+                console.error('Settings role load error:', e);
+                roleEl.textContent = "User";
+            }
+        } else {
+            roleEl.textContent = "User";
+        }
         const email = user.email || "";
         const emailPrefix = email.split("@")[0];
 
@@ -83,7 +141,6 @@
 
         const isGoogle = user.app_metadata?.provider === "google" || user.user_metadata?.provider === "google";
         signinMethodEl.textContent = isGoogle ? "Google OAuth" : "Email & Password";
-        roleEl.textContent = user.user_metadata?.is_admin === true ? "Admin" : "User";
 
         // Helpful note for Google OAuth users: setting a password links an Email/Password login method
         const securityNoteEl = document.querySelector(".security-note");

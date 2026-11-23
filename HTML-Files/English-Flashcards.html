@@ -307,7 +307,7 @@
             </div>
         </section>
 
-        <div id="matching-completion-modal" class="modal-overlay matching-modal">
+        <div id="matching-completion-modal" class="modal-overlay matching-modal is-hidden">
             <div class="modal-content matching-result">
                 <h2 id="matching-result-title">🎉 Congratulations!</h2>
                 <p id="matching-result-time">Time: 0.0s</p>
@@ -320,9 +320,10 @@
         </div>
 
         <!-- Թաքնված Փոփ-ափ (Modal) պատուհանը նոր բառերի համար -->
-        <div id="addWordModal" class="modal-overlay">
+        <div id="addWordModal" class="modal-overlay is-hidden">
             <div class="modal-content">
                 <h2>Add New Flashcard</h2>
+                <button id="addWordCloseBtn" class="modal-close-btn" aria-label="Close modal">&times;</button>
                 <input type="text" id="newWord" placeholder="Word (e.g., Eloquent)" required>
                 <select id="newLevel">
                     <option value="A2">A2 Level</option>

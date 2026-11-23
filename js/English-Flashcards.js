@@ -325,6 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const openModalBtn = document.getElementById('openModalBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     const saveWordBtn = document.getElementById('saveWordBtn');
+    const addWordCloseBtn = document.getElementById('addWordCloseBtn');
     const adminGlobalToggle = document.getElementById('adminGlobalToggle');
     const newIsGlobal = document.getElementById('newIsGlobal');
 
@@ -959,8 +960,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Open note modal
     if (addNoteBtn) {
-        addNoteBtn.addEventListener('click', (e) => {
+        addNoteBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
+            const user = await getCurrentUser();
+            if (!user) {
+                showAuthModal();
+                return;
+            }
             const currentCard = flashcardsData[currentIndex];
             if (!currentCard) return;
             if (noteModalWord) noteModalWord.textContent = currentCard.word;
@@ -1030,12 +1036,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Close note modal on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && noteModal && !noteModal.classList.contains('is-hidden')) {
+            noteModal.classList.add('is-hidden');
+            noteModal.classList.remove('is-visible', 'active');
+        }
+    });
+
     // Delegate clicks on dynamic note badges/buttons (rendered inside renderCard)
     // to open the Personal Memory Note modal without flipping the card.
-    document.addEventListener('click', (e) => {
-        const noteBtn = e.target.closest('.btn-view-note, .short-note-badge');
+    document.addEventListener('click', async (e) => {
+        const noteBtn = e.target.closest('.btn-view-note, .short-note-badge, .card-action-btn');
         if (!noteBtn) return;
         e.stopPropagation();
+        const user = await getCurrentUser();
+        if (!user) {
+            showAuthModal();
+            return;
+        }
         openNoteModal(noteBtn.dataset.noteKey || '');
     });
 
@@ -1317,6 +1336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if(addWordCloseBtn) addWordCloseBtn.addEventListener('click', closeModal);
 
     // Backdrop click & Escape to close add-word modal
     if (modal) {

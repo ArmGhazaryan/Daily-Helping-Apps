@@ -1,23 +1,33 @@
 Task Goal:
-Fix the `Account role` field inside `HTML-Files/settings.html` (`Account & Security` panel) so it accurately displays `Admin` (matching the top-right header badge) instead of staying stuck on `User`.
+Perform a comprehensive, site-wide Responsive Design & Layout Optimization across ALL pages and components of Daily Helping Apps (`index.html`, `HTML-Files/English-Flashcards.html`, `HTML-Files/workout-tracker.html`, `HTML-Files/rubiks-timer.html`, `HTML-Files/mafia-manager.html`, `HTML-Files/settings.html`, `HTML-Files/auth.html`, plus shared headers, drawers, modals, and Admin Console) so the entire site looks polished, proportional, and overflow-free on Mobile (`360px–480px`), Tablet (`768px–1024px`), Desktop (`1280px+`), and Ultrawide screens.
 
-File Scope (STRICT):
-- Read-Only Reference: `js/global-auth.js` and `HTML-Files/settings.html`
-- Read & Edit: `js/settings.js` (and `HTML-Files/settings.html` ONLY if the role element lacks a clean ID/selector), plus bump `js/sw.js` cache version per `clinerules.txt`.
-- STRICT RULE: DO NOT use terminal commands. Make ONLY targeted, surgical edits. NEVER rewrite entire files from scratch.
+Execution Rules (CRITICAL):
+- First inspect the existing CSS files (`css/main.css`, `css/global-auth.css`, `css/auth.css`, `css/admin.css`, `css/English-Flashcards.css`, `css/workout-tracker.css`, `css/rubiks-timer.css`, `css/mafia-manager.css`, `css/settings.css`) before editing.
+- Make ONLY targeted, surgical CSS improvements (and minimal `<meta name="viewport">` / wrapper fixes in HTML ONLY if missing).
+- NEVER rewrite files from scratch, NEVER rename or remove any HTML `id` or `class` used by JavaScript, and NEVER break existing functionality (such as Flashcards 3D flip/Note modal, Settings tab switching, Avatar auto-save, or Auth recovery flow).
+- STRICT RULE: DO NOT use terminal commands. Edit files directly.
 
-EXACT FIX STEPS:
+EXACT RESPONSIVE OPTIMIZATIONS REQUIRED:
 
-1. Copy the Exact Working Role Check from `js/global-auth.js`:
-   - Inspect `js/global-auth.js` to see the exact Supabase `profiles` table query, column name (e.g., `role`, `is_admin`, etc.), and condition that determines whether the user is an `Admin`.
+1. Global Foundation & Mobile Ergonomics (`css/main.css`):
+   - Enforce `*, *::before, *::after { box-sizing: border-box; }` and `html, body { max-width: 100%; overflow-x: hidden; }` to eliminate horizontal scrolling on every device.
+   - Replace rigid `100vh` full-screen heights with `100dvh` (with `100vh` fallback) so mobile browser address bars never clip bottom content.
+   - Use fluid typography (`clamp()`) for page titles and card headings, and cap ultra-wide desktop containers (`max-width: 1360px; margin-inline: auto;`) so layouts don't over-stretch on large monitors.
+   - On touch devices / screens `<= 768px`, ensure interactive buttons have comfortable touch targets (`min-height: 42px`) and form fields (`input`, `select`, `textarea`) use `font-size: 16px` to prevent iOS Safari auto-zoom on focus.
 
-2. Locate the Exact Target Element in `HTML-Files/settings.html`:
-   - Find the exact HTML element inside the `Account & Security` section that currently renders the `Account role` value (`User`).
+2. Shared Header, Clock, User Pill & Slide-Out Drawer (`css/main.css` & `css/global-auth.css`):
+   - Ensure the top `<header>` adapts cleanly at `<= 600px` and `<= 400px`: prevent the DHA logo, clock, and `#auth-header-container` (User Pill + `Admin` badge) from colliding or overflowing horizontally. Truncate long display names gracefully with `text-overflow: ellipsis` on narrow phones.
+   - Make `#user-drawer` responsive (`width: min(320px, 88vw)`) with proper padding on small screens.
 
-3. Update `js/settings.js` to Render the Real Role:
-   - Query `profiles` for the logged-in `user.id` using that exact same column and condition from `js/global-auth.js`.
-   - Set the target element's `textContent` to `'Admin'` when the user has admin privileges (or `'User'` otherwise), removing any hardcoded `'User'` overwrite.
-   - Log any query error with `console.error('Settings role load error:', error)` if something fails.
+3. Home Page & Admin Console (`css/main.css` & `css/admin.css`):
+   - `.grid-container`: `1fr` on mobile (`<= 640px`), `repeat(2, 1fr)` on tablet (`641px–1024px`), `repeat(3, 1fr)` on desktop (`>= 1025px`).
+   - `#adminInsights` / `.admin-metrics-grid`: `1fr` on small phones (`<= 480px`), `repeat(2, 1fr)` on tablets, `repeat(4, 1fr)` on desktop; wrap `.admin-console-header` buttons cleanly on mobile.
 
-4. Cache Busting (`js/sw.js`):
-   - Bump the service worker cache version in `js/sw.js` so the updated `settings.js` loads immediately.
+4. Page-Specific Responsive Refinements:
+   - **English Flashcards (`css/English-Flashcards.css`)**: Make `.flashcard` / `.flashcard-container` fluid (`width: min(92vw, 520px)`), ensure front/back action buttons (`Note`, audio, favorite, navigation) never overlap card text on `360px` screens, and constrain `#noteModal` and game/results modals to `width: min(94vw, 540px); max-height: 86dvh; overflow-y: auto;`.
+   - **Settings (`css/settings.css`)**: At `<= 768px`, convert the two-column sidebar + panel layout into a single stacked column where the sidebar tabs (`Public Profile`, `Account & Security`) sit horizontally at the top, and ensure the `Avatar Theme` popover stays inside viewport edges without clipping.
+   - **Auth Page (`css/auth.css`)**: Constrain `.auth-card` to `width: min(92vw, 430px)` with comfortable padding on mobile (`<= 480px`) and clean spacing below `.auth-header`.
+   - **Workout Tracker, Rubik's Timer & Mafia Manager (`css/workout-tracker.css`, `css/rubiks-timer.css`, `css/mafia-manager.css`)**: Stack multi-column grids, timers, player rosters, and control bars vertically on `<= 768px`, make any wide tables horizontally scrollable inside a wrapper, and ensure all modals fit within `94vw` and `86dvh`.
+
+5. Service Worker Cache Busting (`js/sw.js`):
+   - Increment `CACHE_NAME` in `js/sw.js` by 1 so all devices immediately receive the updated CSS files.

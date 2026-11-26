@@ -39,6 +39,21 @@
         setTimeout(() => toastEl.classList.remove("show"), 3000);
     }
 
+    function showSettingsStatus(containerEl, type, message, invalidInputs = []) {
+        // Clear any previous input-error highlights
+        document.querySelectorAll(".input-error").forEach(el => el.classList.remove("input-error"));
+
+        // Highlight any passed invalid input elements
+        invalidInputs.forEach(el => {
+            if (el) el.classList.add("input-error");
+        });
+
+        // Update and show the status banner
+        containerEl.className = `settings-status is-${type}`;
+        containerEl.textContent = message;
+        containerEl.style.display = "block";
+    }
+
     document.querySelectorAll(".settings-tab").forEach((tab) => {
         tab.addEventListener("click", () => {
             document.querySelectorAll(".settings-tab").forEach((t) => t.classList.remove("active"));
@@ -149,6 +164,12 @@
                 "Setting a password here links an Email/Password login method to your Google account — you can sign in with either Google or email + password.";
         }
 
+        // Hide Current Password group for pure Google OAuth accounts without email/password identity
+        const currentPasswordGroup = document.getElementById("currentPasswordGroup");
+        if (isGoogle && currentPasswordGroup) {
+            currentPasswordGroup.classList.add("is-hidden");
+        }
+
         renderThemeGrid();
     }
 
@@ -158,6 +179,32 @@
             if (error || !session || !session.user) {
                 window.location.href = "auth.html?redirect=settings.html";
                 return;
+            }
+            // Fallback protection: if recovery mode is active, auto-switch to 
+            // Account & Security tab and hide Current Password input
+            if (sessionStorage.getItem('dha_recovery_mode') === 'true') {
+                // Auto-switch to security tab
+                document.querySelectorAll('.settings-tab').forEach((tab) => {
+                    tab.classList.remove('active');
+                });
+                const securityTab = document.querySelector('.settings-tab[data-tab="security"]');
+                if (securityTab) {
+                    securityTab.classList.add('active');
+                }
+                document.querySelectorAll('.settings-panel').forEach((p) => {
+                    p.classList.add('is-hidden');
+                    p.classList.remove('active');
+                });
+                const securityPanel = document.getElementById('panel-security');
+                if (securityPanel) {
+                    securityPanel.classList.remove('is-hidden');
+                    securityPanel.classList.add('active');
+                }
+                // Hide the Current Password input
+                const currentPasswordGroup = document.getElementById('currentPasswordGroup');
+                if (currentPasswordGroup) {
+                    currentPasswordGroup.classList.add('is-hidden');
+                }
             }
             await loadProfile(session.user);
         } catch (e) {
@@ -189,10 +236,17 @@
     updateBtn.addEventListener("click", async () => {
         const displayName = displayNameInput.value.trim();
         const bio = bioInput.value.trim();
+        const profileStatusEl = document.getElementById("profileStatusMsg");
 
         try {
             updateBtn.disabled = true;
             updateBtn.textContent = "Updating...";
+
+            // Validate display name is not empty
+            if (!displayName.trim()) {
+                showSettingsStatus(profileStatusEl, 'error', "Display name cannot be empty.", [displayNameInput]);
+                return;
+            }
 
             const { data, error } = await supabaseClient.auth.updateUser({
                 data: {
@@ -204,6 +258,7 @@
 
             if (error) throw error;
 
+            showSettingsStatus(profileStatusEl, 'success', "Profile updated successfully.", []);
             showToast("Profile updated successfully.");
 
             if (window.dhaUpdateDrawerInfo && data && data.user) {
@@ -217,8 +272,9 @@
                 currentUser.user_metadata.avatar_theme = selectedThemeKey;
             }
         } catch (err) {
-            console.error("Update profile error:", err);
-            showToast(err.message || "Failed to update profile.");
+            const msg = err.message || "Failed to update profile.";
+            showSettingsStatus(profileStatusEl, 'error', msg, [displayNameInput]);
+            showToast(msg);
         } finally {
             updateBtn.disabled = false;
             updateBtn.textContent = "Update Profile";
@@ -227,33 +283,85 @@
 
     passwordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const newPassword = document.getElementById("settings-new-password").value;
-        const confirmPassword = document.getElementById("settings-confirm-password").value;
 
-        if (newPassword !== confirmPassword) {
-            showToast("Passwords do not match.");
-            return;
-        }
-        if (newPassword.length < 6) {
-            showToast("Password must be at least 6 characters.");
-            return;
-        }
+        const currentPasswordInput = document.getElementById("currentPasswordInput");
+        const newPasswordInput = document.getElementById("settings-new-password");
+        const confirmPasswordInput = document.getElementById("settings-confirm-password");
+
+        let currentPassword = currentPasswordInput?.value || "";
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        // Determine if Current Password group is visible (not hidden for Google OAuth users)
+        const currentPasswordGroup = document.getElementById("currentPasswordGroup");
+        const isCurrentPasswordVisible = currentPasswordGroup && !currentPasswordGroup.classList.contains("is-hidden");
+
+        const securityStatusEl = document.getElementById("securityStatusMsg");
 
         try {
-            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-            if (error) throw error;
-            showToast("Password updated successfully.");
-            passwordForm.reset();
-        } catch (err) {
-            const msg = err.message || "Failed to update password.";
-            // Supabase may surface an email-verification/confirmation notice when a password is set
-            // for a Google (OAuth) account — show it as info rather than a hard failure.
-            if (/verification|confirmation|confirm your email|check your email/i.test(msg)) {
-                showToast(msg);
-            } else {
-                console.error("Change password error:", err);
+            // Disable submit button and show "Updating..." text
+            passwordForm.querySelector("button[type='submit']").disabled = true;
+            passwordForm.querySelector("button[type='submit']").textContent = "Updating...";
+
+            // --- Validation checks in strict order ---
+
+            // 1. Current Password visible & empty
+            if (isCurrentPasswordVisible && !currentPassword.trim()) {
+                showSettingsStatus(securityStatusEl, 'error', "Please enter your current password.", [currentPasswordInput]);
+                return;
+            }
+
+            // 2. New Password empty or < 8 characters
+            if (!newPassword.trim() || newPassword.length < 8) {
+                showSettingsStatus(securityStatusEl, 'error', "New password must be at least 8 characters long.", [newPasswordInput]);
+                return;
+            }
+
+            // 3. New Password !== Confirm Password
+            if (newPassword !== confirmPassword) {
+                showSettingsStatus(securityStatusEl, 'error', "New password and confirm password do not match.", [confirmPasswordInput]);
+                return;
+            }
+
+            // 4. Current Password entered & New Password === Current Password
+            if (currentPassword && newPassword === currentPassword) {
+                showSettingsStatus(securityStatusEl, 'error', "New password must be different from your current password.", [newPasswordInput]);
+                return;
+            }
+
+            // 5. Verify current password via Supabase
+            try {
+                const { error: verifyError } = await supabaseClient.auth.signInWithPassword({
+                    email: currentUser.email,
+                    password: currentPassword
+                });
+                if (verifyError) {
+                    showSettingsStatus(securityStatusEl, 'error', "Current password is incorrect. Please try again.", [currentPasswordInput]);
+                    return;
+                }
+            } catch (err) {
+                showSettingsStatus(securityStatusEl, 'error', "Current password is incorrect. Please try again.", [currentPasswordInput]);
+                return;
+            }
+
+            // 6. Update password via Supabase
+            try {
+                const { error: updateError } = await supabaseClient.auth.updateUser({ password: newPassword });
+                if (updateError) throw updateError;
+
+                // Success: clear all 3 password inputs and show success banner
+                passwordForm.reset();
+                showSettingsStatus(securityStatusEl, 'success', "Password updated successfully.", []);
+                showToast("Password updated successfully.");
+            } catch (err) {
+                const msg = err.message || "Failed to update password. Please try again.";
+                showSettingsStatus(securityStatusEl, 'error', msg, []);
                 showToast(msg);
             }
+        } finally {
+            // Re-enable submit button
+            passwordForm.querySelector("button[type='submit']").disabled = false;
+            passwordForm.querySelector("button[type='submit']").textContent = "Update Password";
         }
     });
 

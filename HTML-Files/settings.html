@@ -59,6 +59,7 @@
                             <textarea id="settings-bio" placeholder="Tell a little bit about yourself"></textarea>
                         </div>
                         <button type="button" class="btn-primary" id="settings-update-btn">Update Profile</button>
+                        <div id="profileStatusMsg" class="settings-status is-hidden"></div>
                         <p id="settings-toast" class="settings-toast"></p>
                     </div>
                     <div class="profile-avatar-card">
@@ -96,14 +97,19 @@
                 <div class="security-form-card">
                     <h3>Change Password</h3>
                     <form id="settings-password-form">
+                        <div class="input-group" id="currentPasswordGroup">
+                            <label for="currentPasswordInput">Current Password</label>
+                            <input type="password" id="currentPasswordInput" placeholder="••••••••" autocomplete="current-password">
+                        </div>
                         <div class="input-group">
                             <label for="settings-new-password">New Password</label>
-                            <input type="password" id="settings-new-password" placeholder="••••••••" minlength="6">
+                            <input type="password" id="settings-new-password" placeholder="••••••••" minlength="8">
                         </div>
                         <div class="input-group">
                             <label for="settings-confirm-password">Confirm Password</label>
                             <input type="password" id="settings-confirm-password" placeholder="••••••••">
                         </div>
+                        <div id="securityStatusMsg" class="settings-status is-hidden"></div>
                         <button type="submit" class="btn-primary">Update Password</button>
                     </form>
                     <p class="security-note">Password changes apply to email/password accounts only.</p>

@@ -1,7 +1,10 @@
 html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    max-width: 100%;
 }
+
+html, body { max-width: 100%; overflow-x: hidden; }
 
 /* Basic Reset */
 * {
@@ -14,12 +17,25 @@ html {
 body {
     background-color: #0f172a; /* Dark theme */
     color: #ffffff;
-    min-height: 100vh;
-    overflow-x: hidden;
+    /* 100dvh with 100vh fallback for mobile browser address bars */
+    min-height: min(100dvh, 100vh);
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
+    max-width: 100%;
+}
+
+/* Cap ultra-wide desktop containers */
+.main-wrapper {
+    max-width: 1360px;
+    margin-inline: auto;
+}
+
+/* Fluid typography for page titles and card headings */
+h1, h2, h3 {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    margin-bottom: 1rem;
 }
 
 /* Background animated shapes */

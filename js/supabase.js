@@ -3,7 +3,13 @@ const SUPABASE_URL = 'https://ypdjnzqkvqgjcrgtefsf.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_7_tQfI0y-jCQODj2RGMxyw_MSXMfHlb'; // Քո Publishable Key-ը
 
 
-// Ավելացնում ենք Auth persistence options
+// 🟢 Capture recovery mode from URL hash/search BEFORE creating client
+const _initialHash = window.location.hash + window.location.search;
+if (_initialHash.includes('type=recovery') || _initialHash.includes('mode=recovery')) {
+    try { sessionStorage.setItem('dha_recovery_mode', 'true'); } catch (e) {}
+}
+
+// Ավելաք Auth persistence options
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
         persistSession: true,        // Պահպանում է session-ը localStorage-ում
@@ -12,7 +18,25 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         storageKey: 'sb_auth_token'  // Հստակ բանալի storage-ի համար
     }
 });
+supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        try { sessionStorage.setItem('dha_recovery_mode', 'true'); } catch (e) {}
+        if (!/\/auth\.html$/i.test(window.location.pathname)) {
+            const isInHtmlFiles = window.location.pathname.toLowerCase().includes('/html-files/');
+            window.location.replace(isInHtmlFiles ? 'auth.html?mode=recovery' : 'HTML-Files/auth.html?mode=recovery') + (window.location.hash || '');
+        }
+    }
+});
 if (typeof window !== 'undefined') { window.supabaseClient = supabaseClient; }
+// 🟢 Immediate redirect: if page loaded other than auth.html with recovery signals, forward to recovery auth page
+if (typeof window !== 'undefined') {
+    const inAuthHtml = window.location.pathname.toLowerCase().endsWith('/auth.html') || window.location.pathname.toLowerCase().endsWith('auth.html');
+    const hasRecoverySignal = window.location.search.includes('mode=recovery') || window.location.hash.includes('type=recovery') || sessionStorage.getItem('dha_recovery_mode') === 'true';
+    if (!inAuthHtml && hasRecoverySignal) {
+        const isInHtmlFiles = window.location.pathname.toLowerCase().includes('/html-files/');
+        window.location.replace(isInHtmlFiles ? 'auth.html?mode=recovery' : 'HTML-Files/auth.html?mode=recovery') + (window.location.hash || '');
+    }
+}
 
 // 🟢 Google OAuth trigger
 async function signInWithGoogle() {
@@ -27,7 +51,16 @@ async function signInWithGoogle() {
       redirectTo: authPageUrl
     }
   });
-  if (error) console.error('Google Sign-In Error:', error.message);
+  if (error) {
+    console.error('Google Sign-In Error:', error.message);
+    // Display error in authMessage if on the auth page
+    const authMessage = document.getElementById('auth-message');
+    if (authMessage) {
+      authMessage.classList.add('auth-msg-error');
+      authMessage.classList.remove('auth-msg-info', 'auth-msg-success');
+      authMessage.textContent = error.message;
+    }
+  }
 }
 
 // 🟢 Profile auto-creation / synchronization

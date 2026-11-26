@@ -299,8 +299,39 @@
         // Show the button immediately so it is never missing, even without Supabase.
         renderLoggedOut(container);
 
+        // Track if PASSWORD_RECOVERY auth state change event has fired
+        let passwordRecoveryEventFired = false;
+
         const client = getClient();
         if (!client) return;
+
+        // --- RECOVERY MODE DETECTION & INTERCEPTION ---
+        // On load: check for recovery hash or query param
+        const recoveryHash = window.location.hash.includes('type=recovery');
+        const recoveryQuery = window.location.search.includes('type=recovery') || passwordRecoveryEventFired;
+        if (recoveryHash || recoveryQuery) {
+            try { sessionStorage.setItem('dha_recovery_mode', 'true'); } catch (e) {}
+        }
+        
+        // Listen for PASSWORD_RECOVERY auth state change
+        client.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                try { sessionStorage.setItem('dha_recovery_mode', 'true'); } catch (e) {}
+            }
+        });
+        
+        
+        const isInHtmlFiles = window.location.pathname.toLowerCase().includes('/html-files/');
+// Trigger redirect strictly on actual recovery token/event, NOT because dha_recovery_mode lingers from sessionStorage
+        // Trigger redirect strictly on actual recovery token/event, NOT because dha_recovery_mode lingers from sessionStorage
+        const hasFreshRecoverySignal = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery') || passwordRecoveryEventFired;
+        const targetAuthUrl = isInHtmlFiles
+            ? 'auth.html?mode=recovery'
+            : 'HTML-Files/auth.html?mode=recovery';
+        // Trigger redirect strictly on actual recovery token/event, NOT because dha_recovery_mode lingers from sessionStorage
+        if (!window.location.pathname.toLowerCase().endsWith('/auth.html') && hasFreshRecoverySignal) {
+            window.location.replace(targetAuthUrl);
+        }
 
         client.auth.getSession().then(({ data: { session } }) => {
             if (consumePendingOAuthRedirect(session)) return;

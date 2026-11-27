@@ -1,33 +1,20 @@
-Task Goal:
-Perform a comprehensive, site-wide Responsive Design & Layout Optimization across ALL pages and components of Daily Helping Apps (`index.html`, `HTML-Files/English-Flashcards.html`, `HTML-Files/workout-tracker.html`, `HTML-Files/rubiks-timer.html`, `HTML-Files/mafia-manager.html`, `HTML-Files/settings.html`, `HTML-Files/auth.html`, plus shared headers, drawers, modals, and Admin Console) so the entire site looks polished, proportional, and overflow-free on Mobile (`360px–480px`), Tablet (`768px–1024px`), Desktop (`1280px+`), and Ultrawide screens.
+Apply ONLY these exact, small surgical fixes to `js/mafia-manager.js`, `css/mafia-manager.css`, `HTML-Files/mafia-manager.html`, and `js/sw.js` (NO terminal commands, NO full-file rewrites):
 
-Execution Rules (CRITICAL):
-- First inspect the existing CSS files (`css/main.css`, `css/global-auth.css`, `css/auth.css`, `css/admin.css`, `css/English-Flashcards.css`, `css/workout-tracker.css`, `css/rubiks-timer.css`, `css/mafia-manager.css`, `css/settings.css`) before editing.
-- Make ONLY targeted, surgical CSS improvements (and minimal `<meta name="viewport">` / wrapper fixes in HTML ONLY if missing).
-- NEVER rewrite files from scratch, NEVER rename or remove any HTML `id` or `class` used by JavaScript, and NEVER break existing functionality (such as Flashcards 3D flip/Note modal, Settings tab switching, Avatar auto-save, or Auth recovery flow).
-- STRICT RULE: DO NOT use terminal commands. Edit files directly.
+1. In `js/mafia-manager.js`:
+   - Line 45: Change `'Շevesֆ'` to `'Շերիֆ'`.
+   - Line 153: Change `'Սևatim' : 'Կառմիրatim'` to `'Սև թիմ' : 'Կարմիր թիմ'`.
+   - Inside `restorePlayer(id)` (around line 206): remove the `checkWin();` call.
+   - Inside `dragMove(e)`: add `drag.row.classList.add('swiping');` when `dx < -10`, and inside `dragEnd()`: remove `row.classList.remove('swiping');` so the red `Հեռացնել` badge visibly slides in while dragging left.
 
-EXACT RESPONSIVE OPTIMIZATIONS REQUIRED:
+2. In `css/mafia-manager.css`:
+   - Fix `.dha-brand`: replace `gap: 8px;` with `text-decoration: none; color: #ffffff; font-weight: 800; font-size: 1.15rem;` and add `.dha-brand .letter { color: #15803d; } .dha-brand .expand { color: #94a3b8; font-weight: 500; }`.
+   - Style `.auth-btn` for logged-out users on Step 1: `.auth-btn { background: #141414; border: 1px solid #333333; color: #ffffff; padding: 8px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }`.
+   - Fix `.setup-brand`: change `margin-top: 10px;` to `margin: 10px 0 16px 0;`.
+   - Fix `.mod-count.mod-count-karmir { color: #15803d; }` and `.mod-count.mod-count-mafia { color: #dc2626; }` (remove the space between the two classes).
+   - Make `.btn-eliminate` visibly slide into view during swipe: when `.player-row.swiping .btn-eliminate`, set `transform: translateX(0); opacity: 1; writing-mode: horizontal-tb; width: 92px;`.
 
-1. Global Foundation & Mobile Ergonomics (`css/main.css`):
-   - Enforce `*, *::before, *::after { box-sizing: border-box; }` and `html, body { max-width: 100%; overflow-x: hidden; }` to eliminate horizontal scrolling on every device.
-   - Replace rigid `100vh` full-screen heights with `100dvh` (with `100vh` fallback) so mobile browser address bars never clip bottom content.
-   - Use fluid typography (`clamp()`) for page titles and card headings, and cap ultra-wide desktop containers (`max-width: 1360px; margin-inline: auto;`) so layouts don't over-stretch on large monitors.
-   - On touch devices / screens `<= 768px`, ensure interactive buttons have comfortable touch targets (`min-height: 42px`) and form fields (`input`, `select`, `textarea`) use `font-size: 16px` to prevent iOS Safari auto-zoom on focus.
+3. In `HTML-Files/mafia-manager.html`:
+   - Remove the redundant `<div class="step-top-bar"><button id="btnExitMod" class="btn-exit-fullscreen">Նոր խաղ</button></div>` inside `#step-mod` (keep `#btnNewGameMod` inside `.mod-status-header`).
 
-2. Shared Header, Clock, User Pill & Slide-Out Drawer (`css/main.css` & `css/global-auth.css`):
-   - Ensure the top `<header>` adapts cleanly at `<= 600px` and `<= 400px`: prevent the DHA logo, clock, and `#auth-header-container` (User Pill + `Admin` badge) from colliding or overflowing horizontally. Truncate long display names gracefully with `text-overflow: ellipsis` on narrow phones.
-   - Make `#user-drawer` responsive (`width: min(320px, 88vw)`) with proper padding on small screens.
-
-3. Home Page & Admin Console (`css/main.css` & `css/admin.css`):
-   - `.grid-container`: `1fr` on mobile (`<= 640px`), `repeat(2, 1fr)` on tablet (`641px–1024px`), `repeat(3, 1fr)` on desktop (`>= 1025px`).
-   - `#adminInsights` / `.admin-metrics-grid`: `1fr` on small phones (`<= 480px`), `repeat(2, 1fr)` on tablets, `repeat(4, 1fr)` on desktop; wrap `.admin-console-header` buttons cleanly on mobile.
-
-4. Page-Specific Responsive Refinements:
-   - **English Flashcards (`css/English-Flashcards.css`)**: Make `.flashcard` / `.flashcard-container` fluid (`width: min(92vw, 520px)`), ensure front/back action buttons (`Note`, audio, favorite, navigation) never overlap card text on `360px` screens, and constrain `#noteModal` and game/results modals to `width: min(94vw, 540px); max-height: 86dvh; overflow-y: auto;`.
-   - **Settings (`css/settings.css`)**: At `<= 768px`, convert the two-column sidebar + panel layout into a single stacked column where the sidebar tabs (`Public Profile`, `Account & Security`) sit horizontally at the top, and ensure the `Avatar Theme` popover stays inside viewport edges without clipping.
-   - **Auth Page (`css/auth.css`)**: Constrain `.auth-card` to `width: min(92vw, 430px)` with comfortable padding on mobile (`<= 480px`) and clean spacing below `.auth-header`.
-   - **Workout Tracker, Rubik's Timer & Mafia Manager (`css/workout-tracker.css`, `css/rubiks-timer.css`, `css/mafia-manager.css`)**: Stack multi-column grids, timers, player rosters, and control bars vertically on `<= 768px`, make any wide tables horizontally scrollable inside a wrapper, and ensure all modals fit within `94vw` and `86dvh`.
-
-5. Service Worker Cache Busting (`js/sw.js`):
-   - Increment `CACHE_NAME` in `js/sw.js` by 1 so all devices immediately receive the updated CSS files.
+4. In `js/sw.js`:
+   - Increment `CACHE_NAME` by 1.

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="hy" translate="no" class="notranslate">
 
 <head>
@@ -24,204 +24,110 @@
         </div>
     </header>
 
-
-
-    <div class="background">
-        <div class="shape shape-red"></div>
-        <div class="shape shape-dark"></div>
-    </div>
-
-    <div class="container">
-        <!-- Գլխամաս -->
-        <header class="app-header glass-panel">
-            <div class="header-top-actions">
-                <a href="../index.html" class="back-btn">← Վերադառնալ</a>
-                <div class="header-buttons">
-                    <button id="settingsBtn" class="utility-btn">⚙️ Կարգավորումներ</button>
-                    <button id="rulesBtn" class="utility-btn">📜 Կանոններ</button>
-                </div>
-            </div>
-
-            <div class="title-section">
-                <h1>🎭 ԿԱՐՄԻՐ ԹԵ ՍԵՎ</h1>
+    <div id="app">
+        <!-- ===== Step 1 — Game Setup (Կարգավորում) ===== -->
+        <div id="step-setup" class="step active">
+            <div class="setup-brand">
+                <h1>ԿԱՐՄԻՐ ԹԵ ՍԵՎ</h1>
                 <p>Խաղավարի Վահանակ</p>
             </div>
-
-            <!-- Սա գլխավոր ժամաչափն է, որը դինամիկ կտեղափոխվի խաղացողների քարտերի մեջ -->
-            <div class="timer-widget" id="mainTimerWidget">
-                <span id="timerDisplay">01:00</span>
-                <div class="timer-controls">
-                    <button id="startTimerBtn" class="timer-btn start-btn">▶ Սկսել</button>
-                    <button id="resetTimerBtn" class="timer-btn reset-btn">↺</button>
+            <div class="setup-card">
+                <div class="setup-section">
+                    <span class="setup-section-label">Կարմիրներ</span>
+                    <div class="counter-row">
+                        <div>
+                            <span class="counter-label">Կարմիրներ</span>
+                            <span class="counter-subtext"> ներառում 1 Շերիֆ</span>
+                        </div>
+                        <div class="counter-controls">
+                            <button id="btnRedMinus" class="counter-btn" aria-label="Կարմիր նվազեցնել">−</button>
+                            <span id="valRed" class="counter-value">7</span>
+                            <button id="btnRedPlus" class="counter-btn" aria-label="Կարմիր ավելացնել">+</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </header>
-
-        <!-- ՄԱՖԻԱՅԻ ՊԼԱՆ (3 գիշեր) -->
-        <div id="mafiaPlanSection" class="glass-panel mafia-plan-section">
-            <h2 class="mafia-plan-title">🔫 Մաֆիայի
-                Պլանավորում</h2>
-            <p class="mafia-plan-desc">Նշեք սևերի candyրած զոհերին առաջին երեք
-                գիշերների համար (Խաղը սկսելուց առաջ).</p>
-            <div class="plan-grid plan-grid-flex">
-                <div class="plan-item">
-                    <label class="plan-night-label">Գիշեր 1:</label>
-                    <select id="planN1" class="player-name plan-select">
-                        <option value="">-- Ընտրել --</option>
-                    </select>
+                <div class="setup-section">
+                    <span class="setup-section-label">Մաֆիա</span>
+                    <div class="counter-row">
+                        <div>
+                            <span class="counter-label">Մաֆիա</span>
+                            <span class="counter-subtext" id="subMafia"> ներառյալ 1 Դոն</span>
+                        </div>
+                        <div class="counter-controls">
+                            <button id="btnMafiaMinus" class="counter-btn" aria-label="Մաֆիա նվազեցնել">−</button>
+                            <span id="valMafia" class="counter-value">3</span>
+                            <button id="btnMafiaPlus" class="counter-btn" aria-label="Մաֆիա ավելացնել">+</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="plan-item">
-                    <label class="plan-night-label">Գիշեր 2:</label>
-                    <select id="planN2" class="player-name plan-select">
-                        <option value="">-- Ընտրել --</option>
-                    </select>
+                <div class="setup-roles-hint">
+                    Դեր: Կարմիր ・ Շերիֆ ・ Մաֆիա ・ Դոն
                 </div>
-                <div class="plan-item">
-                    <label class="plan-night-label">Գիշեր 3:</label>
-                    <select id="planN3" class="player-name plan-select">
-                        <option value="">-- Ընտրել --</option>
-                    </select>
-                </div>
+                <button id="btnStartSetup" class="btn-play">Խաղալ</button>
             </div>
         </div>
 
-        <!-- ԽԱՂԸ ՍԿՍԵԼՈՒ ԿՈՃԱԿ -->
-        <div id="startGameSection" class="start-game-section">
-            <button id="initGameBtn" class="timer-btn start-btn init-game-btn">
-                🚀 ՍԿՍԵԼ ԽԱՂԸ (Հաստատել դերերը և պլանը)
-            </button>
-        </div>
-
-        <!-- ԽԱՂԻ ՓՈՒԼԵՐԻ ՈՒՂԵՑՈՒՅՑ (Թաքնված է մինչև խաղի սկիզբը) -->
-        <div id="gamePhaseContainer" class="glass-panel game-phase-container hidden">
-            <h2 id="phaseTitle" class="phase-title">Օր 1</h2>
-            <h3 id="turnTitle" class="turn-title">Խոսում է Խաղացող 1</h3>
-            <div class="turn-actions"
-                style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
-                <button id="prevTurnBtn" class="utility-btn">⏮ Նախորդը</button>
-                <button id="nextTurnBtn" class="timer-btn start-btn" style="padding: 10px 20px; font-size: 1.1rem;">⏭
-                    Պաս / Հաջորդը</button>
-                <button id="startNightBtn" class="timer-btn reset-btn"
-                    style="display: none; padding: 10px 20px; font-size: 1.1rem; background-color: #6366f1;">🌙 Անցնել
-                    Գիշեր</button>
+        <!-- ===== Step 2 — Sequential Role Reveal (Դեր uncover) ===== -->
+        <div id="step-role" class="step">
+            <div class="step-top-bar">
+                <button id="btnExitRole" class="btn-exit-fullscreen">✕ Դուրս գալ</button>
             </div>
-            <!-- Timer will be moved here during voting phase -->
-        </div>
-
-        <!-- Խաղացողների Դաշտ -->
-        <div class="players-grid" id="playersGrid">
-            <!-- JavaScript գեներացիա -->
-        </div>
-
-        <!-- Թեկնածություններ (Nominations) -->
-        <div class="nominations-section glass-panel">
-            <h2>🗳️ Թեկնածություններ (Ցերեկային Քվեարկություն)</h2>
-            <div class="nomination-controls">
-                <select id="nominateSelect" class="player-name">
-                    <option value="" disabled selected>Ընտրել խաղացողին...</option>
-                </select>
-                <button id="addNominationBtn" class="timer-btn start-btn">Առաջադրել</button>
-                <button id="clearNominationsBtn" class="timer-btn reset-btn">Մաքրել ցուցակը</button>
+            <div class="role-header">
+                <div id="rolePlayerTitle" class="role-player-title">Խաղացող 1</div>
+                <div class="role-player-subtitle">Դերը թաքցված է</div>
             </div>
-            <ul id="nominationsList" class="nominations-list"></ul>
+            <div class="role-card-container">
+                <div id="roleCard" class="role-card face-down">
+                    <div class="face face-down">
+                        <div class="role-back-label">Դերը թաքցված է</div>
+                        <div class="role-back-label">Սեղմել «Տեսնել»</div>
+                    </div>
+                    <div class="face face-up hidden">
+                        <div id="roleReveal" class="role-reveal">🎭</div>
+                        <div id="roleName" class="role-name">Կարմիր</div>
+                        <div id="roleSub" class="role-sub">Կարմիր</div>
+                    </div>
+                </div>
+            </div>
+            <button id="roleActionBtn" class="role-btn">Տեսնել</button>
+            <button id="roleStartGame" class="role-start-game hidden">Սկսել խաղը</button>
+        </div>
+
+        <!-- ===== Step 3 — Moderator Control Screen (Վարողի էկրան) ===== -->
+        <div id="step-mod" class="step">
+            <div class="step-top-bar">
+                <button id="btnExitMod" class="btn-exit-fullscreen">Նոր խաղ</button>
+            </div>
+            <div class="mod-status-header">
+                <div class="mod-counts">
+                    <span class="mod-count mod-count-karmir">Կարմիրներ: <span id="cntKarmir">7</span></span>
+                    <span class="mod-count mod-count-mafia">Մաֆիա: <span id="cntMafia">3</span></span>
+                </div>
+                <button id="btnNewGameMod" class="btn-new-game-mod">Նոր խաղ</button>
+            </div>
+            <div class="player-list" id="playerList"></div>
         </div>
     </div>
 
-    <!-- ԳԻՇԵՐԱՅԻՆ ՀՈՒՇՈՒՄՆԵՐԻ ՄՈԴԱԼ (Night Phase) -->
-    <div id="nightModal" class="modal is-hidden">
-        <div class="modal-content glass-panel" style="text-align: center; max-width: 600px;">
-            <h2 style="color: #818cf8; font-size: 2rem; margin-bottom: 20px;">🌙 Գիշեր <span
-                    id="nightNumberDisplay">1</span></h2>
-
-            <div id="nightStep1" class="night-step">
-                <div style="font-size: 3rem; margin-bottom: 10px;">🔫</div>
-                <h3 style="color: #ef4444; margin-bottom: 15px;">Քայլ 1: Մաֆիան կրակում է</h3>
-                <p style="color: #cbd5e1; margin-bottom: 15px;">Մաֆիան արթնանում է և ընտրում զոհին: (Ստուգեք Ձեր նշած
-                    պլանը):</p>
-                <select id="nightVictimSelect" class="player-name"
-                    style="margin-bottom: 20px; width: 80%; font-size: 1.1rem; padding: 10px;">
-                    <option value="">-- Վրիպում (Ոչ ոք չի մահանում) --</option>
-                </select>
-                <br>
-                <button class="timer-btn start-btn" onclick="goToNightStep(2)"
-                    style="padding: 10px 30px; font-size: 1.1rem;">Հաջորդը ⏭</button>
-            </div>
-
-            <div id="nightStep2" class="night-step" style="display: none;">
-                <div style="font-size: 3rem; margin-bottom: 10px;">🕴️</div>
-                <h3 style="color: #dc2626; margin-bottom: 15px;">Քայլ 2: Դոնի Ստուգում</h3>
-                <p style="color: #cbd5e1; margin-bottom: 20px; line-height: 1.5;">Դոնը արթնանում է և մատներով ցույց է
-                    տալիս խաղացողի համար: <br>Խաղավարը գլխով կամ մատով <b>հաստատում է (Շերիֆն է)</b> կամ <b>հերքում
-                        (Շերիֆը չէ)</b>:</p>
-                <button class="timer-btn start-btn" onclick="goToNightStep(3)"
-                    style="padding: 10px 30px; font-size: 1.1rem;">Հաջորդը ⏭</button>
-            </div>
-
-            <div id="nightStep3" class="night-step" style="display: none;">
-                <div style="font-size: 3rem; margin-bottom: 10px;">👮‍♂️</div>
-                <h3 style="color: #3b82f6; margin-bottom: 15px;">Քայլ 3: Շերիֆի Ստուգում</h3>
-                <p style="color: #cbd5e1; margin-bottom: 20px; line-height: 1.5;">Շերիֆը արթնանում է և փնտրում սև
-                    խաղացողի (Մաֆիա): <br>Խաղավարը <b>հաստատում է (Սև է)</b> կամ <b>հերքում (Կարմիր է)</b>:</p>
-                <button class="timer-btn start-btn" onclick="endNight()"
-                    style="padding: 10px 30px; font-size: 1.1rem; background-color: #f59e0b;">Ավարտել Գիշերը 🌅</button>
-            </div>
-        </div>
+    <!-- Fixed bottom speech timer bar (Step 3) -->
+    <div id="timer-bar" class="timer-bar hidden">
+        <button id="btnStartTimer" class="btn btn-start-timer">Սկսել ժամանակը</button>
+        <div id="timerDisplay" class="timer-display">60</div>
+        <button id="btnResetTimer" class="btn btn-reset-timer">Զրոյացնել</button>
     </div>
 
-    <!-- Կարգավորումներ & Կանոններ Մոդալներ -->
-    <div id="settingsModal" class="modal is-hidden">
-        <div class="modal-content glass-panel">
-            <span class="close-btn" id="closeSettingsBtn">&times;</span>
-            <h2
-                style="color: #38bdf8; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-                ⚙️ Խաղի Կարգավորումներ</h2>
-            <div class="settings-form">
-                <div class="input-group">
-                    <label>👥 Խաղացողների ընդհանուր քանակը:</label>
-                    <input type="number" id="totalPlayersInput" value="10" min="4" max="20" class="player-name">
-                </div>
-                <div class="input-group">
-                    <label>⚫ Սևերի քանակը (Մաֆիա + Դոն):</label>
-                    <input type="number" id="blackCountInput" value="3" min="1" max="10" class="player-name">
-                </div>
-                <div class="input-group">
-                    <label>🔴 Կարմիրների քանակը (Քաղաքացի + Շերիֆ):</label>
-                    <input type="number" id="redCountInput" value="7" readonly class="player-name"
-                        style="background: rgba(255,255,255,0.1); opacity: 0.7;">
-                </div>
-                <button id="saveSettingsBtn" class="timer-btn start-btn"
-                    style="width: 100%; margin-top: 20px; padding: 12px; font-size: 1.1rem;">Պահպանել և Սկսել Նոր
-                    Խաղ</button>
-            </div>
+    <!-- Win modal -->
+    <div id="win-modal" class="win-modal hidden">
+        <div class="win-modal-card">
+            <h2 id="winTitle" class="win-title">Հաղթեցին Կարմիրները</h2>
+            <p id="winSub" class="win-sub"></p>
+            <button id="btnWinNewGame" class="btn-new-game-modal">Նոր խաղ</button>
         </div>
     </div>
-
-    <div id="rulesModal" class="modal is-hidden">
-        <div class="modal-content glass-panel">
-            <span class="close-btn" id="closeRulesBtn">&times;</span>
-            <h2
-                style="color: #ef4444; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-                📜 Կանոններ և Տերմիններ</h2>
-            <div class="rules-text" style="line-height: 1.6; color: #cbd5e1; max-height: 50vh; overflow-y: auto;">
-                <p>Խաղում են 10 հոգի. <b>7 Կարմիր</b> (6 քաղաքացի, 1 Շերիֆ) և <b>3 Սև</b> (2 մաֆիա, 1 Դոն):
-                    Յուրաքանչյուրը ունի 60 վրկ:</p>
-                <h3 style="color:#38bdf8; margin-top:10px;">Նկատողություններ:</h3>
-                <p>3-րդ նկատողություն -> զրկվում է հաջորդ խոսքից: 4-րդ նկատողություն -> լքում է խաղը:</p>
-                <h3 style="color:#38bdf8; margin-top:10px;">Տերմիններ:</h3>
-                <ul>
-                    <li><b>Դոնի/Շերիֆի ստուգում:</b> Գիշերը ստուգում են խաղացողների դերերը:</li>
-                    <li><b>Կտակ:</b> Սպանվածի վերջին 60 վրկ:</li>
-                    <li><b>Փոխհրաձգություն:</b> Հավասար ձայներ ունեցողների 30 վրկ արդարացում:</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase.js"></script>
     <script src="../js/global-auth.js"></script>
     <script src="../js/mafia-manager.js"></script>
 </body>
-
 </html>

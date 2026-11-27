@@ -1,964 +1,912 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* ============================================================
+   Mafia Manager — Կարմիր թե Սև (OLED true-black, responsive mobile-first)
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-
-header {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px 20px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 15px;
+html {
+  touch-action: manipulation;
 }
 
 body {
-    background-color: #0f172a;
-    color: #f8fafc;
-    min-height: 100vh;
-    overflow-x: hidden;
+  background: #000000;
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile-first container */
+#app {
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== DHA Header (matching site-wide brand style & hover expand animation) ===== */
+header {
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  z-index: 1000;
 }
-
-.background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
-    overflow: hidden;
-}
-
-.shape {
-    position: absolute;
-    filter: blur(80px);
-    border-radius: 50%;
-    opacity: 0.4;
-}
-
-.shape-red {
-    background: #ef4444;
-    width: 400px;
-    height: 400px;
-    top: -100px;
-    right: -100px;
-}
-
-.shape-dark {
-    background: #000000;
-    width: 500px;
-    height: 500px;
-    bottom: -150px;
-    left: -100px;
-}
-
-.container {
-    padding: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.glass-panel {
-    background: rgba(30, 41, 59, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-}
-
-/* Header & Timer */
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 30px;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.header-top-actions {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.header-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.back-btn {
-    color: #94a3b8;
-    text-decoration: none;
-    font-weight: bold;
-    transition: color 0.3s;
-}
-
-.back-btn:hover {
-    color: #f8fafc;
-}
-
-.utility-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #cbd5e1;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.utility-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    border-color: #38bdf8;
-}
-
-.title-section {
-    text-align: center;
-}
-
-.title-section h1 {
-    font-size: 1.8rem;
-    letter-spacing: 2px;
-    color: #ef4444;
-}
-
-.title-section p {
-    color: #94a3b8;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    margin-top: 5px;
-}
-
-/* Timer Widget Base (When in header/game phase) */
-.timer-widget {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    transition: all 0.3s ease;
-}
-
-#timerDisplay {
-    font-size: 2.2rem;
-    font-weight: bold;
-    font-variant-numeric: tabular-nums;
-    color: #f8fafc;
-    transition: color 0.2s;
-}
-
-.timer-controls {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.timer-btn {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    color: white;
-    transition: transform 0.1s;
-    white-space: nowrap;
-}
-
-.timer-btn:active {
-    transform: scale(0.95);
-}
-
-.timer-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.start-btn {
-    background-color: #10b981;
-}
-
-.start-btn.paused {
-    background-color: #f59e0b;
-}
-
-.reset-btn {
-    background-color: #ef4444;
-}
-
-/* Timer Widget inside Player Card */
-.player-card .timer-widget {
-    margin: 10px 0;
-    padding: 8px 12px;
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid #10b981;
-    border-radius: 8px;
-    flex-direction: row;
-    justify-content: space-between;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-}
-
-.player-card #timerDisplay {
-    font-size: 1.6rem;
-    color: #10b981;
-}
-
-/* Players Grid */
-.players-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.player-card {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: all 0.3s ease;
-    border-top: 4px solid #64748b;
-    position: relative;
-}
-
-.player-card.dead {
-    opacity: 0.4;
-    filter: grayscale(100%);
-}
-
-/* Active Turn Highlight */
-.player-card.active-turn {
-    border-color: #10b981;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-    transform: scale(1.02);
-    z-index: 10;
-}
-
-.player-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.player-number {
-    background: #334155;
-    color: white;
-    min-width: 32px;
-    height: 32px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.player-name {
-    flex-grow: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid #334155;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    outline: none;
-    font-size: 1rem;
-    width: 100%;
-}
-
-.player-name:focus {
-    border-color: #ef4444;
-}
-
-.player-name:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.player-role {
-    background: #0f172a;
-    color: #f8fafc;
-    border: 1px solid #334155;
-    padding: 8px;
-    border-radius: 6px;
-    outline: none;
-    cursor: pointer;
-}
-
-.player-role:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.fouls-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 10px;
-    border-radius: 6px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.fouls-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.fouls-controls button {
-    background: #334155;
-    color: white;
-    border: none;
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.fouls-controls button:hover {
-    background: #475569;
-}
-
-.foul-count {
-    font-size: 1.2rem;
-    font-weight: bold;
-    width: 20px;
-    text-align: center;
-}
-
-.foul-count.danger {
-    color: #ef4444;
-}
-
-.status-btn {
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    color: white;
-    margin-top: auto;
-    transition: background 0.3s;
-}
-
-.status-btn.alive {
-    background-color: #334155;
-}
-
-.status-btn.alive:hover {
-    background-color: #ef4444;
-}
-
-.status-btn.dead {
-    background-color: #ef4444;
-}
-
-/* Nominations Section */
-.nominations-section {
-    padding: 25px;
-    margin-top: 10px;
-}
-
-.nominations-section h2 {
-    font-size: 1.3rem;
-    margin-bottom: 20px;
-    color: #f8fafc;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nomination-controls {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-#nominateSelect {
-    max-width: 250px;
-    padding: 10px;
-}
-
-.nominations-list {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 15px;
-}
-
-.nomination-item {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 15px 20px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-left: 4px solid #3b82f6;
-    transition: transform 0.2s;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.nomination-item:hover {
-    transform: translateX(5px);
-    background: rgba(0, 0, 0, 0.4);
-}
-
-.nomination-votes {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.vote-count {
-    font-size: 1.4rem;
-    font-weight: bold;
-    width: 35px;
-    text-align: center;
-    color: #38bdf8;
-}
-
-.vote-btn {
-    background: #334155;
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
-.vote-btn:hover {
-    background: #475569;
-}
-
-/* State utility classes used by the page JS (this page does not load main.css) */
-.is-hidden { display: none !important; }
-.is-visible { display: block !important; }
-.is-visible-flex { display: flex !important; }
-.is-visible-inline-block { display: inline-block !important; }
-.hidden { display: none !important; }
-
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 10001; /* above #floatingControlsPanel (9999) and the auth header (10000) */
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.modal-content {
-    margin: 5% auto;
-    width: 90%;
-    max-width: 800px;
-    padding: 30px;
-    position: relative;
-    max-height: 85vh;
-    overflow-y: auto;
-}
-
-.close-btn {
-    position: absolute;
-    right: 25px;
-    top: 20px;
-    color: #94a3b8;
-    font-size: 32px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.close-btn:hover {
-    color: #ef4444;
-}
-
-/* Settings Form */
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.input-group label {
-    color: #cbd5e1;
-    font-weight: bold;
-}
-
-.night-step {
-    animation: fadeIn 0.4s ease-in;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* Responsive Adjustments */
-@media (max-width: 900px) {
-    .app-header {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-        gap: 15px;
-    }
-
-    .header-top-actions {
-        justify-content: space-between;
-    }
-
-    .timer-widget {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 600px) {
-    .header-top-actions {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .nomination-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    #nominateSelect {
-        max-width: 100%;
-    }
-
-    .nomination-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .players-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .plan-grid {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .player-card .timer-widget {
-        flex-direction: column;
-    }
-}
-select option {
-    background-color: #ffffff;
-    color: #0f172a;
-    padding: 10px;
-}
-
-/* =========================================
-   ԲՋՋԱՅԻՆ ՏԱՐԲԵՐԱԿԻ ԿՈՄՊԱԿՏ ԵՎ 2-ՍՅՈՒՆԱԿ ԴԻԶԱՅՆ (Mobile)
-   Ակտիվանում է միայն 768px և փոքր էկրաններին
-========================================= */
-@media (max-width: 768px) {
-    /* 1. Քարտերը սարքում ենք 2 սյունակով (կողք-կողքի) */
-    #playersGrid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr); /* 2 հավասար սյունակ */
-        gap: 6px;
-        padding-right: 0 !important;
-    }
-
-    /* 2. Բուն քարտի ավելորդ տարածքների կրճատում */
-    .player-card {
-        padding: 8px;
-        gap: 4px;
-        min-height: auto;
-    }
-
-    /* 3. Խաղացողի գլխամասի և համարի փոքրացում */
-    .player-header {
-        margin-bottom: 2px !important;
-        gap: 6px !important;
-    }
-    .player-number {
-        width: 22px;
-        height: 22px;
-        font-size: 0.8rem;
-    }
-    .player-header span {
-        font-size: 0.9rem !important;
-    }
-
-    /* 4. Դերի ընտրության դաշտի (Select) փոքրացում */
-    .player-role {
-        padding: 2px 4px;
-        font-size: 0.75rem;
-        height: 28px;
-    }
-
-    /* 5. Նկատողությունների բլոկի խտացում */
-    .fouls-section {
-        padding: 2px 4px;
-        margin: 2px 0;
-        display: flex;
-        flex-direction: column; /* Տեքստը և կոճակները իրար տակ, որպեսզի տեղավորվեն նեղ սյունակում */
-        align-items: center;
-        gap: 4px;
-    }
-    .fouls-controls button {
-        width: 24px;
-        height: 24px;
-        font-size: 1rem;
-        line-height: 1;
-    }
-    .foul-count {
-        font-size: 1rem;
-        width: 15px;
-        text-align: center;
-    }
-
-    /* 6. Կարգավիճակի կոճակի բարակեցում */
-    .status-btn {
-        padding: 4px;
-        font-size: 0.7rem;
-    }
-    
-/* 7. Կառավարման ֆիքսված վահանակի կարգավորում բջջայինում */
-    #floatingControlsPanel {
-        transform: scale(0.85) !important;
-        bottom: 10px !important;
-        right: 10px !important;
-        transform-origin: bottom right;
-    }
-}
-
-/* =========================================
-   ՄԻԱՍՆԱԿԱՆ ԿԱՌԱՎԱՐՄԱՆ ՎԱՀԱՆԱԿ ԵՎ ՖԻՔՍՎԱԾ ԷԼԵՄԵՆՏՆԵՐ
-========================================= */
-
-/* Լողացող վահանակ (Floating Control Panel) */
-#floatingControlsPanel {
-    position: fixed;
-    bottom: 15px;
-    right: 15px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-end;
-    pointer-events: none;
-    max-height: 95vh;
-    transform-origin: bottom right;
-}
-
-/* Վահանակի մեջ գտնվող բլոկների ընդհանուր տեսքը */
-#floatingControlsPanel > * {
-    pointer-events: auto;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 12px;
-    margin: 0;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-}
-
-/* Մաֆիայի պլանի բլոկը վահանակում */
-#floatingControlsPanel #mafiaPlanSection {
-    border: 2px solid #ef4444;
-    padding: 10px 15px;
-    max-width: 320px;
-}
-
-/* Թեկնածությունների բլոկը վահանակում */
-#floatingControlsPanel .glass-panel:has(#addNominationBtn),
-#floatingControlsPanel div:has(#addNominationBtn) {
-    border: 2px solid #3b82f6;
-    padding: 10px 15px;
-    max-height: 40vh;
-    overflow-y: auto;
-    max-width: 320px;
-}
-
-/* Ժամաչափի բլոկը վահանակում */
-#floatingControlsPanel #mainTimerWidget {
-    border: 2px solid #10b981;
-    padding: 5px 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    max-width: 320px;
-}
-
-
-
-/* ==========================================
-   🟢 DHA Brand Logo Styles
-   ========================================== */
 
 .dha-brand {
-    display: inline-flex;
-    align-items: center;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #ffffff;
-    text-decoration: none;
-    padding: 8px 18px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.dha-brand .letter {
-    color: #3b82f6;
-    font-size: 1.6rem;
-    transition: color 0.4s ease;
-}
-
-.dha-brand .expand {
-    max-width: 0;
-    opacity: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: #94a3b8;
-    transform: translateX(-8px);
-    transition: max-width 0.8s cubic-bezier(0.25, 1, 0.5, 1), 
-                opacity 0.6s ease-in-out, 
-                transform 0.7s cubic-bezier(0.25, 1, 0.5, 1),
-                margin 0.5s ease;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 7px 12px;
+  border-radius: 12px;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .dha-brand:hover {
-    background: rgba(59, 130, 246, 0.12);
-    border-color: rgba(59, 130, 246, 0.4);
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(59, 130, 246, 0.45);
 }
 
-.dha-brand:hover .letter {
-    color: #10b981;
+.dha-brand .letter {
+  color: #3b82f6;
+  transition: color 0.25s ease;
 }
 
-.dha-brand:hover .expand {
-    max-width: 85px;
-    opacity: 1;
-    transform: translateX(0);
-    margin-right: 6px;
-    color: #f8fafc;
+.dha-brand .expand {
+  display: inline-block;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #e2e8f0;
+  font-weight: 600;
+  transition: max-width 0.35s ease, opacity 0.25s ease, margin-right 0.35s ease;
 }
 
-/* ==========================================
-   🟢 RESPONSIVE / DEVICE OPTIMIZATION
-   ========================================== */
-@media (prefers-reduced-motion: reduce) {
-    .shape,
-    .player-card,
-    .nomination-item,
-    .modal,
-    .modal-content,
-    .dha-brand,
-    .dha-brand .expand {
-        animation: none;
-        transition: none;
-    }
+.dha-brand:hover .expand,
+.dha-brand:focus-visible .expand {
+  max-width: 85px;
+  opacity: 1;
+  margin-right: 4px;
 }
 
-/* ==========================================
-   🟢 STATE / UTILITY CLASSES (Phase 3 refactor)
-   Replaces inline style manipulations in mafia-manager.js
-   ========================================== */
-/* Foul label text (was inline style in generated player card) */
-.foul-text { font-size: 0.9rem; color: #94a3b8; }
-
-/* Role border-top colors (was inline style.borderTopColor in JS) */
-.player-card.role-citizen { border-top-color: #10b981; }
-.player-card.role-sheriff { border-top-color: #3b82f6; }
-.player-card.role-mafia { border-top-color: #ef4444; }
-.player-card.role-don { border-top-color: #dc2626; }
-
-/* Default player-number state (was inline style reset in JS) */
-.player-card .player-number { background-color: #334155; transform: scale(1); }
-
-/* Nomination list row styles (was inline style in renderNominations template) */
-.nomination-row { display: flex; align-items: center; gap: 15px; }
-.nomination-name { font-size: 1.1rem; font-weight: bold; }
-.nomination-votes-label { color: #94a3b8; font-size: 0.9rem; margin-right: 5px; }
-
-/* Active turn highlight on player number */
-.player-card.active-turn .player-number { background-color: #10b981; transform: scale(1.2); }
-.player-card.active-turn.tie-breaker .player-number { background-color: #ef4444; }
-
-/* Active turn card tie-breaker override */
-.player-card.active-turn.tie-breaker { border-color: #ef4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.7); }
-
-/* ==========================================
-   🟢 RESPONSIVE / DEVICE OPTIMIZATION
-   ========================================== */
-@media (max-width: 768px) {
-    .container {
-        padding: 15px;
-        max-width: 100%;
-    }
-
-    .app-header {
-        padding: 12px 16px;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-
-    .header-top-actions {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .header-buttons {
-        justify-content: center;
-        width: 100%;
-    }
-
-    .utility-btn {
-        white-space: normal;
-        text-align: center;
-        flex: 1;
-    }
-
-    .timer-widget {
-        padding: 8px 16px;
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-    }
-
-    #timerDisplay {
-        font-size: 1.75rem;
-    }
-
-    .timer-controls {
-        justify-content: center;
-        width: 100%;
-    }
-
-    .title-section h1 {
-        font-size: 1.5rem;
-    }
-
-    .shape-red {
-        width: 300px;
-        height: 300px;
-    }
-
-    .shape-dark {
-        width: 350px;
-        height: 350px;
-    }
-
-    #floatingControlsPanel {
-        bottom: 10px;
-        right: 10px;
-        left: 10px;
-        align-items: center;
-    }
-
-    #floatingControlsPanel #mafiaPlanSection,
-    #floatingControlsPanel #mainTimerWidget,
-    #floatingControlsPanel div:has(#addNominationBtn) {
-        max-width: 100%;
-        width: 100%;
-    }
+.dha-brand:hover .expand:last-child,
+.dha-brand:focus-visible .expand:last-child {
+  margin-right: 0;
 }
 
-@media (max-width: 480px) {
-    .container {
-        padding: 12px;
-    }
+.auth-btn {
+  background: #141414;
+  border: 1px solid #333333;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
 
-    .app-header {
-        padding: 10px 16px;
-    }
+body.mafia-fullscreen-active header {
+  display: none !important;
+}
 
-    .utility-btn {
-        padding: 10px 14px;
-        font-size: 0.85rem;
-    }
+/* ===== Steps ===== */
+.step {
+  display: none;
+  width: 100%;
+  padding: 0 10px 14px 10px;
+}
 
-    .timer-btn {
-        padding: 10px 16px;
-        font-size: 0.9rem;
-        min-width: 44px;
-        min-height: 44px;
-    }
+.step.active {
+  display: flex;
+  flex-direction: column;
+}
 
-    #timerDisplay {
-        font-size: 1.5rem;
-    }
+/* Steps 2 & 3 use full viewport height */
+#step-role.active,
+#step-mod.active {
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top, 8px);
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+}
 
-    .title-section h1 {
-        font-size: 1.25rem;
-    }
+/* ===== Compact top bar (Step 2) ===== */
+.step-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px 0;
+}
 
-    .dha-brand {
-        font-size: 1.25rem;
-        padding: 6px 14px;
-    }
+.btn-exit-fullscreen {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: 38px;
+}
 
-    .dha-brand .letter {
-        font-size: 1.4rem;
-    }
+.btn-exit-fullscreen:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
 
-    .dha-brand .expand {
-        font-size: 0.95rem;
-    }
+/* ===== Step 1 — Setup ===== */
+.setup-brand {
+  text-align: center;
+  margin: 6px 0 14px 0;
+}
 
-    .shape-red {
-        width: 250px;
-        height: 250px;
-    }
+.setup-brand h1 {
+  font-size: clamp(1.3rem, 5vw, 1.55rem);
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
 
-    .shape-dark {
-        width: 300px;
-        height: 300px;
-    }
+.setup-brand p {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.setup-card {
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 16px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.setup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-section-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+}
+
+.counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #141414;
+  border: 1px solid #222222;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.counter-label {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.counter-subtext {
+  color: #94a3b8;
+  font-size: 0.76rem;
+  margin-top: 2px;
+  display: block;
+}
+
+.counter-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.counter-btn {
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  color: #ffffff;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.counter-btn:hover {
+  background: #242424;
+  border-color: #444444;
+}
+
+.counter-btn:active {
+  transform: scale(0.95);
+}
+
+.counter-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.counter-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  min-width: 28px;
+  text-align: center;
+}
+
+.setup-roles-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.btn-play {
+  background: #15803d;
+  border: none;
+  color: #ffffff;
+  width: 100%;
+  min-height: 50px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-top: 2px;
+  box-shadow: 0 4px 0 #0d4a2a;
+}
+
+.btn-play:hover {
+  background: #166534;
+}
+
+.btn-play:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0d4a2a;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ===== Step 2 — Role Reveal ===== */
+.role-header {
+  text-align: center;
+  margin: 6px 0 4px 0;
+}
+
+.role-player-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.role-player-subtitle {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.role-card-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 14px 0;
+}
+
+.role-card {
+  width: min(210px, 64vw);
+  height: min(260px, 44dvh);
+  background: #0d0d0d;
+  border: 2px solid #1a1a1a;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.role-card.face-down .face-up,
+.role-card:not(.face-down) .face-down {
+  display: none;
+}
+
+.role-back-label {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 4px 0;
+}
+
+.role-reveal {
+  font-size: clamp(3rem, 12vw, 4rem);
+  margin-bottom: 6px;
+}
+
+.role-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.role-sub {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 4px;
+}
+
+.role-btn {
+  background: #15803d;
+  border: none;
+  color: #ffffff;
+  width: min(220px, 75vw);
+  min-height: 48px;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  align-self: center;
+  margin-bottom: 18px;
+}
+
+.role-btn:hover {
+  background: #166534;
+}
+
+.role-btn:active {
+  transform: scale(0.97);
+}
+
+.role-start-game {
+  background: #15803d;
+  border: none;
+  color: #ffffff;
+  width: 100%;
+  max-width: 260px;
+  min-height: 50px;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  align-self: center;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 0 #0d4a2a;
+}
+
+.role-start-game:hover {
+  background: #166534;
+}
+
+/* ===== Step 3 — Moderator ===== */
+.mod-status-header {
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 6px 0 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mod-counts {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.mod-count {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.mod-count.mod-count-karmir {
+  color: #ef4444;
+}
+
+.mod-count.mod-count-mafia {
+  color: #94a3b8;
+}
+
+.btn-new-game-mod {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  min-height: 34px;
+}
+
+.btn-new-game-mod:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.player-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 88px;
+}
+
+/* Two-layer swipe architecture */
+.player-row {
+  position: relative;
+  border-radius: 12px;
+  margin-bottom: 7px;
+  overflow: hidden;
+  background: #000000;
+  touch-action: pan-y;
+}
+
+.player-row-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: #111111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  padding: 8px 10px;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+/* Eliminated state: dimmed dark background only (NO strikethrough, NO bleed-through) */
+.player-row.eliminated .player-row-content {
+  opacity: 0.5;
+  background: #050505;
+  border-color: #161616;
+}
+
+.player-number {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+/* Role badges: Red team = Red / White, Black team = True Black (#000000) */
+.player-role-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  min-width: 68px;
+  text-align: center;
+}
+
+/* Red team: Կարմիր (Red) & Շերիֆ (White) */
+.player-role-tag.karmir {
+  background: rgba(220, 38, 38, 0.18);
+  color: #f87171;
+  border: 1px solid #ef4444;
+}
+
+.player-role-tag.sheriff {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+/* Black team: Մաֆիա & Դոն (True Black #000000 pills) */
+.player-role-tag.mafia {
+  background: #000000;
+  color: #cbd5e1;
+  border: 1.5px solid #475569;
+}
+
+.player-role-tag.don {
+  background: #000000;
+  color: #ffffff;
+  border: 1.5px solid #94a3b8;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.player-nomination {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+}
+
+.player-nomination.nominated {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.5);
+}
+
+.player-fouls {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.btn-foul {
+  background: #181818;
+  border: 1px solid #333333;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-foul:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-foul:hover:not(:disabled) {
+  background: #242424;
+  border-color: #555555;
+}
+
+.foul-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 800;
+  min-width: 16px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.foul-count.warn {
+  color: #f59e0b;
+}
+
+.foul-count.elim {
+  color: #dc2626;
+}
+
+/* Red swipe-revealed Delete button: hidden unless row is actively swiped */
+.btn-eliminate {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 92px;
+  z-index: 1;
+  background: #dc2626;
+  border: none;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-row.swiping:not(.eliminated) .btn-eliminate,
+.player-row.swiped-open:not(.eliminated) .btn-eliminate {
+  display: flex;
+}
+
+.player-row.eliminated .btn-eliminate {
+  display: none !important;
+}
+
+.btn-eliminate:hover {
+  background: #b91c1c;
+}
+
+/* Clean inline Restore button — fits inside 375px and narrower mobile screens */
+.btn-restore {
+  display: none;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  color: #ffffff;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.player-row.eliminated .btn-restore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-restore:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* ===== Fixed bottom speech timer bar ===== */
+.timer-bar {
+  position: fixed;
+  left: 50%;
+  bottom: env(safe-area-inset-bottom, 10px);
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  max-width: 480px;
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 14px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  z-index: 200;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.timer-bar .btn {
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: none;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-start-timer {
+  background: #15803d;
+  box-shadow: 0 3px 0 #0d4a2a;
+}
+
+.btn-start-timer.paused {
+  background: #dc2626;
+  box-shadow: 0 3px 0 #b91c1c;
+}
+
+.btn-start-timer:active {
+  transform: scale(0.96);
+}
+
+.btn-reset-timer {
+  background: #1a1a1a;
+  border: 1px solid #333333;
+}
+
+.btn-reset-timer:hover {
+  background: #242424;
+  border-color: #555555;
+}
+
+.timer-display {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #dc2626;
+  text-align: center;
+  min-width: 48px;
+}
+
+.timer-display.pulse {
+  animation: pulse-red 1s infinite;
+}
+
+@keyframes pulse-red {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ===== Win modal ===== */
+.win-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.win-modal.hidden {
+  display: none !important;
+}
+
+.win-modal-card {
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 20px;
+  padding: 24px 20px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.win-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.win-title.karmir-win {
+  color: #ef4444;
+}
+
+.win-title.mafia-win {
+  color: #cbd5e1;
+}
+
+.win-sub {
+  color: #94a3b8;
+  font-size: 0.88rem;
+  margin-bottom: 20px;
+}
+
+.btn-new-game-modal {
+  background: #15803d;
+  border: none;
+  color: #ffffff;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #0d4a2a;
+}
+
+.btn-new-game-modal:hover {
+  background: #166534;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ===== Compact Mobile Breakpoints (<= 390px & <= 345px) ===== */
+@media (max-width: 390px) {
+  .step {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .player-row-content {
+    padding: 7px 8px;
+    gap: 5px;
+  }
+
+  .player-number {
+    min-width: 18px;
+    font-size: 0.88rem;
+  }
+
+  .player-role-tag {
+    min-width: 60px;
+    padding: 3px 6px;
+    font-size: 0.68rem;
+  }
+
+  .player-nomination {
+    width: 26px;
+    height: 26px;
+    font-size: 0.72rem;
+  }
+
+  .player-fouls {
+    gap: 4px;
+  }
+
+  .btn-foul {
+    width: 26px;
+    height: 26px;
+    font-size: 0.9rem;
+  }
+
+  .foul-count {
+    min-width: 14px;
+    font-size: 0.88rem;
+  }
+
+  .btn-restore {
+    padding: 5px 7px;
+    font-size: 0.66rem;
+  }
+
+  .timer-bar {
+    width: calc(100% - 16px);
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .timer-bar .btn {
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 0.78rem;
+  }
+
+  .timer-display {
+    font-size: 1.65rem;
+    min-width: 40px;
+  }
+}
+
+@media (max-width: 345px) {
+  /* On ultra-narrow 320px screens, hide inactive nomination circle on eliminated rows so Restore fits cleanly */
+  .player-row.eliminated .player-nomination {
+    display: none;
+  }
 }

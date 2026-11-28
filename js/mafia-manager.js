@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+﻿function initMafiaManager() {
   'use strict';
 
   /* ================= references ================= */
@@ -39,6 +39,14 @@
   const winTitle      = document.getElementById('winTitle');
   const btnWinNewGame = document.getElementById('btnWinNewGame');
 
+  const btnOpenRules        = document.getElementById('btnOpenRules');
+  const rulesModal          = document.getElementById('rules-modal');
+  const rulesModalBody      = document.getElementById('rulesModalBody');
+  const btnCloseRulesTop    = document.getElementById('btnCloseRulesTop');
+  const btnCloseRulesBottom = document.getElementById('btnCloseRulesBottom');
+  const rulesTabBtns        = document.querySelectorAll('.rules-tab-btn');
+  const rulesTabPanels      = document.querySelectorAll('.rules-tab-panel');
+
   /* ================= state ================= */
   let redCount = 7;
   let mafiaCount = 3;
@@ -69,6 +77,7 @@
       timerBar?.classList.add('hidden');
     }
     winModal?.classList.add('hidden');
+    rulesModal?.classList.add('hidden');
   }
 
   function enterFullscreen() {
@@ -344,6 +353,19 @@
     updateTimer();
   }
 
+  /* ================= rules tabs ================= */
+  function switchRulesTab(tabName) {
+    rulesTabBtns.forEach(btn => {
+      const isActive = btn.dataset.rulesTab === tabName;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+    });
+    rulesTabPanels.forEach(panel => {
+      panel.classList.toggle('hidden', panel.id !== `rules-tab-${tabName}`);
+    });
+    if (rulesModalBody) rulesModalBody.scrollTop = 0;
+  }
+
   /* ================= two-step swipe (slide open -> tap Delete) ================= */
   let drag = { active: false, row: null, content: null, startX: 0, baseOffset: 0, currentOffset: 0 };
 
@@ -444,6 +466,31 @@
 
   btnWinNewGame?.addEventListener('click', exitFullscreen);
 
+  rulesTabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchRulesTab(btn.dataset.rulesTab);
+    });
+  });
+
+  btnOpenRules?.addEventListener('click', () => {
+    switchRulesTab('basic');
+    rulesModal?.classList.remove('hidden');
+  });
+  btnCloseRulesTop?.addEventListener('click', () => {
+    rulesModal?.classList.add('hidden');
+  });
+  btnCloseRulesBottom?.addEventListener('click', () => {
+    rulesModal?.classList.add('hidden');
+  });
+  rulesModal?.addEventListener('click', (e) => {
+    if (e.target === rulesModal) rulesModal.classList.add('hidden');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && rulesModal && !rulesModal.classList.contains('hidden')) {
+      rulesModal.classList.add('hidden');
+    }
+  });
+
   playerList?.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) {
@@ -474,4 +521,10 @@
 
   /* ================= boot ================= */
   updateCountersUI();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMafiaManager);
+} else {
+  initMafiaManager();
+}

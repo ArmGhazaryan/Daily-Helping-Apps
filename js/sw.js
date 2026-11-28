@@ -1,5 +1,5 @@
 ﻿// Service Worker for Daily Productivity & Fitness PWA
-const CACHE_NAME = 'daily-app-v36';
+const CACHE_NAME = 'daily-app-v38';
 const APP_SHELL = [
   './',
   './index.html',

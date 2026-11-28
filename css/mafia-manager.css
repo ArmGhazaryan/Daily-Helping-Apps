@@ -93,16 +93,33 @@ header {
   margin-right: 0;
 }
 
-.auth-btn {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-rules-header {
   background: #141414;
-  border: 1px solid #333333;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: #ffffff;
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-rules-header:hover {
+  background: #1f1f1f;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.btn-rules-header:active {
+  transform: scale(0.97);
 }
 
 body.mafia-fullscreen-active header {
@@ -833,6 +850,216 @@ body.mafia-fullscreen-active header {
   background: #166534;
 }
 
+/* ===== Rules Modal & Tabs ===== */
+.rules-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.86);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.rules-modal.hidden {
+  display: none !important;
+}
+
+.rules-modal-card {
+  background: #0d0d0d;
+  border: 1px solid #222222;
+  border-radius: 20px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 84dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.rules-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #1a1a1a;
+  flex-shrink: 0;
+}
+
+.rules-modal-header h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.btn-close-rules {
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  color: #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close-rules:hover {
+  background: #262626;
+  color: #ffffff;
+}
+
+.rules-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 18px;
+  background: #0a0a0a;
+  border-bottom: 1px solid #1a1a1a;
+  flex-shrink: 0;
+}
+
+.rules-tab-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 6px;
+  background: #141414;
+  border: 1px solid #262626;
+  color: #94a3b8;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.rules-tab-btn:hover {
+  color: #ffffff;
+  border-color: #3f3f46;
+}
+
+.rules-tab-btn.active {
+  background: #15803d;
+  border-color: #15803d;
+  color: #ffffff;
+  box-shadow: 0 2px 0 #0d4a2a;
+}
+
+.rules-modal-body {
+  padding: 14px 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.rules-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rules-tab-panel.hidden {
+  display: none !important;
+}
+
+.rules-block {
+  background: #121212;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.rules-block h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.rules-block strong {
+  color: #ffffff;
+}
+
+.rules-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rules-list li {
+  line-height: 1.45;
+}
+
+.rules-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.rules-badge.karmir {
+  background: rgba(220, 38, 38, 0.18);
+  color: #f87171;
+  border: 1px solid #ef4444;
+}
+
+.rules-badge.sheriff {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.rules-badge.mafia {
+  background: #000000;
+  color: #cbd5e1;
+  border: 1.5px solid #475569;
+}
+
+.rules-badge.don {
+  background: #000000;
+  color: #ffffff;
+  border: 1.5px solid #94a3b8;
+}
+
+.rules-modal-footer {
+  padding: 12px 18px 16px 18px;
+  border-top: 1px solid #1a1a1a;
+  flex-shrink: 0;
+}
+
+.btn-rules-done {
+  background: #15803d;
+  border: none;
+  color: #ffffff;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #0d4a2a;
+}
+
+.btn-rules-done:hover {
+  background: #166534;
+}
+
 button {
   font-family: inherit;
 }
@@ -842,6 +1069,11 @@ button {
   .step {
     padding-left: 8px;
     padding-right: 8px;
+  }
+
+  .btn-rules-header {
+    padding: 7px 10px;
+    font-size: 0.78rem;
   }
 
   .player-row-content {
@@ -901,6 +1133,27 @@ button {
   .timer-display {
     font-size: 1.65rem;
     min-width: 40px;
+  }
+
+  .rules-modal {
+    padding: 10px;
+  }
+
+  .rules-tabs {
+    padding: 8px 12px;
+    gap: 5px;
+  }
+
+  .rules-tab-btn {
+    font-size: 0.76rem;
+    padding: 0 4px;
+  }
+
+  .rules-modal-header,
+  .rules-modal-body,
+  .rules-modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
 

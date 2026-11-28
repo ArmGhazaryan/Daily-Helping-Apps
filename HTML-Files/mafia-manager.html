@@ -1,133 +1,274 @@
 ﻿<!DOCTYPE html>
 <html lang="hy" translate="no" class="notranslate">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google" content="notranslate">
-    <title>Mafia Manager - Կարմիր թե Սև</title>
-    <link rel="icon" type="image/png" href="../Img/logo.png">
-    <link rel="stylesheet" href="../css/mafia-manager.css">
-    <link rel="stylesheet" href="../css/global-auth.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="google" content="notranslate" />
+  <title>Կարմիր թե Սև — Մաֆիա Վարող | Daily Helping Apps</title>
+  <link rel="stylesheet" href="../css/mafia-manager.css" />
 </head>
-
 <body>
-    <header>
-        <!-- 🟢 DHA Brand Logo (Հղումը տանում է դեպի index.html) -->
-        <a href="../index.html" class="dha-brand" title="Daily Helping Apps">
-            <span class="letter">D</span><span class="expand">aily</span>
-            <span class="letter">H</span><span class="expand">elping</span>
-            <span class="letter">A</span><span class="expand">pps</span>
-        </a>
-        <div class="header-right">
-            <div id="auth-header-container"></div>
-        </div>
-    </header>
-
-    <div id="app">
-        <!-- ===== Step 1 — Game Setup (Կարգավորում) ===== -->
-        <div id="step-setup" class="step active">
-            <div class="setup-brand">
-                <h1>ԿԱՐՄԻՐ ԹԵ ՍԵՎ</h1>
-                <p>Խաղավարի Վահանակ</p>
-            </div>
-            <div class="setup-card">
-                <div class="setup-section">
-                    <span class="setup-section-label">Կարմիրներ</span>
-                    <div class="counter-row">
-                        <div>
-                            <span class="counter-label">Կարմիրներ</span>
-                            <span class="counter-subtext"> ներառում 1 Շերիֆ</span>
-                        </div>
-                        <div class="counter-controls">
-                            <button id="btnRedMinus" class="counter-btn" aria-label="Կարմիր նվազեցնել">−</button>
-                            <span id="valRed" class="counter-value">7</span>
-                            <button id="btnRedPlus" class="counter-btn" aria-label="Կարմիր ավելացնել">+</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="setup-section">
-                    <span class="setup-section-label">Մաֆիա</span>
-                    <div class="counter-row">
-                        <div>
-                            <span class="counter-label">Մաֆիա</span>
-                            <span class="counter-subtext" id="subMafia"> ներառյալ 1 Դոն</span>
-                        </div>
-                        <div class="counter-controls">
-                            <button id="btnMafiaMinus" class="counter-btn" aria-label="Մաֆիա նվազեցնել">−</button>
-                            <span id="valMafia" class="counter-value">3</span>
-                            <button id="btnMafiaPlus" class="counter-btn" aria-label="Մաֆիա ավելացնել">+</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="setup-roles-hint">
-                    Դեր: Կարմիր ・ Շերիֆ ・ Մաֆիա ・ Դոն
-                </div>
-                <button id="btnStartSetup" class="btn-play">Խաղալ</button>
-            </div>
-        </div>
-
-        <!-- ===== Step 2 — Sequential Role Reveal (Դեր uncover) ===== -->
-        <div id="step-role" class="step">
-            <div class="step-top-bar">
-                <button id="btnExitRole" class="btn-exit-fullscreen">✕ Դուրս գալ</button>
-            </div>
-            <div class="role-header">
-                <div id="rolePlayerTitle" class="role-player-title">Խաղացող 1</div>
-                <div class="role-player-subtitle">Դերը թաքցված է</div>
-            </div>
-            <div class="role-card-container">
-                <div id="roleCard" class="role-card face-down">
-                    <div class="face face-down">
-                        <div class="role-back-label">Դերը թաքցված է</div>
-                        <div class="role-back-label">Սեղմել «Տեսնել»</div>
-                    </div>
-                    <div class="face face-up hidden">
-                        <div id="roleReveal" class="role-reveal">🎭</div>
-                        <div id="roleName" class="role-name">Կարմիր</div>
-                        <div id="roleSub" class="role-sub">Կարմիր</div>
-                    </div>
-                </div>
-            </div>
-            <button id="roleActionBtn" class="role-btn">Տեսնել</button>
-            <button id="roleStartGame" class="role-start-game hidden">Սկսել խաղը</button>
-        </div>
-
-        <!-- ===== Step 3 — Moderator Control Screen (Վարողի էկրան) ===== -->
-        <div id="step-mod" class="step">
-            <div class="step-top-bar">
-                <button id="btnExitMod" class="btn-exit-fullscreen">Նոր խաղ</button>
-            </div>
-            <div class="mod-status-header">
-                <div class="mod-counts">
-                    <span class="mod-count mod-count-karmir">Կարմիրներ: <span id="cntKarmir">7</span></span>
-                    <span class="mod-count mod-count-mafia">Մաֆիա: <span id="cntMafia">3</span></span>
-                </div>
-                <button id="btnNewGameMod" class="btn-new-game-mod">Նոր խաղ</button>
-            </div>
-            <div class="player-list" id="playerList"></div>
-        </div>
+  <header>
+    <a href="../index.html" class="dha-brand" aria-label="Daily Helping Apps">
+      <span class="letter">D</span><span class="expand">aily</span>
+      <span class="letter">H</span><span class="expand">elping</span>
+      <span class="letter">A</span><span class="expand">pps</span>
+    </a>
+    <div class="header-actions">
+      <button type="button" id="btnOpenRules" class="btn-rules-header">Կանոններ</button>
     </div>
+  </header>
 
-    <!-- Fixed bottom speech timer bar (Step 3) -->
-    <div id="timer-bar" class="timer-bar hidden">
-        <button id="btnStartTimer" class="btn btn-start-timer">Սկսել ժամանակը</button>
-        <div id="timerDisplay" class="timer-display">60</div>
-        <button id="btnResetTimer" class="btn btn-reset-timer">Զրոյացնել</button>
-    </div>
+  <main id="app">
+    <!-- Step 1: Setup -->
+    <section id="step-setup" class="step active">
+      <div class="setup-brand">
+        <h1>ԿԱՐՄԻՐ ԹԵ ՍԵՎ</h1>
+        <p>Խաղի կարգավորումներ</p>
+      </div>
 
-    <!-- Win modal -->
-    <div id="win-modal" class="win-modal hidden">
-        <div class="win-modal-card">
-            <h2 id="winTitle" class="win-title">Հաղթեցին Կարմիրները</h2>
-            <p id="winSub" class="win-sub"></p>
-            <button id="btnWinNewGame" class="btn-new-game-modal">Նոր խաղ</button>
+      <div class="setup-card">
+        <div class="setup-section">
+          <span class="setup-section-label">Թիմերի կազմը</span>
+
+          <div class="counter-row">
+            <div>
+              <div class="counter-label">Կարմիրներ</div>
+              <span class="counter-subtext">ներառյալ 1 Շերիֆ</span>
+            </div>
+            <div class="counter-controls">
+              <button type="button" id="btnRedMinus" class="counter-btn" aria-label="Պակասեցնել կարմիրների քանակը">−</button>
+              <span id="valRed" class="counter-value">7</span>
+              <button type="button" id="btnRedPlus" class="counter-btn" aria-label="Ավելացնել կարմիրների քանակը">+</button>
+            </div>
+          </div>
+
+          <div class="counter-row">
+            <div>
+              <div class="counter-label">Մաֆիա</div>
+              <span id="subMafia" class="counter-subtext"> ներառյալ 1 Դոն</span>
+            </div>
+            <div class="counter-controls">
+              <button type="button" id="btnMafiaMinus" class="counter-btn" aria-label="Պակասեցնել մաֆիայի քանակը">−</button>
+              <span id="valMafia" class="counter-value">3</span>
+              <button type="button" id="btnMafiaPlus" class="counter-btn" aria-label="Ավելացնել մաֆիայի քանակը">+</button>
+            </div>
+          </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/supabase.js"></script>
-    <script src="../js/global-auth.js"></script>
-    <script src="../js/mafia-manager.js"></script>
+        <p class="setup-roles-hint">Դերերը բաշխվում են պատահականության սկզբունքով</p>
+
+        <button type="button" id="btnStartSetup" class="btn-play">Խաղալ</button>
+      </div>
+    </section>
+
+    <!-- Step 2: Role Reveal -->
+    <section id="step-role" class="step">
+      <div class="step-top-bar">
+        <button type="button" id="btnExitRole" class="btn-exit-fullscreen">Նոր խաղ</button>
+      </div>
+
+      <div class="role-header">
+        <h2 id="rolePlayerTitle" class="role-player-title">Խաղացող 1</h2>
+        <p class="role-player-subtitle">Փոխանցեք հեռախոսը խաղացողին</p>
+      </div>
+
+      <div class="role-card-container">
+        <div id="roleCard" class="role-card face-down">
+          <div class="face-down">
+            <div class="role-reveal">🃏</div>
+            <p class="role-back-label">Սեղմեք «Տեսնել»</p>
+          </div>
+          <div class="face-up hidden">
+            <div id="roleReveal" class="role-reveal">🔴</div>
+            <div id="roleName" class="role-name">Կարմիր</div>
+            <div id="roleSub" class="role-sub">Կարմիր թիմ</div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="roleActionBtn" class="role-btn">Տեսնել</button>
+      <button type="button" id="roleStartGame" class="role-start-game hidden">Սկսել խաղը</button>
+    </section>
+
+    <!-- Step 3: Moderator -->
+    <section id="step-mod" class="step">
+      <div class="mod-status-header">
+        <div class="mod-counts">
+          <span class="mod-count mod-count-karmir">Կարմիրներ՝ <span id="cntKarmir">7</span></span>
+          <span class="mod-count mod-count-mafia">Մաֆիա՝ <span id="cntMafia">3</span></span>
+          <button type="button" id="btnNewGameMod" class="btn-new-game-mod">Նոր խաղ</button>
+        </div>
+      </div>
+
+      <div id="playerList" class="player-list"></div>
+    </section>
+  </main>
+
+  <!-- Fixed Bottom Timer Bar -->
+  <div id="timer-bar" class="timer-bar hidden">
+    <button type="button" id="btnStartTimer" class="btn btn-start-timer">Սկսել ժամանակը</button>
+    <div id="timerDisplay" class="timer-display">60</div>
+    <button type="button" id="btnResetTimer" class="btn btn-reset-timer">Վերականգնել</button>
+  </div>
+
+  <!-- Win Modal -->
+  <div id="win-modal" class="win-modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="win-modal-card">
+      <h2 id="winTitle" class="win-title">Հաղթեցին Կարմիրները</h2>
+      <p class="win-sub">Խաղն ավարտվեց</p>
+      <button type="button" id="btnWinNewGame" class="btn-new-game-modal">Նոր խաղ</button>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div id="rules-modal" class="rules-modal hidden" role="dialog" aria-modal="true" aria-labelledby="rulesModalTitle">
+    <div class="rules-modal-card">
+      <div class="rules-modal-header">
+        <h2 id="rulesModalTitle">Խաղի կանոնները</h2>
+        <button type="button" id="btnCloseRulesTop" class="btn-close-rules" aria-label="Փակել">✕</button>
+      </div>
+
+      <div class="rules-tabs" role="tablist">
+        <button type="button" class="rules-tab-btn active" data-rules-tab="basic" role="tab" aria-selected="true">Հիմնական</button>
+        <button type="button" class="rules-tab-btn" data-rules-tab="advanced" role="tab" aria-selected="false">Խորացված</button>
+        <button type="button" class="rules-tab-btn" data-rules-tab="terms" role="tab" aria-selected="false">Տերմիններ</button>
+      </div>
+
+      <div id="rulesModalBody" class="rules-modal-body">
+        <!-- Basic Rules Tab -->
+        <div id="rules-tab-basic" class="rules-tab-panel">
+          <div class="rules-block">
+            <h3>🎯 Խաղի նպատակը</h3>
+            <p>Խաղացողները բաժանվում են երկու թիմի՝ <strong>Կարմիրներ</strong> (խաղաղ բնակիչներ) և <strong>Սևեր</strong> (մաֆիա)։ Կարմիրները չգիտեն, թե ով ով է, իսկ Սևերը ճանաչում են միմյանց։</p>
+          </div>
+
+          <div class="rules-block">
+            <h3>🎭 Դերերը և ստուգումները</h3>
+            <ul class="rules-list">
+              <li><span class="rules-badge karmir">Կարմիր</span> Խոսքով ու տրամաբանությամբ փնտրում է մաֆիային և հեռացնում ցերեկային քվեարկությամբ։</li>
+              <li><span class="rules-badge sheriff">Շերիֆ</span> Կարմիր թիմ․ գիշերը ստուգում է 1 խաղացողի և վարողից իմանում միայն՝ նա <strong>Կարմիր է, թե Սև</strong> (չի տարբերում մաֆիային Դոնից)։</li>
+              <li><span class="rules-badge mafia">Մաֆիա</span> Սև թիմ․ ցերեկը ձևանում է կարմիր, իսկ գիշերը թիմով «կրակում» է 1 խաղացողի։</li>
+              <li><span class="rules-badge don">Դոն</span> Մաֆիայի ղեկավարն է․ գիշերը ստուգում է 1 խաղացողի և իմանում միայն՝ նա <strong>Շերիֆ է, թե ոչ</strong>։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>☀️ Ցերեկային փուլ և քվեարկություն</h3>
+            <ul class="rules-list">
+              <li><strong>60 վայրկյան խոսք.</strong> Յուրաքանչյուր խաղացող ունի <strong>60 վայրկյան</strong> խոսելու և առավելագույնը <strong>1 թեկնածու</strong> առաջադրելու համար։</li>
+              <li><strong>Առաջին օրվա կանոն.</strong> Եթե առաջին օրը առաջադրված է <strong>միայն 1 թեկնածու</strong>, քվեարկություն չի անցկացվում և ոչ ոք չի հեռանում։ Հաջորդ օրերին 1 թեկնածուն հեռանում է ավտոմատ։</li>
+              <li><strong>Քվեարկության կարգ.</strong> Քվեարկելիս բռունցքը դրվում է սեղանին վարողի հաշվարկով։ Ձեռքը հետ քաշելն արգելվում է, իսկ չքվեարկած խաղացողի ձայնն ավտոմատ գնում է <strong>վերջին առաջադրված թեկնածուին</strong>։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>🌙 Գիշերային փուլ</h3>
+            <p>Բոլորը փակում են աչքերը։ Հերթով արթնանում են <strong>Մաֆիան</strong> (կրակում է), <strong>Դոնը</strong> (փնտրում է Շերիֆին) և <strong>Շերիֆը</strong> (ստուգում է խաղացողի գույնը)։</p>
+          </div>
+
+          <div class="rules-block">
+            <h3>⚠️ Ֆոլեր (Կարգապահություն)</h3>
+            <p>Առանց հերթի խոսելը, ընդհատելը կամ կարգը խախտելը պատժվում է <strong>ֆոլով</strong>։ <strong>4-րդ ֆոլը</strong> ստանալուն պես խաղացողն անմիջապես լքում է խաղը՝ առանց վերջին խոսքի։</p>
+          </div>
+
+          <div class="rules-block">
+            <h3>🏆 Հաղթանակի պայմանները</h3>
+            <ul class="rules-list">
+              <li><strong>Հաղթում են Կարմիրները</strong>, երբ խաղից հեռացվում են բոլոր սև խաղացողները։</li>
+              <li><strong>Հաղթում է Մաֆիան</strong>, երբ սևերի և կարմիրների քանակը հավասարվում է (օրինակ՝ 2 սև և 2 կարմիր)։</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Advanced Rules Tab -->
+        <div id="rules-tab-advanced" class="rules-tab-panel hidden">
+          <div class="rules-block">
+            <h3>🚫 Գիշերային կոնտակտի արգելք</h3>
+            <ul class="rules-list">
+              <li><strong>Առանց հաղորդակցման.</strong> Վարողի <strong>«Գիշեր»</strong> հրամանից հետո սև թիմի խաղացողներն իրավունք չունեն որևէ կերպ կոնտակտի մեջ մտնել միմյանց հետ (ժեստերով, ձայնով կամ հպումով)։ Խախտման դեպքում մեղավորները <strong>հաջորդ գիշեր լքում են խաղը՝ առանց վերջին խոսքի</strong>։</li>
+              <li><strong>Անշարժ դիրք.</strong> Գիշերը բոլոր խաղացողները պետք է նստեն ուղիղ, ձեռքերն անշարժ պահեն և չթեքվեն հարևանների կողմը։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>🔫 Կրակոցի մեխանիկա և առաջին գիշեր</h3>
+            <ul class="rules-list">
+              <li><strong>Միայն 1-ին գիշերը.</strong> Սևերը բացում են աչքերը և կրակոցների հերթականությունը պայմանավորվում են միայն <strong>առաջին գիշերը</strong>։</li>
+              <li><strong>Փակ աչքերով կրակոց.</strong> Երկրորդ գիշերվանից կրակոցը կատարվում է փակ աչքերով․ բոլոր ակտիվ սևերը պետք է միաժամանակ «կրակեն» նույն խաղացողի վրա։ Եթե գոնե մեկը չի կրակում կամ կրակում է ուրիշի վրա, գրանցվում է <strong>վրիպում</strong>։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>⚖️ Հավասար ձայներ և վերաքվեարկություն</h3>
+            <ul class="rules-list">
+              <li><strong>30 վայրկյան արդարացում.</strong> Եթե երկու կամ ավելի թեկնածուներ հավասար ձայներ են հավաքում, նրանց տրվում է <strong>30 վայրկյան</strong> արդարացման խոսք, որից հետո անցկացվում է կրկնակի քվեարկություն միայն նրանց միջև։</li>
+              <li><strong>«Բոլորին հեռացնելու» հարց.</strong> Եթե վերաքվեարկությունից հետո ձայները նորից հավասարվում են, վարողը հարցնում է՝ <em>«Ո՞վ է կողմ, որ բոլոր նշված թեկնածուները լքեն խաղը»</em>։ Եթե քվեարկում է խաղացողների <strong>կեսից ավելին</strong>, բոլորը հեռանում են, հակառակ դեպքում՝ բոլորը մնում են։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>🗣️ Վերջին խոսքի («կտակի») և լռության կանոններ</h3>
+            <ul class="rules-list">
+              <li><strong>60 վայրկյան կտակ.</strong> Քվեարկությամբ կամ գիշերային կրակոցով հեռացված խաղացողն ունի <strong>60 վայրկյան</strong> վերջին խոսքի համար։</li>
+              <li><strong>Առանց խոսքի հեռացում.</strong> <strong>4-րդ ֆոլով</strong> կամ գիշերային կանոնների խախտմամբ հեռացված խաղացողը լքում է խաղն անմիջապես՝ առանց վերջին խոսքի։</li>
+              <li><strong>Լիակատար լռություն.</strong> Վերջին խոսքն ավարտելուց հետո հեռացված խաղացողը մինչև խաղի ավարտը չի կարող խոսել, ժեստեր անել կամ որևէ կերպ ազդել խաղի ընթացքի վրա։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>🙊 Արգելված հնարքներ (Fair Play)</h3>
+            <p>Արգելվում է երդվել, գրազ գալ կամ խաղից դուրս փաստերով համոզել, որ կարմիր ես։ Նման արտահայտությունն անմիջապես պատժվում է <strong>ֆոլով</strong>, իսկ կոպիտ խախտման դեպքում՝ խաղից հեռացմամբ։</p>
+          </div>
+        </div>
+
+        <!-- Game Terms / Expressions Tab -->
+        <div id="rules-tab-terms" class="rules-tab-panel hidden">
+          <div class="rules-block">
+            <h3>⏱️ Խաղի փուլեր և ընթացք</h3>
+            <ul class="rules-list">
+              <li><strong>Զրոյական շրջան (0-ական շրջան).</strong> Խաղի ամենաառաջին ցերեկային փուլը՝ նախքան առաջին գիշերվա կրակոցը, երբ խաղացողները դեռ նոր են ծանոթանում իրար խոսքին և տալիս առաջին գույները։</li>
+              <li><strong>Կտակ.</strong> Խաղից հեռացող խաղացողի վերջին 60 վայրկյանանոց ելույթը, որտեղ նա թողնում է իր վերջնական կարծիքը՝ ովքեր են կարմիր և ովքեր՝ մաֆիա։</li>
+              <li><strong>Կրիտիկական շրջան (Կրիտիկա).</strong> Խաղի վճռորոշ օրը, երբ սխալ քվեարկությունը կբերի մաֆիայի անմիջական հաղթանակին (օրինակ՝ 5 հոգուց 2-ը սև են, 3-ը՝ կարմիր)։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>🗳️ Քվեարկություն և մարտավարություն</h3>
+            <ul class="rules-list">
+              <li><strong>Սեղան կիսել (Կիսել).</strong> Երկու թեկնածուի միջև ձայները հավասար բաժանելը՝ նրանց 30 վայրկյան լրացուցիչ խոսք տալու և խաղն ավելի լավ վերլուծելու նպատակով։</li>
+              <li><strong>Թեկնածու հանել.</strong> Իր 60 վայրկյանի ընթացքում որևէ խաղացողի համարը նշել որպես քվեարկության թեկնածու։</li>
+              <li><strong>Կրակոցից գնալ / Քվեարկությամբ գնալ.</strong> Խաղից հեռանալ գիշերային մաֆիայի կրակոցի հետևանքով կամ ցերեկային քվեարկության արդյունքում։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>🎭 Դերեր և ստուգումներ</h3>
+            <ul class="rules-list">
+              <li><strong>Սև / Կարմիր ստուգում.</strong> Շերիֆի գիշերային ստուգման արդյունքը (օրինակ՝ <em>«Ունեմ 4-ի սև ստուգում»</em> նշանակում է՝ 4-րդ խաղացողը մաֆիա է)։</li>
+              <li><strong>Բացվել / Կեղծ շերիֆ.</strong> Իրական Շերիֆի կողմից իր դերը հայտարարելը՝ ստուգումները թիմին փոխանցելու համար։ <strong>Կեղծ շերիֆ</strong> է կոչվում մաֆիայի խաղացողը, որը խաբելու նպատակով ձևանում է Շերիֆ։</li>
+              <li><strong>Ինքնակրակոց (Самострел).</strong> Երբ մաֆիան գիշերը միտումնավոր կրակում է իր թիմակցի կամ հենց իր վրա՝ կարմիրներին շփոթեցնելու և կեղծ վստահություն ստեղծելու համար։</li>
+            </ul>
+          </div>
+
+          <div class="rules-block">
+            <h3>🧠 Խաղային դիրքորոշումներ</h3>
+            <ul class="rules-list">
+              <li><strong>Գույն տալ.</strong> Խաղացողի խոսքից ու վարքից եզրակացնել, թե նա որ թիմից է (օրինակ՝ <em>«3-ը ինձ համար կարմիր է, 7-ը՝ սև»</em>)։</li>
+              <li><strong>Միասին խաղալ.</strong> Միմյանց կարմիր համարել և համաձայնեցված քվեարկել (օրինակ՝ <em>«Ես խաղում եմ 1-ի և 5-ի հետ»</em>)։</li>
+              <li><strong>Հավասարակշռություն (Բալանս).</strong> Երբ երկու խաղացողներ պնդում են, որ իրենք են Շերիֆը (մեկը՝ իրական, մյուսը՝ կեղծ), կարմիրները հերթով հեռացնում են երկուսին էլ՝ ռիսկից խուսափելու համար։</li>
+              <li><strong>Չոր հաղթանակ.</strong> Մաֆիայի հաղթանակն առանց որևէ սև խաղացող կորցնելու։</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-modal-footer">
+        <button type="button" id="btnCloseRulesBottom" class="btn-rules-done">Հասկանալի է</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/mafia-manager.js"></script>
 </body>
 </html>
